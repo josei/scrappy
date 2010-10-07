@@ -1,0 +1,228 @@
+#!/usr/bin/ruby
+
+stty_save = `stty -g`.chomp
+trap('INT') { system('stty', stty_save); Scrappy::App.quit }
+module Scrappy
+  Root = File.expand_path(File.dirname(File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__) + "/..")
+
+  require 'rubygems'
+  require 'optparse'
+  require 'logger'
+  require 'readline'
+  gem 'camping', '=2.0'
+  require 'camping'
+  require 'camping/server'
+  require 'etc'
+  require "#{Root}/lib/scrappy"
+  require 'scrappy/shell'
+
+  SESSION_TOKEN = rand(100000000)
+  Options = OpenStruct.new
+
+  class App
+    def self.quit
+      puts "\"#{Quotes.sort_by{rand}.first}\"" unless Options.quiet
+      exit
+    end
+    
+    def initialize
+      Options.port = 3434
+      Options.concurrence = 10
+      Agent::Options.depth = 1
+
+      OptionParser.new do |opts|
+        opts.on('-V', '--version')              { output_version; exit 0 }
+        opts.on('-h', '--help')                 { output_help; exit 0 }
+        opts.on('-g URL', '--get URL')          { |url| Options.url = url; Options.http_method=:get }
+        opts.on('-p URL', '--post URL')         { |url| Options.url = url; Options.http_method=:post }
+        opts.on('-i', '--interactive')          { Options.shell = true }
+        opts.on('-s', '--server')               { Options.server = true }
+        opts.on('-S', '--proxy-server')         { Options.proxy = true }
+        opts.on('-P P', '--port P')             { |p| Options.port = p }
+        opts.on('-c C', '--concurrence C')      { |c| Options.concurrence = c.to_i }
+        opts.on('-d D', '--delay D')            { |d| Agent::Options.delay = d; Options.concurrence = 1 }
+        opts.on('-l L', '--levels L')           { |l| Agent::Options.depth = l.to_i }
+        opts.on('-v', '--visual')               { Agent::Options.agent = :visual }
+        opts.on('-r', '--reference')            { Agent::Options.referenceable = :minimum }
+        opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
+        opts.on('-w', '--window')               { Agent::Options.window = true }
+        opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
+      end.parse!(ARGV)
+      @file = ARGV.shift
+    end
+
+    def run
+      onload
+      if Options.url
+        Options.quiet = true
+        puts Agent.create.proxy(:get, Options.url)
+      elsif Options.proxy
+        puts "Launching Scrappy Web Proxy..."
+        Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/proxy.rb"]).start
+      elsif Options.server
+        puts "Launching Scrappy Web Server..."
+        Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/server.rb"]).start
+      elsif Options.shell
+        puts "Launching Scrappy Shell..."
+        Shell.new.run
+      else
+        Options.quiet = true
+        Shell.new(@file).run
+      end
+      Scrappy::App.quit
+    end
+
+    protected
+    def output_help
+      output_version
+      puts """Synopsis 
+  Scrappy is a tool to scrape semantic data out of the unstructured web
+
+Examples
+  This command retrieves Google web page
+    scrappy -g http://www.google.com
+
+Usage 
+  scrappy [options]
+
+  For help use: scrappy -h
+
+Options
+  -h, --help               Displays help message
+  -V, --version            Display the version, then exit
+  -f, --format             Picks output format (json, ejson, rdfxml, ntriples, png)
+  -g, --get URL            Gets requested URL
+  -p, --post URL           Posts requested URL
+  -c, --concurrence VALUE  Sets number of concurrent connections for crawling (default is 10)
+  -l, --levels VALUE       Sets recursion levels for resource crawling (default is 1)
+  -d, --delay VALUE        Sets delay (in ms) between requests (default is 0)
+  -i, --interactive        Runs interactive shell
+  -s, --server             Runs web server
+  -S, --proxy-server       Runs web proxy
+  -P, --port PORT          Selects port number (default is 3434)
+  -v, --visual             Uses visual agent (slow)
+  -r, --reference          Outputs referenceable data (requires -v)
+  -R, --reference-all      Outputs all HTML referenceable data (requires -v)
+  -w, --window             Shows browser window (requires -v)
+
+Authors
+  José Ignacio Fernández, Jacobo Blasco
+
+Copyright
+  Copyright (c) 2010 José Ignacio Fernández. Licensed under the MIT License:
+  http://www.opensource.org/licenses/mit-license.php"""
+    end
+   
+    def output_version
+      puts "Scrappy v#{Scrappy::VERSION}"
+    end
+
+    def onload
+      # Check local or global knowledge base
+      if File.exists?("#{Etc.getpwuid.dir}/.scrappy/kb")
+        data_folder = "#{Etc.getpwuid.dir}/.scrappy/kb"
+        cache_file  = "#{Etc.getpwuid.dir}/.scrappy/kb.cache"
+      else
+        data_folder = "#{Scrappy::Root}/kb"
+        cache_file  = "#{Dir.tmpdir}/scrappy.kb.cache"
+      end
+
+      # Load knowledge base
+      Agent::Options.kb = if File.exists?(cache_file) and File.mtime(cache_file) >= Dir["#{data_folder}/*", data_folder].map{ |f| File.mtime(f) }.max
+        # Just load kb from cache
+        open(cache_file) { |f| Marshal.load(f) }
+      else
+        # Load YARF files and cache kb
+        data = Dir["#{data_folder}/*"].inject(RDF::Graph.new) { |graph, file| extension = file.split('.').last.to_sym; graph.merge(extension==:ignore ? RDF::Graph.new : RDF::Parser.parse(extension, open(file).read)) }
+        open(cache_file, "w") { |f| Marshal.dump(data, f) }
+        data
+      end
+
+      # Create cluster of agents
+      Agent.create_cluster Options.concurrence, :referenceable=>Agent::Options.referenceable,
+                                                :agent=>Agent::Options.agent, :window=>false
+    end
+  end
+
+  Quotes = """Knowledge talks, wisdom listens
+Fool me once, shame on you. Fool me twice, shame on me
+Only the wisest and the stupidest of men never change
+Don’t let your victories go to your head, or your failures go to your heart
+Those who criticize our generation forget who raised it
+Criticizing is easy, art is difficult
+I don’t know what the key to success is, but the key to failure is trying to please everyone
+When the character of a man is not clear to you, look at his friends
+Not to care for philosophy is to be a true philosopher
+The mind is like a parachute. It doesn’t work unless it’s open
+The best mind-altering drug is truth
+Be wiser than other people if you can, but do not tell them so
+Never forget what a man says to you when he is angry
+A winner listens, a loser just waits until it is their turn to talk
+Guns don’t kill people — people do
+He who knows others is wise. He who knows himself is enlightened
+If you are not part of the cure, then you are part of the problem
+The only time you run out of chances is when you stop taking them
+The best things in life are not things
+An investment in knowledge always pays the best interest
+You can tell more about a person by what he says about others than you can by what others say about him
+Think like a man of action, and act like a man of thought
+He who knows others is learned; he who knows himself is wise
+Going to church doesn’t make you a Christian, anymore than standing in your garage makes you a car
+Never challenge an old man, because if you lose, you’ve lost to an old man, and if you win, so what?
+Half our life is spent trying to find something to do with the time we have spent most of life trying to save
+He who indulges in a task without proper knowledge will deteriorate rather than improve the case
+It is because of it’s emptiness that the cup is useful
+When the people of the world all know beauty as beauty, there arises the recognition of ugliness
+The apprentice who tries to take the carpenters place, always cuts his hands
+In the end, we will remember not the words of our enemies, but the silence of our friends
+A wise man’s actions speak for himself
+Never wrestle with a pig -- you both get dirty, but the pig likes it
+50% of the solution is to put your hands on the problem
+Never keep your head down, you’re better than many
+Those who fail to prepare, are preparing to fail
+The man who smiles when things go wrong has thought of someone to blame it on
+Time is a great teacher, but unfortunately it kills all its pupils
+It's true that we don't know what we've got until we lose it, but it's also true that we don't know what we've been missing until it arrives
+Never take life seriously. Nobody gets out alive anyway
+The only way to keep your health is to eat what you don't want, drink what you don't like, and do what you'd rather not
+I am so clever that sometimes I don't understand a single word of what I am saying
+Dogs have owners, cats have staff
+I put all my genius into my life; I put only my talent into my works
+It is better to be beautiful than to be good, but it is better to be good than to be ugly
+All human beings, by nature, desire to know
+All life is an experiment
+An investment in knowledge always pays the best interest
+An optimist is a person who sees a green light everywhere. The pessimist sees only the red light. But the truly wise person is color blind
+Chance favors only those who court her
+Give a man a fish, he'll eat for a day. Teach a man how to fish, he'll eat for a lifetime
+God helps them that help themselves
+Great beginnings are not as important as the way one finishes
+Happiness is not a reward - it is consequence. Suffering is not a punishment - it is a result
+Don't think much of a man who is not wiser today than he was yesterday
+Maturity is achieved when a person postpones immediate pleasures for long-term values
+Men are wise in proportion, not to their experience, but to their capacity for experience
+Much wisdom often goes with fewer words
+Never leave that till tomorrow which you can do today
+Never mistake knowledge for wisdom. One helps you make a living; the other helps you make a life
+Nothing is a waste of time if you use the experience wisely
+It requires wisdom to understand wisdom: the music is nothing if the audience is deaf
+It takes a great deal of living to get a little deal of learning
+Live as if you were to die tomorrow. Learn as if you were to live forever
+Unless you try to do something beyond what you have already mastered, you will never grow
+What you have to do and the way you have to do it is incredibly simple. Whether you are willing to do it is another matter
+When written in Chinese the word crisis is composed to two characters. One represents danger, and the other represents opportunity
+Cheer up, the worst is yet to come
+Common sense ain't common
+A coward is a hero with a wife, kids, and a mortgage
+All power corrupts, but we need electricity
+Do not try to live forever. You will not succeed
+Pick the flower when it is ready to be picked
+The greatest risk is the risk of riskless living
+The man who does things makes many mistakes, but he never makes the biggest mistake of all - doing nothing
+The man who makes no mistakes does not usually make anything
+The results you achieve will be in direct proportion to the effort you apply
+The reward of a thing well done is to have done it
+Don’t argue with idiots. They will bring you down to their level and beat you with experience""".split("\n")
+end
+
+Scrappy::App.new.run

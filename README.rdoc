@@ -1,0 +1,176 @@
+= Scrappy
+
+* http://github.com/josei/scrappy
+
+== DESCRIPTION:
+
+Scrappy is a tool that allows extracting information from web pages and producing RDF data.
+It uses the scraping ontology to define the mappings between HTML contents and RDF data.
+
+An example of mapping is shown next, which allows extracting all titles from http://www.elmundo.es:
+
+  dc: http://purl.org/dc/elements/1.1/
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  sioc: http://rdfs.org/sioc/ns#
+  sc: http://lab.gsi.dit.upm.es/scraping.rdf#
+  *:
+    rdf:type: sc:Fragment
+    sc:selector:
+      *:
+        rdf:type: sc:UriSelector
+        rdf:value: "http://www.elmundo.es/"
+    sc:identifier:
+      *:
+        rdf:type: sc:BaseUriSelector
+    sc:subfragment:
+      *:
+        sc:type: sioc:Post
+        sc:selector:
+          *:
+            rdf:type: sc:CssSelector
+            rdf:value: ".noticia h2, .noticia h3, .noticia h4"
+        sc:identifier:
+          *:
+            rdf:type: sc:CssSelector
+            rdf:value: "a"
+            sc:attribute: "href"
+        sc:subfragment:
+          *:
+            sc:type:     rdf:Literal
+            sc:relation: dc:title
+            sc:selector:
+              *:
+                rdf:type:  sc:CssSelector
+                rdf:value: "a"
+
+(The above code is serialized using YARF format, supported by LightRDF gem, as well as
+RDFXML, JSON, NTriples formats, which can also be used to define the mappings).
+
+== SYNOPSIS:
+
+A knowledge base of mappings can be defined by storing RDF files inside ~/.scrappy/kb folder.
+Then, the command-line tool can be used to get RDF data from web sites. You can get help on this
+tool by typing:
+
+  $ scrappy --help
+
+Scrappy offers many different interfaces to get RDF data from a web page:
+
+* Command-line interface:
+
+  $ scrappy -g elmundo.es
+
+* Interactive shell:
+
+  $ scrappy -i
+  Launching Scrappy Shell...
+  $ get elmundo.es
+  dc: http://purl.org/dc/elements/1.1/
+  owl: http://www.w3.org/2002/07/owl#
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  sc: http://lab.gsi.dit.upm.es/scraping.rdf#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  http://www.elmundo.es/elmundo/2010/10/05/gentes/1286310993.html:
+    dc:description: "Las vacaciones del n\u00famero uno"
+    dc:title:
+      "Una suite de 5.000 euros para Nadal en Tailandia"
+      "Una suite de 5.000 euros para Nadal"
+    rdf:type: http://rdfs.org/sioc/ns#Post
+    dc:creator: "Fernando Domingo | John Bali (V\u00eddeo)"
+    http://www.daml.org/experiment/ontology/location-ont#location:
+      *:
+        rdf:label: "Bangkok"
+        rdf:type: http://www.daml.org/experiment/ontology/location-ont#Location
+    dc:date: "mi\u00e9rcoles 06/10/2010"
+  ...
+
+  http://www.elmundo.es$
+
+* Web Service interface:
+
+  $ scrappy -s
+  Launching Scrappy Web Server...
+  ** Starting Mongrel on localhost:3434
+
+Then point your browser to http://localhost:3434 for additional directions.
+
+* Web Proxy interface:
+
+  $ scrappy -S
+  Launching Scrappy Web Proxy...
+  ** Starting Mongrel on localhost:3434
+
+Then configure your browser's HTTP proxy to http://localhost:3434 and browse http://www.elmundo.es
+
+* Scripting (experimental):
+
+You can create scripts that retrieve many web pages and run them using scrappy.
+
+  #!/usr/bin/scrappy
+  get elmundo.es
+  get google.com/search?q=testing
+
+Then you can run your script from the command line just as any other bash script.
+
+We plan to enable complex operations such as posting forms and definining a useful language
+with variables to enable flow control in order to build web service mashups.
+
+* Ruby interface:
+
+You can use Scrappy in a Ruby program by requiring the gem:
+
+  require 'rubygems'
+  require 'scrappy'
+
+  # Parse a knowledge base
+  kb = RDF::Parser.parse(:rdf, open("kb.rdf").read)
+
+  # Create an agent
+  agent = Scrappy::Agent.create :kb=>kb
+
+  # Get RDF output
+  output = agent.request :get, 'http://www.example.com'
+
+  # Output all titles from the web page
+  titles = output.find(Node('http://www.example.com'), Node('dc:title'), nil)
+  titles.each { |title| puts title }
+
+== INSTALL:
+
+Install it as any other gem:
+
+  $ gem install scrappy
+
+The gem also requires raptor library (in Debian systems: sudo aptitude install raptor-utils), which is used
+for outputting different RDF serialization formats.
+
+Additionally, some extra libraries are needed for certain features:
+
+* Visual parsing requires rbwebkitgtk: http://github.com/danlucraft/rbwebkitgtk
+
+* PNG output of RDF graphs requires Graphviz (in Debian systems: sudo aptitude install graphviz).
+
+== LICENSE:
+
+(The MIT License)
+
+Copyright (c) 2010 José Ignacio Fernández (joseignacio.fernandez <at> gmail.com)
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
