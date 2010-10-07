@@ -58,82 +58,82 @@ Scrappy offers many different interfaces to get RDF data from a web page:
 
 * Command-line interface:
 
-  $ scrappy -g elmundo.es
+    $ scrappy -g elmundo.es
 
 * Interactive shell:
 
-  $ scrappy -i
-  Launching Scrappy Shell...
-  $ get elmundo.es
-  dc: http://purl.org/dc/elements/1.1/
-  owl: http://www.w3.org/2002/07/owl#
-  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
-  sc: http://lab.gsi.dit.upm.es/scraping.rdf#
-  rdfs: http://www.w3.org/2000/01/rdf-schema#
-  http://www.elmundo.es/elmundo/2010/10/05/gentes/1286310993.html:
-    dc:description: "Las vacaciones del n\u00famero uno"
-    dc:title:
-      "Una suite de 5.000 euros para Nadal en Tailandia"
-      "Una suite de 5.000 euros para Nadal"
-    rdf:type: http://rdfs.org/sioc/ns#Post
-    dc:creator: "Fernando Domingo | John Bali (V\u00eddeo)"
-    http://www.daml.org/experiment/ontology/location-ont#location:
-      *:
-        rdf:label: "Bangkok"
-        rdf:type: http://www.daml.org/experiment/ontology/location-ont#Location
-    dc:date: "mi\u00e9rcoles 06/10/2010"
-  ...
+    $ scrappy -i
+    Launching Scrappy Shell...
+    $ get elmundo.es
+    dc: http://purl.org/dc/elements/1.1/
+    owl: http://www.w3.org/2002/07/owl#
+    rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+    sc: http://lab.gsi.dit.upm.es/scraping.rdf#
+    rdfs: http://www.w3.org/2000/01/rdf-schema#
+    http://www.elmundo.es/elmundo/2010/10/05/gentes/1286310993.html:
+      dc:description: "Las vacaciones del n\u00famero uno"
+      dc:title:
+        "Una suite de 5.000 euros para Nadal en Tailandia"
+        "Una suite de 5.000 euros para Nadal"
+      rdf:type: http://rdfs.org/sioc/ns#Post
+      dc:creator: "Fernando Domingo | John Bali (V\u00eddeo)"
+      http://www.daml.org/experiment/ontology/location-ont#location:
+        *:
+          rdf:label: "Bangkok"
+          rdf:type: http://www.daml.org/experiment/ontology/location-ont#Location
+      dc:date: "mi\u00e9rcoles 06/10/2010"
+    ...
 
-  http://www.elmundo.es$
+    http://www.elmundo.es$
 
 * Web Service interface:
 
-  $ scrappy -s
-  Launching Scrappy Web Server...
-  ** Starting Mongrel on localhost:3434
+    $ scrappy -s
+    Launching Scrappy Web Server...
+    ** Starting Mongrel on localhost:3434
 
-Then point your browser to http://localhost:3434 for additional directions.
+  Then point your browser to http://localhost:3434 for additional directions.
 
 * Web Proxy interface:
 
-  $ scrappy -S
-  Launching Scrappy Web Proxy...
-  ** Starting Mongrel on localhost:3434
+    $ scrappy -S
+    Launching Scrappy Web Proxy...
+    ** Starting Mongrel on localhost:3434
 
-Then configure your browser's HTTP proxy to http://localhost:3434 and browse http://www.elmundo.es
+  Then configure your browser's HTTP proxy to http://localhost:3434 and browse http://www.elmundo.es
 
 * Scripting (experimental):
 
-You can create scripts that retrieve many web pages and run them using scrappy.
+  You can create scripts that retrieve many web pages and run them using scrappy.
 
-  #!/usr/bin/scrappy
-  get elmundo.es
-  get google.com/search?q=testing
+    #!/usr/bin/scrappy
+    get elmundo.es
+    get google.com/search?q=testing
 
-Then you can run your script from the command line just as any other bash script.
+  Then you can run your script from the command line just as any other bash script.
 
-We plan to enable complex operations such as posting forms and definining a useful language
-with variables to enable flow control in order to build web service mashups.
+  We plan to enable complex operations such as posting forms and definining a useful language
+  with variables to enable flow control in order to build web service mashups.
 
 * Ruby interface:
 
-You can use Scrappy in a Ruby program by requiring the gem:
+  You can use Scrappy in a Ruby program by requiring the gem:
 
-  require 'rubygems'
-  require 'scrappy'
+    require 'rubygems'
+    require 'scrappy'
 
-  # Parse a knowledge base
-  kb = RDF::Parser.parse(:rdf, open("kb.rdf").read)
+    # Parse a knowledge base
+    kb = RDF::Parser.parse(:rdf, open("kb.rdf").read)
 
-  # Create an agent
-  agent = Scrappy::Agent.create :kb=>kb
+    # Create an agent
+    agent = Scrappy::Agent.create :kb=>kb
 
-  # Get RDF output
-  output = agent.request :get, 'http://www.example.com'
+    # Get RDF output
+    output = agent.request :get, 'http://www.example.com'
 
-  # Output all titles from the web page
-  titles = output.find(Node('http://www.example.com'), Node('dc:title'), nil)
-  titles.each { |title| puts title }
+    # Output all titles from the web page
+    titles = output.find(Node('http://www.example.com'), Node('dc:title'), nil)
+    titles.each { |title| puts title }
 
 == INSTALL:
 
