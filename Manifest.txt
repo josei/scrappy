@@ -4,6 +4,7 @@ README.rdoc
 Rakefile
 bin/scrappy
 kb/elmundo.yarf
+lib/js/annotator.js
 lib/scrappy.rb
 lib/scrappy/agent/agent.rb
 lib/scrappy/agent/blind_agent.rb

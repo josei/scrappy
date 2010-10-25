@@ -6,7 +6,7 @@ module Scrappy
     end
 
     def run
-      commands = ['get', 'put', 'help']
+      commands = ['get', 'quit', 'help', 'annotate', 'html']
 
       Readline.completion_append_character = " "
       Readline.completer_word_break_characters = ""
@@ -30,20 +30,35 @@ module Scrappy
 
       code = if command =~ /\Aget\W(.*)\Z/
         puts @agent.proxy :get, $1
-        puts ''
+        puts
       elsif command == 'help'
         puts 'Available commands:'
         puts '  get URL: Visit the specified URL'
+        puts '  html: Show HTML code of the current URL'
+        puts '  annotate: Start the annotation tool that helps building extractors'
         puts '  help: Show this information'
         puts '  quit: Exit scrappy shell'
-        puts ''
+        puts
+      elsif command == 'annotate'
+        if @agent.class.to_s == 'Scrappy::VisualAgent' and @agent.visible
+          @agent.load_js "http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"
+          @agent.load_js "http://github.com/josei/scrappy/raw/master/lib/js/annotator.js"
+          puts "Use the browser's window to annotate resources"
+          puts
+        else
+          puts 'ERROR: Scrappy must be run with -v and -w options to use this feature'
+          puts
+        end
+      elsif command == 'html'
+        puts @agent.html
+        puts
       elsif command == 'quit'
         :quit
       elsif command == '' or command[0..0] == '#'
         nil
       else
         puts "ERROR: Unknown command '#{command}'"
-        puts ''
+        puts
       end
       code
     end

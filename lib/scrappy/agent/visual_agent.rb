@@ -6,6 +6,8 @@ $stderr = old_stderr
 
 module Scrappy
   class VisualAgent < Agent
+    attr_reader :visible
+
     def initialize args={}
       super
 
@@ -18,7 +20,10 @@ module Scrappy
       @window.signal_connect("destroy") { Gtk.main_quit }
       @window.add(@webview)
       @window.set_size_request(1024, 600)
-      @window.show_all if args[:window] or (args[:window].nil? and Agent::Options.window)
+      if args[:window] or (args[:window].nil? and Agent::Options.window)
+        @window.show_all
+        @visible = true
+      end
     end
 
     def uri
@@ -40,7 +45,7 @@ module Scrappy
     def html
       js "document.documentElement.outerHTML"
     end
-    
+
     def add_visual_data!
       js """var items = document.documentElement.getElementsByTagName('*');
             var i=0;
@@ -57,14 +62,22 @@ module Scrappy
             }"""
     end
 
-
-    private
     def js code
       old_title = @webview.title
       @webview.execute_script("document.title = JSON.stringify(eval(#{ActiveSupport::JSON.encode(code)}))")
       title = ActiveSupport::JSON.decode(@webview.title)
       @webview.execute_script("document.title = #{ActiveSupport::JSON.encode(old_title)}")
       title
+    end
+
+    def load_js url
+      function = """function include(destination) {
+          var e=window.document.createElement('script');
+          e.setAttribute('src',destination);
+          window.document.body.appendChild(e);
+        }"""
+      js function
+      js "include('#{url}')"
     end
   end
 end

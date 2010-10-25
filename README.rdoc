@@ -132,7 +132,7 @@ Scrappy offers many different interfaces to get RDF data from a web page:
     output = agent.request :get, 'http://www.example.com'
 
     # Output all titles from the web page
-    titles = output.find(Node('http://www.example.com'), Node('dc:title'), nil)
+    titles = output.find([], Node('dc:title'), nil)
     titles.each { |title| puts title }
 
 == INSTALL:
