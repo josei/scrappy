@@ -13,7 +13,7 @@ $hoe = Hoe.spec 'scrappy' do
   self.summary = "Web scraper that allows producing RDF data out of plain web pages"
   self.post_install_message = '**(Optional) Remember to install rbwebkitgtk for visual parsing features**'
   self.rubyforge_name       = self.name
-  self.extra_deps         = [['activesupport','>= 2.3.5'], ['markaby', '>= 0.7.1'], ['camping', '= 2.0'], ['nokogiri', '>= 1.4.1'], ['mechanize','>= 1.0.0'], ['lightrdf','>= 0.1']]
+  self.extra_deps         = [['activesupport','>= 2.3.5'], ['markaby', '>= 0.7.1'], ['camping', '= 2.0'], ['nokogiri', '>= 1.4.1'], ['mechanize','>= 1.0.0'], ['lightrdf','>= 0.1'], ['mongrel', '>= 1.1.5']]
 end
 
 require 'newgem/tasks'
