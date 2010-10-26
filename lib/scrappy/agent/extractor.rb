@@ -1,3 +1,5 @@
+require 'digest/md5'
+
 module Scrappy
   module Extractor
     def extract uri, html, referenceable=nil
@@ -39,6 +41,7 @@ module Scrappy
               bnode = Node(nil)
               bnode.rdf::value = value
               bnode.rdf::type = Node('rdf:Literal')
+              options[:triples].push *bnode.triples
               bnode
             else
               value
@@ -53,7 +56,7 @@ module Scrappy
 
           # Add referenceable data if requested
           if options[:referenceable]
-            source = Node("_:#{doc[:uri]}|#{doc[:content].path}")
+            source = Node(node_hash(doc[:uri], doc[:content].path))
             options[:triples] << [ object, Node("sc:source"), source ]
             fragment.sc::type.each { |t| options[:triples] << [ source, Node("sc:type"), t ] }
             fragment.sc::relation.each { |relation| options[:triples] << [ source, Node("sc:relation"), relation ] }
@@ -115,12 +118,13 @@ module Scrappy
     def add_referenceable_data content, triples, referenceable
       resources = triples.map{|s,p,o| [[s],[o]]}.flatten
 
-      fragment = Node("_:#{uri}|/")
+      fragment = Node(node_hash(uri, '/'))
       selector = Node(nil)
       presentation = Node(nil)
 
       selector.rdf::type = Node('sc:UnivocalSelector')
       selector.sc::path = '/'
+      selector.sc::children = content.search('*').size.to_s
       selector.sc::uri = uri
 
       fragment.sc::selector = selector
@@ -128,7 +132,7 @@ module Scrappy
       triples.push(*fragment.graph.merge(presentation.graph).merge(selector.graph).triples) if referenceable==:dump or resources.include?(fragment)
 
       content.search('*').each do |node|
-        fragment = Node("_:#{uri}|#{node.path}")
+        fragment = Node(node_hash(uri, node.path))
 
         if referenceable == :dump or resources.include?(fragment)
           selector = Node(nil)
@@ -147,6 +151,8 @@ module Scrappy
           presentation.sc::font_weight = node[:vweight].to_s if node[:vweight]
           presentation.sc::color = node[:vcolor].to_s if node[:vcolor]
           presentation.sc::background_color = node[:vbcolor].to_s if node[:vbcolor]
+          presentation.sc::text = node.text.strip
+          presentation.sc::children_count = node.search('*').size.to_s
 
           fragment.sc::selector = selector
           fragment.sc::presentation = presentation unless presentation.empty?
@@ -154,6 +160,11 @@ module Scrappy
           triples.push(*fragment.graph.merge(presentation.graph).merge(selector.graph).triples)
         end
       end
+    end
+
+    def node_hash uri, path
+      digest = Digest::MD5.hexdigest("#{uri} #{path}")
+      "_:bnode#{digest}"
     end
   end
 end
