@@ -9,6 +9,7 @@ Echoe.new('scrappy', Scrappy::VERSION) do |p|
   p.url            = "http://github.com/josei/scrappy"
   p.author         = "Jose Ignacio"
   p.email          = "joseignacio.fernandez@gmail.com"
+  p.install_message = '**(Optional) Remember to install rbwebkitgtk for visual parsing features**'
   p.ignore_pattern = ["pkg/*"]
   p.development_dependencies = [['activesupport','>= 2.3.5'], ['markaby', '>= 0.7.1'], ['camping', '= 2.0'], ['nokogiri', '>= 1.4.1'], ['mechanize','>= 1.0.0'], ['lightrdf','>= 0.1'], ['mongrel', '>= 1.1.5']]
 end
