@@ -1,5 +1,4 @@
 History.txt
-Manifest.txt
 README.rdoc
 Rakefile
 bin/scrappy
@@ -18,3 +17,4 @@ lib/scrappy/support.rb
 lib/scrappy/webkit/webkit.rb
 test/test_helper.rb
 test/test_scrappy.rb
+Manifest

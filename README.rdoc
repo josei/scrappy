@@ -1,10 +1,10 @@
-= Scrappy
+= scrappy
 
 * http://github.com/josei/scrappy
 
 == DESCRIPTION:
 
-Scrappy is a tool that allows extracting information from web pages and producing RDF data.
+scrappy is a tool that allows extracting information from web pages and producing RDF data.
 It uses the scraping ontology to define the mappings between HTML contents and RDF data.
 
 An example of mapping is shown next, which allows extracting all titles from http://www.elmundo.es:
@@ -54,7 +54,7 @@ tool by typing:
 
   $ scrappy --help
 
-Scrappy offers many different interfaces to get RDF data from a web page:
+scrappy offers many different interfaces to get RDF data from a web page:
 
 * Command-line interface:
 
@@ -63,7 +63,7 @@ Scrappy offers many different interfaces to get RDF data from a web page:
 * Interactive shell:
 
     $ scrappy -i
-    Launching Scrappy Shell...
+    Launching scrappy Shell...
     $ get elmundo.es
     dc: http://purl.org/dc/elements/1.1/
     owl: http://www.w3.org/2002/07/owl#
@@ -89,7 +89,7 @@ Scrappy offers many different interfaces to get RDF data from a web page:
 * Web Service interface:
 
     $ scrappy -s
-    Launching Scrappy Web Server...
+    Launching scrappy Web Server...
     ** Starting Mongrel on localhost:3434
 
   Then point your browser to http://localhost:3434 for additional directions.
@@ -97,7 +97,7 @@ Scrappy offers many different interfaces to get RDF data from a web page:
 * Web Proxy interface:
 
     $ scrappy -S
-    Launching Scrappy Web Proxy...
+    Launching scrappy Web Proxy...
     ** Starting Mongrel on localhost:3434
 
   Then configure your browser's HTTP proxy to http://localhost:3434 and browse http://www.elmundo.es
@@ -117,7 +117,7 @@ Scrappy offers many different interfaces to get RDF data from a web page:
 
 * Ruby interface:
 
-  You can use Scrappy in a Ruby program by requiring the gem:
+  You can use scrappy in a Ruby program by requiring the gem:
 
     require 'rubygems'
     require 'scrappy'
@@ -126,7 +126,7 @@ Scrappy offers many different interfaces to get RDF data from a web page:
     kb = RDF::Parser.parse(:rdf, open("kb.rdf").read)
 
     # Create an agent
-    agent = Scrappy::Agent.create :kb=>kb
+    agent = scrappy::Agent.create :kb=>kb
 
     # Get RDF output
     output = agent.request :get, 'http://www.example.com'
