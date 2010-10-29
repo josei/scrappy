@@ -1,3 +1,9 @@
+=== 0.1.1 2010-09-30
+
+* Extremely basic annotator tool
+* Visual agent forces no concurrency to prevent memory leaks
+* Minor fixes
+
 === 0.1 2010-09-30
 
 * Initial release
