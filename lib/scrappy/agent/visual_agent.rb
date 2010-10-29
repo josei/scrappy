@@ -27,14 +27,26 @@ module Scrappy
     end
 
     def uri
-      @webview.uri
+      @uri
     end
 
     def uri= uri
-      synchronize do
-        @webview.open uri.to_s
-        @cv.wait(60) # 1 minute to open the page
-        sleep(1) while !Nokogiri::HTML(html).search("head").empty? and Nokogiri::HTML(html).search("body").empty?
+      # First, check if the requested uri is a valid HTML page
+      valid = begin
+        Mechanize.new.get(uri).is_a?(Mechanize::Page)
+      rescue
+        false
+      end
+
+      # Open the page in the browser if it's an HTML page
+      if valid
+        synchronize do
+          @webview.open uri.to_s
+          @cv.wait(60) # 1 minute to open the page
+          @uri = @webview.uri
+        end
+      else
+        @uri = nil
       end
     end
 
