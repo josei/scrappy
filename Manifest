@@ -1,4 +1,5 @@
 History.txt
+Manifest
 README.rdoc
 Rakefile
 bin/scrappy
@@ -11,10 +12,16 @@ lib/scrappy/agent/cluster.rb
 lib/scrappy/agent/extractor.rb
 lib/scrappy/agent/visual_agent.rb
 lib/scrappy/proxy.rb
+lib/scrappy/selectors/base_uri.rb
+lib/scrappy/selectors/css.rb
+lib/scrappy/selectors/root.rb
+lib/scrappy/selectors/slice.rb
+lib/scrappy/selectors/uri.rb
+lib/scrappy/selectors/uri_pattern.rb
+lib/scrappy/selectors/xpath.rb
 lib/scrappy/server.rb
 lib/scrappy/shell.rb
 lib/scrappy/support.rb
 lib/scrappy/webkit/webkit.rb
 test/test_helper.rb
 test/test_scrappy.rb
-Manifest
