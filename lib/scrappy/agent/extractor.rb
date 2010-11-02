@@ -5,10 +5,15 @@ module Scrappy
     def extract uri, html, referenceable=nil
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
-      uri_selectors  = kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')).select{ |n| n.rdf::value.include?(uri.match(/\A([^\?]*)(\?.*\Z)?/).captures.first) }
-      uri_selectors += kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector')).select{|n| n.rdf::value.any?{|v| /\A#{v.gsub('.','\.').gsub('*', '.+')}\Z/ =~ uri} }
+
+      uri_selectors  = kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector')).flatten.select do |uri_selector|
+        class_name = uri_selector.rdf::type.first.to_s.split('#').last
+        results = Kernel.const_get(class_name).filter uri_selector, {:content=>content, :uri=>uri}
+        !results.empty?
+      end
 
       fragments = uri_selectors.map { |uri_selector| kb.find(nil, Node('sc:selector'), uri_selector) }.flatten
+
       fragments.each do |fragment|
         extract_fragment fragment, :doc=>{:uri=>uri, :content=>content },
                                    :parent=>uri, :triples=>triples, :referenceable=>!referenceable.nil?
@@ -69,38 +74,16 @@ module Scrappy
     end
 
     def filter selector, doc
-      content = doc[:content]
-      uri = doc[:uri]
-      results = if selector.rdf::type.include?(Node('sc:CssSelector')) or
-         selector.rdf::type.include?(Node('sc:XPathSelector'))
-        selector.rdf::value.map do |pattern|
-          content.search(pattern).map do |result|
-            if selector.sc::attribute.first
-              # Select node's attribute if given
-              selector.sc::attribute.map { |attribute| { :uri=>uri, :content=>result, :value=>result[attribute] } }
-            else
-              # Select node
-              [ { :uri=>uri, :content=>result, :value=>result.text } ]
-            end
-          end
-        end.flatten
+      # From "BaseUriSelector" to "base_uri"
+      class_name = selector.rdf::type.first.to_s.split('#').last
 
-      elsif selector.rdf::type.include?(Node('sc:SliceSelector'))
-        text = content.text
-        selector.rdf::value.map do |separator|
-          slices = text.split(separator)
-          selector.sc::index.map { |index| { :uri=>uri, :content=>content, :value=>slices[index.to_i].to_s.strip} }
-        end.flatten
+      # Process selector
+      results = Kernel.const_get(class_name).filter selector, doc
 
-      elsif selector.rdf::type.include?(Node('sc:BaseUriSelector'))
-        [ { :uri=>uri, :content=>content, :value=>uri } ]
-
-      else
-        [ { :uri=>uri, :content=>content, :value=>content.text } ]
-      end
-
-      # Process nested selectors, if any
+      # Return results if no nested selectors
       return results if selector.sc::selector.empty?
+
+      # Process nested selectors
       results.map do |result|
         selector.sc::selector.map { |s| filter s, result }
       end.flatten

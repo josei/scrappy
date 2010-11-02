@@ -150,6 +150,12 @@ Additionally, some extra libraries are needed for certain features:
 
 * PNG output of RDF graphs requires Graphviz (in Debian systems: sudo aptitude install graphviz).
 
+== CONTRIBUTORS:
+
+* José Ignacio Fernández
+
+* Jacobo Blasco
+
 == LICENSE:
 
 (The MIT License)
