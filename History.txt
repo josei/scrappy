@@ -1,4 +1,8 @@
-=== 0.1.1 2010-09-30
+=== 0.1.2 2010-11-03
+
+* Fix for script portability (shebang arguments)
+
+=== 0.1.1 2010-10-30
 
 * Extremely basic annotator tool
 * Visual agent forces no concurrency to prevent memory leaks
