@@ -30,6 +30,7 @@ module Scrappy
       Options.port = 3434
       Options.concurrence = 10
       Agent::Options.depth = 1
+      args = ARGV.map { |arg| arg.split(" ") }.flatten
 
       OptionParser.new do |opts|
         opts.on('-V', '--version')              { output_version; exit 0 }
@@ -48,8 +49,8 @@ module Scrappy
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
         opts.on('-w', '--window')               { Agent::Options.window = true }
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
-      end.parse!(ARGV)
-      @file = ARGV.shift
+      end.parse!(args)
+      @file = args.shift
     end
 
     def run
