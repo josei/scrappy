@@ -29,7 +29,7 @@ module Scrappy
       command = raw_command.strip
 
       code = if command =~ /\Aget\W(.*)\Z/
-        puts @agent.proxy :get, $1
+        puts @agent.proxy(:uri=>$1).output
         puts
       elsif command == 'help'
         puts 'Available commands:'

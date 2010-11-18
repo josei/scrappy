@@ -14,6 +14,9 @@ module Scrappy
     def self.[] id
       pool[id] || Agent.create(:id=>id)
     end
+    def self.cache
+      @cache ||= {}
+    end
 
     def self.create args={}
       if (args[:agent] || Options.agent) == :visual
@@ -25,7 +28,7 @@ module Scrappy
       end
     end
 
-    attr_accessor :id, :output, :content_type, :status, :options, :kb
+    attr_accessor :id, :options, :kb
 
     def initialize args={}
       super()
@@ -35,56 +38,70 @@ module Scrappy
       @options = Options.clone
     end
 
-    def request http_method, uri, inputs={}, depth=options.depth
+    def request args={}
       synchronize do
-        uri = "#{uri}.com" if uri =~ /\A\w+\Z/
-        uri = "http://#{uri}" if uri.index(/\A\w*:/) != 0
+        depth = args[:depth]
+        request = { :method=>:get, :inputs=>{} }.merge :method=>args[:method], :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{}
 
-        # Perform the request
-        if http_method == :get
-          self.uri = uri
-          return RDF::Graph.new unless self.html_data?
+        # Expire cache
+        Agent::cache.keys.each { |req| Agent::cache.delete(req) if Time.now.to_i - Agent::cache[req][:time].to_i > 300 }
+
+        # Lookup in cache
+        triples = if Agent::cache[request]
+          Agent::cache[request][:response]
         else
-          raise Exception, 'POST requests not supported yet'
+          # Perform the request
+          if request[:method] == :get
+            self.uri = request[:uri]
+          else
+            raise Exception, 'POST requests not supported yet'
+          end
+          
+          response = if self.html_data?
+            add_visual_data! if options.referenceable     # Adds tags including visual information
+            extract self.uri, html, options.referenceable # Extract data
+          else
+            []
+          end
+
+          # Cache the request
+          Agent::cache[request]                       = { :time=>Time.now, :response=>response }
+          Agent::cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>response } unless self.uri.nil?
+
+          response
         end
-
-        # Adds tags including visual information
-        add_visual_data! if options.referenceable
-
-        # Extract data
-        triples = extract self.uri, html, options.referenceable
 
         # Iterate through subresources
         if depth > 0
           uris = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}.map(&:to_s)
           Agent.process(uris, :depth=>depth-1).each { |result| triples += result }
         end
+        
         RDF::Graph.new(triples.uniq)
       end
     end
 
-    def proxy http_method, uri, inputs={}, format=options.format, depth=options.depth
+    def proxy args={}
       synchronize do
-        if @status == :redirect and uri == self.uri
-          @status = :ok
-        else
-          @output = request(http_method, uri, inputs, depth).serialize(format)
-          @content_type = ContentTypes[format] || 'text/plain'
-          @status = if self.html_data?
-            self.uri == uri ? :ok : :redirect
-          else
-            :error
-          end
-        end
+        request  = { :method=>:get, :inputs=>{}, :format=>options.format, :depth=>options.depth }.merge(args)
 
-        @output
+        OpenStruct.new :output => self.request(request).serialize(request[:format]),
+                       :content_type => ContentTypes[request[:format]] || 'text/plain',
+                       :uri => self.uri,
+                       :status => self.html_data? ? (self.uri == request[:uri] ? :ok : :redirect) : :error
       end
     end
 
     # Method used when consuming a list of uris
     def process uri, args={}
       sleep 0.001 * options.delay.to_f
-      request(:get, uri, {}, args[:depth]).triples
+      request(:method=>:get, :uri=>uri, :depth=>args[:depth]).triples
+    end
+    
+    def complete_uri uri
+      uri = "#{uri}.com" if uri =~ /\A\w+\Z/
+      uri = "http://#{uri}" if uri.index(/\A\w*:/) != 0
+      uri
     end
   end
 end
