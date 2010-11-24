@@ -1,3 +1,9 @@
+=== 0.1.4 2010-11-24
+
+* Support for node sets in extractions
+* Support for index selection in CSS and XPath selectors
+* Debugging mode
+
 === 0.1.3 2010-11-18
 
 * RDF node caching

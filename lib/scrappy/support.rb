@@ -16,3 +16,13 @@ module Scrappy
     end
   end
 end
+
+module Nokogiri
+  module XML
+    class NodeSet
+      def select &block
+        NodeSet.new(document, super(&block))
+      end
+    end
+  end
+end

@@ -61,10 +61,12 @@ module Scrappy
 
           # Add referenceable data if requested
           if options[:referenceable]
-            source = Node(node_hash(doc[:uri], doc[:content].path))
-            options[:triples] << [ object, Node("sc:source"), source ]
-            fragment.sc::type.each { |t| options[:triples] << [ source, Node("sc:type"), t ] }
-            fragment.sc::relation.each { |relation| options[:triples] << [ source, Node("sc:relation"), relation ] }
+            sources = [doc[:content]].flatten.map { |node| Node(node_hash(doc[:uri], node.path)) }
+            sources.each do |source|
+              options[:triples] << [ object, Node("sc:source"), source ]
+              fragment.sc::type.each { |t| options[:triples] << [ source, Node("sc:type"), t ] }
+              fragment.sc::relation.each { |relation| options[:triples] << [ source, Node("sc:relation"), relation ] }
+            end
           end
 
           # Process subfragments
@@ -80,6 +82,23 @@ module Scrappy
       # Process selector
       results = Kernel.const_get(class_name).filter selector, doc
 
+      if !selector.sc::debug.empty?
+        puts '== DEBUG'
+        puts '== Selector:'
+        puts selector.serialize(:yarf, false)
+        puts '== Applied on fragment:'
+        puts "URI: #{doc[:uri]}"
+        puts "Content: #{doc[:content]}"
+        puts "Value: #{doc[:value]}"
+        results.each_with_index do |result, i|
+          puts "== Result ##{i}:"
+          puts "URI: #{result[:uri]}"
+          puts "Content: #{result[:content]}"
+          puts "Value: #{result[:value].inspect}"
+        end
+        puts
+      end
+      
       # Return results if no nested selectors
       return results if selector.sc::selector.empty?
 
