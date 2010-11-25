@@ -33,6 +33,8 @@ module Scrappy
       Agent.pool[@id] = self
       @kb = args[:kb] || Options.kb
       @options = Options.clone
+      @repository = args[:repository] || Options.repository
+      @time = Time.now.min*100 + Time.now.sec
     end
 
     def request http_method, uri, inputs={}, depth=options.depth
@@ -50,13 +52,38 @@ module Scrappy
 
         # Adds tags including visual information
         add_visual_data! if options.referenceable
+        
+        # Checks if there is any previous extraction within the last 15 minutes
+        context_list = Nokogiri::XML(@repository.get_context)
+        context_s = @repository.process_contexts(context_list, uri)
 
         # Extract data
-        triples = extract self.uri, html, options.referenceable
+        triples = nil
+        if context_s.empty?
+          #Extracts from the uri
+          triples = extract self.uri, html, options.referenceable
+          #triples << [Node(uri), Node("sc:extraction"), Node("sc:Empty")]
 
+          #Checks if the extraction returns nothing
+          if triples.empty?
+            #Creates a triple to indicate that nothing was extracted from the uri
+            ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
+            #Adds data to sesame
+            result = @repository.post_data(ntriples,uri)
+          else
+            ntriples =  RDF::Graph.new(triples.uniq).serialize(:ntriples)
+            result = @repository.post_data(ntriples,uri)
+          end
+        else
+          #Data found in sesame. Asking for it
+          ntriples = @repository.get_data(context_s)
+          graph = RDF::Parser.parse(:rdf, ntriples)
+          graph[Node(uri)].sc::extraction=[]
+          triples = graph.triples
+        end
         # Iterate through subresources
         if depth > 0
-          uris = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}.map(&:to_s)
+          uris = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and   n.id.is_a?(URI)}.map(&:to_s)
           Agent.process(uris, :depth=>depth-1).each { |result| triples += result }
         end
         RDF::Graph.new(triples.uniq)
@@ -76,7 +103,7 @@ module Scrappy
             :error
           end
         end
-
+        
         @output
       end
     end

@@ -16,3 +16,9 @@ module Scrappy
     end
   end
 end
+
+class RDF::Node
+  def hash
+    id.hash ^ self.class.hash
+  end
+end

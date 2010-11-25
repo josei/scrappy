@@ -50,6 +50,8 @@ module Scrappy
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
       end.parse!(ARGV)
       @file = ARGV.shift
+       #To do: create a configuration file, so it takes the default options from it
+      Agent::Options.repository = Repository.new("http://localhost:8080/", "men-ses", Options.url)
     end
 
     def run
