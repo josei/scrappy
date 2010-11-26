@@ -52,35 +52,47 @@ module Scrappy
 
         # Adds tags including visual information
         add_visual_data! if options.referenceable
-        
-        # Checks if there is any previous extraction within the last 15 minutes
-        context_list = Nokogiri::XML(@repository.get_context)
-        context_s = @repository.process_contexts(context_list, uri)
 
-        # Extract data
+        # Checks if using a Sesame repository
         triples = nil
-        if context_s.empty?
-          #Extracts from the uri
-          triples = extract self.uri, html, options.referenceable
-          #triples << [Node(uri), Node("sc:extraction"), Node("sc:Empty")]
 
-          #Checks if the extraction returns nothing
-          if triples.empty?
-            #Creates a triple to indicate that nothing was extracted from the uri
-            ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
-            #Adds data to sesame
-            result = @repository.post_data(ntriples,uri)
+        # Checks if a repository if being used
+        if @repository != nil
+          # Checks if there is any previous extraction within the last 15 minutes
+          context_list = Nokogiri::XML(@repository.get_context)
+          context_s = @repository.process_contexts(context_list, uri)
+
+          # Extract data
+          triples = nil
+          if context_s.empty?
+            #Extracts from the uri
+            triples = extract self.uri, html, options.referenceable
+
+            #Checks if the extraction returns nothing
+            if triples.empty?
+            
+              #Creates a triple to indicate that nothing was extracted from the uri
+              ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
+
+              #Adds data to sesame
+              result = @repository.post_data(ntriples,uri)
+            else
+              ntriples =  RDF::Graph.new(triples.uniq).serialize(:ntriples)
+              result = @repository.post_data(ntriples,uri)
+            end
           else
-            ntriples =  RDF::Graph.new(triples.uniq).serialize(:ntriples)
-            result = @repository.post_data(ntriples,uri)
+          
+            # Data found in sesame. Asking for it
+            ntriples = @repository.get_data(context_s)
+            graph = RDF::Parser.parse(:rdf, ntriples)
+            graph[Node(uri)].sc::extraction=[]
+            triples = graph.triples
           end
         else
-          #Data found in sesame. Asking for it
-          ntriples = @repository.get_data(context_s)
-          graph = RDF::Parser.parse(:rdf, ntriples)
-          graph[Node(uri)].sc::extraction=[]
-          triples = graph.triples
+          # Extracts data without using a repository
+          triples = extract self.uri, html, options.referenceable
         end
+        
         # Iterate through subresources
         if depth > 0
           uris = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and   n.id.is_a?(URI)}.map(&:to_s)

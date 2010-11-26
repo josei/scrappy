@@ -135,8 +135,22 @@ scrappy offers many different interfaces to get RDF data from a web page:
     titles = output.find([], Node('dc:title'), nil)
     titles.each { |title| puts title }
 
-== INSTALL:
+* Sesame
 
+    You can change the Sesame configuration by editing the file 'config.yml'.
+    By default, Sesame its suposed to be installed locally, using the port 8080, with a repository 
+    named "men-ses", considering the extraction valid during 15 minutes, and uses the ntriples format
+    to comunicate with sesame.
+
+    The file "config.yml" can be placed in the .scrappy dir in your home (~/.scrappy/),
+
+    If the file does not exist, sesame will not be used.
+
+    If any of the values of the config.yml file is missing, the default value will be used.
+
+
+== INSTALL:
+  
 Install it as any other gem:
 
   $ gem install scrappy
@@ -149,6 +163,9 @@ Additionally, some extra libraries are needed for certain features:
 * Visual parsing requires rbwebkitgtk: http://github.com/danlucraft/rbwebkitgtk
 
 * PNG output of RDF graphs requires Graphviz (in Debian systems: sudo aptitude install graphviz).
+
+In order to use Sesame, you will need to install it. Further instructions can be found
+in the openRDF website, more precisely, in http://www.openrdf.org/doc/sesame2/users/ch06.html .
 
 == LICENSE:
 
