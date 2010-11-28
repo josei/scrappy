@@ -6,6 +6,7 @@ $stderr = old_stderr
 
 module Scrappy
   class VisualAgent < Agent
+    include MonitorMixin
     attr_reader :visible
 
     def initialize args={}

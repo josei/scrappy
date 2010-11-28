@@ -3,7 +3,6 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 require 'nokogiri'
 require 'thread'
-require 'monitor'
 require 'mechanize'
 require 'ostruct'
 require 'active_support'
@@ -14,6 +13,7 @@ require 'scrappy/support'
 
 require 'scrappy/agent/extractor'
 require 'scrappy/agent/map_reduce'
+require 'scrappy/agent/cache'
 require 'scrappy/agent/agent'
 
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'

@@ -1,8 +1,8 @@
 module Scrappy
   class Agent
     include Extractor
-    include MonitorMixin
     include MapReduce
+    include Cached
 
     Options = OpenStruct.new :format=>:yarf, :depth=>0, :agent=>:blind, :delay=>0, :workers=>10
     ContentTypes = { :png => 'image/png', :rdfxml => 'application/rdf+xml',
@@ -13,9 +13,6 @@ module Scrappy
     end
     def self.[] id
       pool[id] || Agent.create(:id=>id)
-    end
-    def self.cache
-      @cache ||= {}
     end
 
     def self.create args={}
@@ -31,10 +28,9 @@ module Scrappy
     attr_accessor :id, :options, :kb
 
     def initialize args={}
-      super()
-      create_cluster args[:workers] || Options.workers,
-                     :referenceable=>Options.referenceable, :agent=>Options.agent,
-                     :workers=>1, :window=>false
+      @cluster_count   = args[:workers] || Options.workers
+      @cluster_options = [ { :referenceable=>Options.referenceable, :agent=>Options.agent,
+                             :workers=>1, :window=>false } ]
       @id = args[:id] || Agent.pool.keys.size
       Agent.pool[@id] = self
       @kb = args[:kb] || Options.kb
@@ -46,14 +42,16 @@ module Scrappy
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
 
       # Expire cache
-      Agent::cache.keys.each { |req| Agent::cache.delete(req) if Time.now.to_i - Agent::cache[req][:time].to_i > 300 }
+      cache.expire! 300 # 5 minutes
 
       # Lookup in cache
-      triples = if Agent::cache[request]
-        Agent::cache[request][:response]
+      triples = if cache[request]
+        cache[request][:response]
       else
         # Perform the request
+        
         sleep 0.001 * options.delay.to_f # Sleep if requested
+        
         if request[:method] == :get
           self.uri = request[:uri]
         else
@@ -68,8 +66,8 @@ module Scrappy
         end
 
         # Cache the request
-        Agent::cache[request]                       = { :time=>Time.now, :response=>response }
-        Agent::cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>response } unless self.uri.nil?
+        cache[request]                       = { :time=>Time.now, :response=>response }
+        cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>response } unless self.uri.nil?
 
         response
       end

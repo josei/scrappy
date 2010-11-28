@@ -2,12 +2,8 @@ require 'thread'
 
 module MapReduce
 
-  def self.included(klass)
-    klass.send :attr_accessor, :cluster
-  end
-
-  def create_cluster count, *args
-    self.cluster = [self] + (2..count).map { self.class.new(*args) }
+  def cluster
+    @cluster ||= [self] + (2..@cluster_count || 1).map { self.class.new(*(@cluster_options || [])) }
   end
 
   def process list
