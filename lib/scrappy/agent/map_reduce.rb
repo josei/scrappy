@@ -1,9 +1,44 @@
 require 'thread'
+require 'monitor'
 
 module MapReduce
 
+  class Queue
+    def initialize
+      @items = []
+      @items.extend MonitorMixin
+    end
+    
+    def pop
+      yielded = false
+      item = nil
+      @items.synchronize do
+        item = @items.shift
+        if @items.empty?
+          yield item if (block_given? and item)
+          yielded = true
+        end
+      end
+      yield item if (block_given? and not yielded)
+      item
+    end
+    
+    def << value
+      @items << value
+    end
+    
+    def push value
+      self << value
+    end
+
+    def empty?
+      @items.synchronize { @items.empty? }
+    end
+  end
+
+  
   def cluster
-    @cluster ||= [self] + (2..@cluster_count || 1).map { self.class.new(*(@cluster_options || [])) }
+    @cluster ||= (1..@cluster_count || 1).map { self.class.new(*(@cluster_options || [])) }
   end
 
   def process list
@@ -18,10 +53,13 @@ module MapReduce
     reduce results
   end
 
+
   def work queue, results
     begin
-      result = map queue.pop, queue
-      results.synchronize { results << result }
+      queue.pop do |item|
+        result = map item, queue
+        results.synchronize { results << result }
+      end
     end until queue.empty?
   end
 

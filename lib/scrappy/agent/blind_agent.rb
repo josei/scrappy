@@ -1,7 +1,5 @@
 module Scrappy
   class BlindAgent < Agent
-    include MonitorMixin
-
     def initialize args={}
       super
       @mechanize = Mechanize.new

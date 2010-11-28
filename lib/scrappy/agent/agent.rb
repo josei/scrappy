@@ -1,5 +1,6 @@
 module Scrappy
   class Agent
+    include MonitorMixin
     include Extractor
     include MapReduce
     include Cached
@@ -28,16 +29,18 @@ module Scrappy
     attr_accessor :id, :options, :kb
 
     def initialize args={}
+      super()
       @cluster_count   = args[:workers] || Options.workers
       @cluster_options = [ { :referenceable=>Options.referenceable, :agent=>Options.agent,
                              :workers=>1, :window=>false } ]
+      @cluster = args[:parent]
       @id = args[:id] || Agent.pool.keys.size
       Agent.pool[@id] = self
       @kb = args[:kb] || Options.kb
       @options = Options.clone
     end
 
-    def map args, queue
+    def map args, queue=nil
       depth = args[:depth]
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
 
@@ -74,8 +77,12 @@ module Scrappy
 
       # Enqueue subresources
       if depth > 0
-        uris = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}.map(&:to_s)
-        uris.each { |uri| queue << { :uri=>uri, :depth=>depth-1 } }
+        items = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}.map { |uri| {:uri=>uri.to_s, :depth=>depth-1} }
+        if queue.nil?
+          triples += process items
+        else
+          items.each { |item| queue << item }
+        end
       end
       
       triples
@@ -83,11 +90,11 @@ module Scrappy
     
     def reduce results
       triples = []; results.each { |result| triples += result }
-      RDF::Graph.new(triples.uniq)
+      triples
     end
 
     def request args={}
-      process [args]
+      RDF::Graph.new map(args).uniq
     end
 
     def proxy args={}
