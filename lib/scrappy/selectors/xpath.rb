@@ -6,7 +6,8 @@ module XPathSelector
       else
         (0..-1)
       end
-      (doc[:content].search(pattern)[interval] || []).map do |result|
+      patterns = selector.sc::keyword
+      (doc[:content].search(pattern)[interval] || []).select { |node| patterns.any? ? patterns.include?(node.text.downcase.strip) : true }.map do |result|
         if selector.sc::attribute.first
           # Select node's attribute if given
           selector.sc::attribute.map { |attribute| { :uri=>doc[:uri], :content=>result, :value=>result[attribute] } }

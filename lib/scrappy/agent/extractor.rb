@@ -79,17 +79,21 @@ module Scrappy
       # From "BaseUriSelector" to "base_uri"
       class_name = selector.rdf::type.first.to_s.split('#').last
 
-      # Process selector
-      results = Kernel.const_get(class_name).filter selector, doc
-
       if !selector.sc::debug.empty?
         puts '== DEBUG'
         puts '== Selector:'
         puts selector.serialize(:yarf, false)
-        puts '== Applied on fragment:'
+        puts '== On fragment:'
         puts "URI: #{doc[:uri]}"
         puts "Content: #{doc[:content]}"
         puts "Value: #{doc[:value]}"
+      end
+
+      # Process selector
+      results = Kernel.const_get(class_name).filter selector, doc
+
+      if !selector.sc::debug.empty?
+        puts "== No results" if results.empty?
         results.each_with_index do |result, i|
           puts "== Result ##{i}:"
           puts "URI: #{result[:uri]}"
