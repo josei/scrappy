@@ -1,3 +1,7 @@
+=== 0.1.5 2010-11-29
+
+* Better map-reduce-based design
+
 === 0.1.4 2010-11-24
 
 * Support for node sets in extractions
