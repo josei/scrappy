@@ -41,7 +41,7 @@ module Scrappy
         nodes.each do |node|
           # Build the object
           object = if fragment.sc::type.first == Node('rdf:Literal')
-            value = doc[:value].strip
+            value = doc[:value].to_s.strip
             if options[:referenceable]
               bnode = Node(nil)
               bnode.rdf::value = value
@@ -51,10 +51,11 @@ module Scrappy
             else
               value
             end
-          elsif fragment.sc::type.first
-            options[:triples] << [node, Node('rdf:type'), fragment.sc::type.first]
-            node
           else
+            if fragment.sc::type.first and fragment.sc::type.first != Node('rdf:Resource')
+              options[:triples] << [node, Node('rdf:type'), fragment.sc::type.first]
+            end
+            fragment.sc::superclass.each { |superclass| options[:triples] << [node, Node('rdfs:subClassOf'), superclass] }
             node
           end
           fragment.sc::relation.each { |relation| options[:triples] << [options[:parent], relation, object] }
