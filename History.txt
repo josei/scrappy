@@ -1,3 +1,7 @@
+=== 0.1.6 2010-12-09
+
+* Added sc:superclass to sc:Fragments
+
 === 0.1.5 2010-11-29
 
 * Better map-reduce-based design
