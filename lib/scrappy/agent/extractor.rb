@@ -56,6 +56,7 @@ module Scrappy
               options[:triples] << [node, Node('rdf:type'), fragment.sc::type.first]
             end
             fragment.sc::superclass.each { |superclass| options[:triples] << [node, Node('rdfs:subClassOf'), superclass] }
+            fragment.sc::sameas.each { |samenode| options[:triples] << [node, Node('owl:sameAs'), samenode] }
             node
           end
           fragment.sc::relation.each { |relation| options[:triples] << [options[:parent], relation, object] }

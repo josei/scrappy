@@ -94,7 +94,7 @@ module Scrappy
     end
 
     def request args={}
-      RDF::Graph.new map(args).uniq
+      RDF::Graph.new(map(args).uniq.select { |s,p,o| p!=Node('rdf:type') or o!=Node('sc:Index') })
     end
 
     def proxy args={}
