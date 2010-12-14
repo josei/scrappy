@@ -1,3 +1,9 @@
+=== 0.1.8 2010-12-14
+
+* Added sc:sameas
+* Added sc:attribute support to sc:RootSelector
+* Added sc:NewUriSelector for constructing new uris
+
 === 0.1.7 2010-12-09
 
 * Added section selector

@@ -15,6 +15,7 @@ lib/scrappy/agent/visual_agent.rb
 lib/scrappy/proxy.rb
 lib/scrappy/selectors/base_uri.rb
 lib/scrappy/selectors/css.rb
+lib/scrappy/selectors/new_uri.rb
 lib/scrappy/selectors/root.rb
 lib/scrappy/selectors/section.rb
 lib/scrappy/selectors/slice.rb

@@ -26,3 +26,9 @@ module Nokogiri
     end
   end
 end
+
+class String
+  def wikify
+    gsub(/^[a-z]|\s+[a-z]/) { |a| a.upcase }.gsub(/\s/, '')
+  end
+end
