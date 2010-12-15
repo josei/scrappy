@@ -8,7 +8,7 @@ module NewUriSelector
     end
 
     contents.map do |content|
-      new_uri = selector.sc::prefix.to_s + content.wikify
+      new_uri = selector.sc::prefix.first.to_s + content.wikify + selector.sc::suffix.first.to_s
       { :uri=>new_uri, :content=>doc[:content], :value=>new_uri }
     end
   end
