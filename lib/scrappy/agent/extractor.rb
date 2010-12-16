@@ -6,7 +6,7 @@ module Scrappy
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
-      uri_selectors  = kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector')).flatten.select do |uri_selector|
+      uri_selectors  = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
         class_name = uri_selector.rdf::type.first.to_s.split('#').last
         results = Kernel.const_get(class_name).filter uri_selector, {:content=>content, :uri=>uri}
         !results.empty?
