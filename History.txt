@@ -1,3 +1,7 @@
+=== 0.1.10 2010-12-20
+
+* Fixed gem dependencies
+
 === 0.1.9 2010-12-16
 
 * Corrected bug when filtering URI selectors
