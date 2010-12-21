@@ -3,6 +3,10 @@ require 'digest/md5'
 module Scrappy
   module Extractor
     def extract uri, html, referenceable=nil
+      if options.debug
+        print "Extracting #{uri}..."; $stdout.flush
+      end
+      
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
@@ -21,6 +25,8 @@ module Scrappy
 
       add_referenceable_data content, triples, referenceable if referenceable
 
+      puts " done!" if options.debug
+      
       triples
     end
     
@@ -81,7 +87,7 @@ module Scrappy
       # From "BaseUriSelector" to "base_uri"
       class_name = selector.rdf::type.first.to_s.split('#').last
 
-      if !selector.sc::debug.empty?
+      if !selector.sc::debug.empty? and options.debug
         puts '== DEBUG'
         puts '== Selector:'
         puts selector.serialize(:yarf, false)
@@ -94,7 +100,7 @@ module Scrappy
       # Process selector
       results = Kernel.const_get(class_name).filter selector, doc
 
-      if !selector.sc::debug.empty?
+      if !selector.sc::debug.empty? and options.debug
         puts "== No results" if results.empty?
         results.each_with_index do |result, i|
           puts "== Result ##{i}:"

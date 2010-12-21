@@ -37,6 +37,7 @@ module Scrappy
         opts.on('-h', '--help')                 { output_help; exit 0 }
         opts.on('-g URL', '--get URL')          { |url| Options.url = url; Options.http_method=:get }
         opts.on('-p URL', '--post URL')         { |url| Options.url = url; Options.http_method=:post }
+        opts.on('-u', '--debug')                { Agent::Options.debug = true }
         opts.on('-i', '--interactive')          { Options.shell = true }
         opts.on('-s', '--server')               { Options.server = true }
         opts.on('-S', '--proxy-server')         { Options.proxy = true }
@@ -98,6 +99,7 @@ Options
   -c, --concurrence VALUE  Sets number of concurrent connections for crawling (default is 10)
   -l, --levels VALUE       Sets recursion levels for resource crawling (default is 1)
   -d, --delay VALUE        Sets delay (in ms) between requests (default is 0)
+  -u, --debug              Shows debugging traces
   -i, --interactive        Runs interactive shell
   -s, --server             Runs web server
   -S, --proxy-server       Runs web proxy

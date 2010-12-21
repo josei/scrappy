@@ -89,7 +89,13 @@ module Scrappy
     end
     
     def reduce results
+      if options.debug
+        print "Merging results..."; $stdout.flush
+      end
+      
       triples = []; results.each { |result| triples += result }
+      
+      puts 'done!'if options.debug
       triples
     end
 
@@ -99,8 +105,18 @@ module Scrappy
 
     def proxy args={}
       request  = { :method=>:get, :inputs=>{}, :format=>options.format, :depth=>options.depth }.merge(args)
+      
+      response = self.request(request)
+      
+      if options.debug
+        print "Serializing..."; $stdout.flush
+      end
+      
+      output = response.serialize(request[:format])
+      
+      puts 'done!'if options.debug
 
-      OpenStruct.new :output => self.request(request).serialize(request[:format]),
+      OpenStruct.new :output => output,
                      :content_type => ContentTypes[request[:format]] || 'text/plain',
                      :uri => self.uri,
                      :status => self.html_data? ? (self.uri == request[:uri] ? :ok : :redirect) : :error
