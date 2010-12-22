@@ -49,17 +49,25 @@ module Scrappy
 
       # Lookup in cache
       triples = if cache[request]
+        puts "Retrieving cached #{uri}...done!" if options.debug
+        
         cache[request][:response]
       else
         # Perform the request
         
         sleep 0.001 * options.delay.to_f # Sleep if requested
-        
+
+        if options.debug
+          print "Opening #{request[:uri]}..."; $stdout.flush
+        end
+
         if request[:method] == :get
           self.uri = request[:uri]
         else
           raise Exception, 'POST requests not supported yet'
         end
+        
+        puts 'done!' if options.debug
         
         response = if self.html_data?
           add_visual_data! if options.referenceable     # Adds tags including visual information
@@ -76,8 +84,21 @@ module Scrappy
       end
 
       # Enqueue subresources
-      if depth > 0
-        items = (triples.map{|t| [t[0],t[2]]}.flatten-[Node(self.uri)]).uniq.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}.map { |uri| {:uri=>uri.to_s, :depth=>depth-1} }
+      if depth >= 0
+        # Pages are enqueued without reducing depth
+        pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+
+        # All other URIS are enqueued with depth reduced
+        uris = if depth > 0
+          (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+        else
+          []
+        end
+        
+        items = (pages.map { |uri| {:uri=>uri.to_s, :depth=>depth} } + uris.map { |uri| {:uri=>uri.to_s, :depth=>depth-1} }).uniq
+        
+        items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" } if options.debug
+        
         if queue.nil?
           triples += process items
         else
@@ -96,11 +117,12 @@ module Scrappy
       triples = []; results.each { |result| triples += result }
       
       puts 'done!'if options.debug
+      
       triples
     end
 
     def request args={}
-      RDF::Graph.new(map(args).uniq.select { |s,p,o| p!=Node('rdf:type') or o!=Node('sc:Index') })
+      RDF::Graph.new(map(args).uniq.select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) })
     end
 
     def proxy args={}

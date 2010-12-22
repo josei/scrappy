@@ -25,7 +25,7 @@ module Scrappy
 
       add_referenceable_data content, triples, referenceable if referenceable
 
-      puts " done!" if options.debug
+      puts "done!" if options.debug
       
       triples
     end
@@ -46,7 +46,7 @@ module Scrappy
 
         nodes.each do |node|
           # Build the object
-          object = if fragment.sc::type.first == Node('rdf:Literal')
+          object = if fragment.sc::type.include?(Node('rdf:Literal'))
             value = doc[:value].to_s.strip
             if options[:referenceable]
               bnode = Node(nil)
@@ -58,15 +58,13 @@ module Scrappy
               value
             end
           else
-            if fragment.sc::type.first and fragment.sc::type.first != Node('rdf:Resource')
-              options[:triples] << [node, Node('rdf:type'), fragment.sc::type.first]
-            end
+            fragment.sc::type.each { |type| options[:triples] << [node, Node('rdf:type'), type] if type != Node('rdf:Resource') }
             fragment.sc::superclass.each { |superclass| options[:triples] << [node, Node('rdfs:subClassOf'), superclass] }
             fragment.sc::sameas.each { |samenode| options[:triples] << [node, Node('owl:sameAs'), samenode] }
             node
           end
           fragment.sc::relation.each { |relation| options[:triples] << [options[:parent], relation, object] }
-
+          
           # Add referenceable data if requested
           if options[:referenceable]
             sources = [doc[:content]].flatten.map { |node| Node(node_hash(doc[:uri], node.path)) }
