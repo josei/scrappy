@@ -1,3 +1,10 @@
+=== 0.1.11 2010-12-23
+
+* Handling of timeout errors
+* Support for paged resources with sc:Page
+* Added missing gem dependecy (i18n)
+* Added debug mode
+
 === 0.1.10 2010-12-20
 
 * Fixed gem dependencies
