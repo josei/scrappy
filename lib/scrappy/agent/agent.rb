@@ -44,12 +44,9 @@ module Scrappy
       depth = args[:depth]
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
 
-      # Expire cache
-      cache.expire! 300 # 5 minutes
-
       # Lookup in cache
       triples = if cache[request]
-        puts "Retrieving cached #{uri}...done!" if options.debug
+        puts "Retrieving cached #{request[:uri]}...done!" if options.debug
         
         cache[request][:response]
       else
@@ -122,6 +119,9 @@ module Scrappy
     end
 
     def request args={}
+      # Expire cache
+      cache.expire! 300 # 5 minutes
+
       RDF::Graph.new(map(args).uniq.select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) })
     end
 
