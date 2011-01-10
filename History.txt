@@ -1,3 +1,7 @@
+=== 0.1.12 2011-01-10
+
+* Correction for Windows compatibility
+
 === 0.1.11 2010-12-23
 
 * Handling of timeout errors
