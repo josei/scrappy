@@ -13,7 +13,6 @@ module Scrappy
   gem 'camping', '=2.0'
   require 'camping'
   require 'camping/server'
-  require 'etc'
   require "#{Root}/lib/scrappy"
   require 'scrappy/shell'
 
@@ -123,9 +122,9 @@ Copyright
 
     def onload
       # Check local or global knowledge base
-      if File.exists?("#{Etc.getpwuid.dir}/.scrappy/kb")
-        data_folder = "#{Etc.getpwuid.dir}/.scrappy/kb"
-        cache_file  = "#{Etc.getpwuid.dir}/.scrappy/kb.cache"
+      if File.exists?("#{ENV['HOME']}/.scrappy/kb")
+        data_folder = "#{ENV['HOME']}/.scrappy/kb"
+        cache_file  = "#{ENV['HOME']}/.scrappy/kb.cache"
       else
         data_folder = "#{Scrappy::Root}/kb"
         cache_file  = "#{Dir.tmpdir}/scrappy.kb.cache"
