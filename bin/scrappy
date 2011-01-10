@@ -1,8 +1,11 @@
 #!/usr/bin/ruby
 # encoding: UTF-8
 
-stty_save = `stty -g`.chomp
-trap('INT') { system('stty', stty_save); Scrappy::App.quit }
+if !RUBY_PLATFORM.include?("mswin")
+  stty_save = `stty -g`.chomp
+  trap('INT') { system('stty', stty_save); Scrappy::App.quit }
+end
+
 module Scrappy
   Root = File.expand_path(File.dirname(File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__) + "/..")
 
@@ -122,9 +125,11 @@ Copyright
 
     def onload
       # Check local or global knowledge base
-      if File.exists?("#{ENV['HOME']}/.scrappy/kb")
-        data_folder = "#{ENV['HOME']}/.scrappy/kb"
-        cache_file  = "#{ENV['HOME']}/.scrappy/kb.cache"
+      home = RUBY_PLATFORM.include?("mswin") ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
+      
+      if File.exists?("#{home}/kb")
+        data_folder = "#{home}/kb"
+        cache_file  = "#{home}/kb.cache"
       else
         data_folder = "#{Scrappy::Root}/kb"
         cache_file  = "#{Dir.tmpdir}/scrappy.kb.cache"
