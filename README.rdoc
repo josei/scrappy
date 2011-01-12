@@ -137,16 +137,48 @@ scrappy offers many different interfaces to get RDF data from a web page:
 
 * Sesame
 
-    You can change the Sesame configuration by editing the file 'config.yml'.
-    By default, Sesame its suposed to be installed locally, using the port 8080, with a repository 
-    named "men-ses", considering the extraction valid during 15 minutes, and uses the ntriples format
-    to comunicate with sesame.
+    Sesame functionality have been included in the lightrdf gem. You can still configure
+    the repository options by editing the file config.yml placed the folder .scrappy, in your home dir.
+    An example of this file can be found at the end of this section
 
-    The file "config.yml" can be placed in the .scrappy dir in your home (~/.scrappy/),
+    You can get the data from a certain period of time, by using the time (-t, --time) option:
 
-    If the file does not exist, sesame will not be used.
+    $ scrappy -g example.org -t 3
 
-    If any of the values of the config.yml file is missing, the default value will be used.
+    This would get all the data stored in sesame for example.org in the previous 3 days.
+
+    Be aware:
+    
+    Date representation in 2011 have been changed. If you have been using a previous version, it is
+    strongly recommended deleting all previpus data in Sesame to prevent posible date interferences.
+
+* Config.yml Example
+
+  repository:
+    # This is a configuration file, with the options to comunicate with Sesame using Scrappy
+
+    # The host were Sesame is. Do not add the final '/'
+    host: http://localhost
+
+    # The port for the conection
+    port: 8080
+
+    # The time to consider the data in sesame valid, in minutes
+    time: 15
+
+    # The name of the repository
+    repo: men-ses
+
+    # The format to comunicate with the repository
+    format: ntriples
+
+    # You can use the following formats, typing the proper option
+    # RDF-XML => format: rdfxml
+    # N-Triples => format: ntriples
+    # Turtle => format:turtle
+    # N3 => format: n3
+    # TriX => format: trix
+    # TriG => format: trig
 
 
 == INSTALL:

@@ -48,15 +48,9 @@ module Scrappy
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
         opts.on('-w', '--window')               { Agent::Options.window = true }
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
+        opts.on('-t TIME', '--time TIME')       { |t| Agent::Options.time = (t.to_i)*144000 } #converts days in seconds
       end.parse!(ARGV)
       @file = ARGV.shift
-
-      # Looks for a configuration file. If it does not exist, Scrappy does not uses Sesame
-      # First, it looks for it in the home .scrappy dir
-      if File.exist?("#{ENV["HOME"]}/.scrappy/config.yml")
-        r_opt = YAML::load_file("#{ENV["HOME"]}/.scrappy/config.yml")
-        Agent::Options.repository = Repository.new(r_opt["repository"])
-      end
     end
 
     def run
@@ -146,6 +140,13 @@ Copyright
         data
       end
 
+      # Looks for a configuration file. If it does not exist, Scrappy does not uses Sesame
+      # It looks for it in the home .scrappy dir
+      if File.exist?("#{Etc.getpwuid.dir}/.scrappy/config.yml")
+        r_opt = YAML::load_file("#{Etc.getpwuid.dir}/.scrappy/config.yml")
+        Agent::Options.repository = Repository.new r_opt
+      end
+      
       # Create cluster of agents
       Agent.create_cluster Options.concurrence, :referenceable=>Agent::Options.referenceable,
                                                 :agent=>Agent::Options.agent, :window=>false

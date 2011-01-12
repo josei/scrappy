@@ -60,7 +60,12 @@ module Scrappy
         if @repository != nil
           # Checks if there is any previous extraction within the last 15 minutes
           context_list = Nokogiri::XML(@repository.get_context)
-          context_s = @repository.process_contexts(context_list, uri)
+          context_s = []
+          if Options.time != nil
+            context_s = @repository.process_contexts_period(context_list, uri, Options.time)
+          else
+            context_s = @repository.process_contexts(context_list, uri)
+          end
 
           # Extract data
           triples = nil
@@ -68,23 +73,25 @@ module Scrappy
             #Extracts from the uri
             triples = extract self.uri, html, options.referenceable
 
+            context = "#{uri}:#{Time.now.to_i}"
             #Checks if the extraction returns nothing
             if triples.empty?
             
               #Creates a triple to indicate that nothing was extracted from the uri
-              ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
+              graph = RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])
+              #ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
 
               #Adds data to sesame
-              result = @repository.post_data(ntriples,uri)
+              result = @repository.post_data(graph,context)
             else
-              ntriples =  RDF::Graph.new(triples.uniq).serialize(:ntriples)
-              result = @repository.post_data(ntriples,uri)
+              graph = RDF::Graph.new(triples.uniq)
+              result = @repository.post_data(graph, context)
             end
           else
           
             # Data found in sesame. Asking for it
-            ntriples = @repository.get_data(context_s)
-            graph = RDF::Parser.parse(:rdf, ntriples)
+            graph = @repository.get_data(context_s)
+            #graph = RDF::Parser.parse(:rdf, ntriples)
             graph[Node(uri)].sc::extraction=[]
             triples = graph.triples
           end
