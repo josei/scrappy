@@ -132,5 +132,18 @@ module Scrappy
       sleep 0.001 * options.delay.to_f
       request(:get, uri, {}, args[:depth]).triples
     end
+
+    # Method to observe several webs, and extract the data periodicaly
+    def observe(uris)
+      array = uris.split
+      while true
+        time_init = Time.now.to_i
+        array.each do |url|
+          proxy :get, url
+        end
+          time_sleep = 900 - (Time.now.to_i - time_init)
+          sleep time_sleep
+      end
+    end
   end
 end

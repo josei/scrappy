@@ -49,13 +49,17 @@ module Scrappy
         opts.on('-w', '--window')               { Agent::Options.window = true }
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
         opts.on('-t TIME', '--time TIME')       { |t| Agent::Options.time = (t.to_i)*144000 } #converts days in seconds
+        opts.on('-o URL', '--observe URL')      { |url| Options.observe = url}
       end.parse!(ARGV)
       @file = ARGV.shift
     end
 
     def run
       onload
-      if Options.url
+      if Options.observe
+        Options.quiet = true
+        Agent.create.observe(Options.observe)
+      elsif Options.url
         Options.quiet = true
         puts Agent.create.proxy(:get, Options.url)
       elsif Options.proxy
