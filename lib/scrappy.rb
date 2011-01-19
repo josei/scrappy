@@ -3,7 +3,6 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 require 'nokogiri'
 require 'thread'
-require 'monitor'
 require 'mechanize'
 require 'ostruct'
 require 'active_support'
@@ -14,11 +13,15 @@ require 'restclient'
 require 'scrappy/support'
 require 'scrappy/repository'
 require 'scrappy/agent/extractor'
-require 'scrappy/agent/cluster'
+require 'scrappy/agent/map_reduce'
+require 'scrappy/agent/cache'
 require 'scrappy/agent/agent'
 
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'
 
 module Scrappy
-  VERSION = '0.1.1'
+  VERSION = '0.1.12'
 end
+
+# Require selectors
+Dir["#{File.expand_path(File.dirname(__FILE__))}/scrappy/selectors/*.rb"].each { |f| require f }

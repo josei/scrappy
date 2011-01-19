@@ -129,7 +129,7 @@ scrappy offers many different interfaces to get RDF data from a web page:
     agent = scrappy::Agent.create :kb=>kb
 
     # Get RDF output
-    output = agent.request :get, 'http://www.example.com'
+    output = agent.request :method=>:get, :uri=>'http://www.example.com'
 
     # Output all titles from the web page
     titles = output.find([], Node('dc:title'), nil)
@@ -198,6 +198,12 @@ Additionally, some extra libraries are needed for certain features:
 
 In order to use Sesame, you will need to install it. Further instructions can be found
 in the openRDF website, more precisely, in http://www.openrdf.org/doc/sesame2/users/ch06.html .
+
+== CONTRIBUTORS:
+
+* José Ignacio Fernández
+
+* Jacobo Blasco
 
 == LICENSE:
 

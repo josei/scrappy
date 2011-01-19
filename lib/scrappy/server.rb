@@ -48,16 +48,16 @@ module Scrappy
       end
 
       protected
-      def process_request http_method, format, url
+      def process_request method, format, url
         callback = @input['callback']
-        agent.proxy http_method, url, @input.reject{|k,v| k=='callback'}, format.to_sym
+        response = agent.proxy :method=>method, :uri=>url, :inputs=>@input.reject{|k,v| k=='callback'}, :format=>format.to_sym
 
-        case agent.status
+        case response.status
         when :redirect
-          redirect "/#{format}/#{agent.uri}#{inputs}"
+          redirect "/#{format}/#{response.uri}#{inputs}"
         when :ok
-          @headers['Content-Type'] = agent.content_type
-          callback ? "#{callback}(#{agent.output})" : agent.output
+          @headers['Content-Type'] = response.content_type
+          callback ? "#{callback}(#{response.output})" : response.output
         else
           @status = 500
           'Error'

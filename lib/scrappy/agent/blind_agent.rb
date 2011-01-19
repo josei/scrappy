@@ -14,6 +14,8 @@ module Scrappy
         begin
           @mechanize.get uri
           @loaded = true
+        rescue Timeout::Error
+          @loaded = false
         rescue
           @loaded = false
         end

@@ -1,8 +1,11 @@
 #!/usr/bin/ruby
 # encoding: UTF-8
 
-stty_save = `stty -g`.chomp
-trap('INT') { system('stty', stty_save); Scrappy::App.quit }
+if !RUBY_PLATFORM.include?("mswin")
+  stty_save = `stty -g`.chomp
+  trap('INT') { system('stty', stty_save); Scrappy::App.quit }
+end
+
 module Scrappy
   Root = File.expand_path(File.dirname(File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__) + "/..")
 
@@ -13,7 +16,6 @@ module Scrappy
   gem 'camping', '=2.0'
   require 'camping'
   require 'camping/server'
-  require 'etc'
   require "#{Root}/lib/scrappy"
   require 'scrappy/shell'
 
@@ -28,30 +30,32 @@ module Scrappy
     
     def initialize
       Options.port = 3434
-      Options.concurrence = 10
+      Agent::Options.workers = 10
       Agent::Options.depth = 1
+      args = ARGV.map { |arg| arg.split(" ") }.flatten
 
       OptionParser.new do |opts|
         opts.on('-V', '--version')              { output_version; exit 0 }
         opts.on('-h', '--help')                 { output_help; exit 0 }
         opts.on('-g URL', '--get URL')          { |url| Options.url = url; Options.http_method=:get }
         opts.on('-p URL', '--post URL')         { |url| Options.url = url; Options.http_method=:post }
+        opts.on('-u', '--debug')                { Agent::Options.debug = true }
         opts.on('-i', '--interactive')          { Options.shell = true }
         opts.on('-s', '--server')               { Options.server = true }
         opts.on('-S', '--proxy-server')         { Options.proxy = true }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
-        opts.on('-c C', '--concurrence C')      { |c| Options.concurrence = c.to_i }
-        opts.on('-d D', '--delay D')            { |d| Agent::Options.delay = d; Options.concurrence = 1 }
+        opts.on('-c C', '--concurrence C')      { |c| Agent::Options.workers = c.to_i }
+        opts.on('-d D', '--delay D')            { |d| Agent::Options.delay = d; Agent::Options.workers = 1 }
         opts.on('-l L', '--levels L')           { |l| Agent::Options.depth = l.to_i }
-        opts.on('-v', '--visual')               { Agent::Options.agent = :visual; Options.concurrence = 1 }
+        opts.on('-v', '--visual')               { Agent::Options.agent = :visual; Agent::Options.workers = 1 }
         opts.on('-r', '--reference')            { Agent::Options.referenceable = :minimum }
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
         opts.on('-w', '--window')               { Agent::Options.window = true }
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
         opts.on('-t TIME', '--time TIME')       { |t| Agent::Options.time = (t.to_i)*144000 } #converts days in seconds
         opts.on('-o URL', '--observe URL')      { |url| Options.observe = url}
-      end.parse!(ARGV)
-      @file = ARGV.shift
+      end.parse!(args)
+      @file = args.shift
     end
 
     def run
@@ -61,7 +65,7 @@ module Scrappy
         Agent.create.observe(Options.observe)
       elsif Options.url
         Options.quiet = true
-        puts Agent.create.proxy(:get, Options.url)
+        puts Agent.create.proxy(:http_method=>:get, :uri=>Options.url).output
       elsif Options.proxy
         puts "Launching Scrappy Web Proxy..."
         Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/proxy.rb"]).start
@@ -102,6 +106,7 @@ Options
   -c, --concurrence VALUE  Sets number of concurrent connections for crawling (default is 10)
   -l, --levels VALUE       Sets recursion levels for resource crawling (default is 1)
   -d, --delay VALUE        Sets delay (in ms) between requests (default is 0)
+  -u, --debug              Shows debugging traces
   -i, --interactive        Runs interactive shell
   -s, --server             Runs web server
   -S, --proxy-server       Runs web proxy
@@ -123,14 +128,16 @@ Copyright
       puts "Scrappy v#{Scrappy::VERSION}"
     end
 
-    def onload
+  def onload
       # Check local or global knowledge base
-      if File.exists?("#{Etc.getpwuid.dir}/.scrappy/kb")
-        data_folder = "#{Etc.getpwuid.dir}/.scrappy/kb"
-        cache_file  = "#{Etc.getpwuid.dir}/.scrappy/kb.cache"
+      home = RUBY_PLATFORM.include?("mswin") ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
+      
+      if File.exists?("#{home}/kb")
+        data_folder = "#{home}/kb"
+        cache_file = "#{home}/kb.cache"
       else
         data_folder = "#{Scrappy::Root}/kb"
-        cache_file  = "#{Dir.tmpdir}/scrappy.kb.cache"
+        cache_file = "#{Dir.tmpdir}/scrappy.kb.cache"
       end
 
       # Load knowledge base
@@ -143,19 +150,14 @@ Copyright
         open(cache_file, "w") { |f| Marshal.dump(data, f) }
         data
       end
-
       # Looks for a configuration file. If it does not exist, Scrappy does not uses Sesame
       # It looks for it in the home .scrappy dir
-      if File.exist?("#{Etc.getpwuid.dir}/.scrappy/config.yml")
-        r_opt = YAML::load_file("#{Etc.getpwuid.dir}/.scrappy/config.yml")
+      if File.exist?("#{home}/config.yml")
+        r_opt = YAML::load_file("#{home}/config.yml")
         Agent::Options.repository = Repository.new r_opt
       end
-      
-      # Create cluster of agents
-      Agent.create_cluster Options.concurrence, :referenceable=>Agent::Options.referenceable,
-                                                :agent=>Agent::Options.agent, :window=>false
     end
-  end
+  end  
 
   Quotes = """Knowledge talks, wisdom listens
 Fool me once, shame on you. Fool me twice, shame on me

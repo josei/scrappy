@@ -17,8 +17,18 @@ module Scrappy
   end
 end
 
-class RDF::Node
-  def hash
-    id.hash ^ self.class.hash
+module Nokogiri
+  module XML
+    class NodeSet
+      def select &block
+        NodeSet.new(document, super(&block))
+      end
+    end
+  end
+end
+
+class String
+  def wikify
+    gsub(/^[a-z]|\s+[a-z]/) { |a| a.upcase }.gsub(/\s/, '')
   end
 end

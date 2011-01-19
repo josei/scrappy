@@ -18,15 +18,15 @@ module Scrappy
       end
 
       protected
-      def process_request http_method
-        agent.proxy http_method, request.env["REQUEST_URI"], @input
+      def process_request method
+        response = agent.proxy :method=>method, :uri=>request.env["REQUEST_URI"], :inputs=>@input
 
-        case agent.status
+        case response.status
         when :redirect
-          redirect agent.uri
+          redirect response.uri
         when :ok
-          @headers['Content-Type'] = agent.content_type
-          agent.output
+          @headers['Content-Type'] = response.content_type
+          response.output
         else
           @status = 500
           'Error'
