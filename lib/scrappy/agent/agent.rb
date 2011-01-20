@@ -202,7 +202,7 @@ module Scrappy
       while true
         time_init = Time.now.to_i
         array.each do |url|
-          proxy :get, url
+          proxy :http_method=>:get, :uri=>url
         end
           time_sleep = 900 - (Time.now.to_i - time_init)
           sleep time_sleep
