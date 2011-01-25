@@ -51,10 +51,9 @@ module Scrappy
       def process_request method, format, url
         callback = @input['callback']
         response = agent.proxy :method=>method, :uri=>url, :inputs=>@input.reject{|k,v| k=='callback'}, :format=>format.to_sym
-
         case response.status
         when :redirect
-          redirect "/#{format}/#{response.uri}#{inputs}"
+          redirect "/#{format}/#{CGI::escape(response.uri).gsub('%2F','/').gsub('%3A',':')}#{inputs}"
         when :ok
           @headers['Content-Type'] = response.content_type
           callback ? "#{callback}(#{response.output})" : response.output
