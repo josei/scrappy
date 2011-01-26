@@ -3,6 +3,7 @@ module Scrappy
     def initialize args={}
       super
       @mechanize = Mechanize.new
+      @mechanize.max_history = 20
     end
 
     def uri

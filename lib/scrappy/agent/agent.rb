@@ -70,8 +70,10 @@ module Scrappy
         puts 'done!' if options.debug
         
         response = if self.html_data?
-          add_visual_data! if options.referenceable     # Adds tags including visual information
-          extract self.uri, html, options.referenceable # Extract data
+          add_visual_data! if options.referenceable                     # Adds tags including visual information
+          extraction = extract self.uri, html, options.referenceable       # Extract data
+          Dumper.dump self.uri, clean(extraction), options.format if options.dump # Dump results to disk
+          extraction
         else
           []
         end
@@ -105,11 +107,13 @@ module Scrappy
           items.each { |item| queue << item }
         end
       end
-      
-      triples
+
+      triples unless options.dump
     end
     
     def reduce results
+      return [] if options.dump
+      
       if options.debug
         print "Merging results..."; $stdout.flush
       end
@@ -122,7 +126,7 @@ module Scrappy
     end
 
     def request args={}
-      RDF::Graph.new(map(args).uniq.select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) })
+      RDF::Graph.new clean(map(args))
     end
 
     def proxy args={}
@@ -130,13 +134,19 @@ module Scrappy
       
       response = self.request(request)
       
-      if options.debug
-        print "Serializing..."; $stdout.flush
+      output = if options.dump
+        ""
+      else
+        if options.debug
+          print "Serializing..."; $stdout.flush
+        end
+        
+        output = response.serialize request[:format]
+      
+        puts 'done!'if options.debug
+        
+        output
       end
-      
-      output = response.serialize(request[:format])
-      
-      puts 'done!'if options.debug
 
       OpenStruct.new :output => output,
                      :content_type => ContentTypes[request[:format]] || 'text/plain',
@@ -148,6 +158,10 @@ module Scrappy
       uri = "#{uri}.com" if uri =~ /\A\w+\Z/
       uri = "http://#{uri}" if uri.index(/\A\w*:/) != 0
       uri
+    end
+    
+    def clean triples
+      triples.uniq.select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) }
     end
   end
 end

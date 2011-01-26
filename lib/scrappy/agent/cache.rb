@@ -19,10 +19,13 @@ module Scrappy
 
   class Cache < Hash
     include MonitorMixin
+    MAX_ELEMENTS = 100
     
     def expire! timeout
       synchronize do
-        keys.each { |req| delete(req) if Time.now.to_i - self[req][:time].to_i > timeout }
+        keys.each { |key| delete(key) if Time.now.to_i - self[key][:time].to_i > timeout }
+        sort_by { |key, value| value[:time].to_i }[0...size-MAX_ELEMENTS].each { |key, value| delete key } if size > MAX_ELEMENTS
+        self
       end
     end
 
