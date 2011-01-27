@@ -1,3 +1,9 @@
+=== 0.1.13 2011-01-27
+
+* Improvements on memory consumption
+* Correction in redirections in the web interface
+* Dump to disk feature
+
 === 0.1.12 2011-01-10
 
 * Correction for Windows compatibility
