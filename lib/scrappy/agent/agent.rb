@@ -126,7 +126,7 @@ module Scrappy
     end
 
     def request args={}
-      RDF::Graph.new clean(map(args))
+      RDF::Graph.new clean(map(args) || [])
     end
 
     def proxy args={}
