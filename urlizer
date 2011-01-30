@@ -1,0 +1,7 @@
+#!/usr/bin/ruby
+if $*.size < 2
+  puts "Usage: urlizer directory base_url"
+  exit
+end
+
+puts Dir["#{$*[0]}/*"].map { |f| "#{$*[1]}/#{f}" }
