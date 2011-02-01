@@ -86,26 +86,24 @@ module Scrappy
       end
 
       # Enqueue subresources
-      if depth >= 0
-        # Pages are enqueued without reducing depth
-        pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+      # Pages are enqueued without reducing depth
+      pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
 
-        # All other URIS are enqueued with depth reduced
-        uris = if depth > 0
-          (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
-        else
-          []
-        end
-        
-        items = (pages.map { |uri| {:uri=>uri.to_s, :depth=>depth} } + uris.map { |uri| {:uri=>uri.to_s, :depth=>depth-1} }).uniq
-        
-        items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" } if options.debug
-        
-        if queue.nil?
-          triples += process items
-        else
-          items.each { |item| queue << item }
-        end
+      # All other URIS are enqueued with depth reduced
+      uris = if depth != 0
+        (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+      else
+        []
+      end
+      
+      items = (pages.map { |uri| {:uri=>uri.to_s, :depth=>[-1, depth].max} } + uris.map { |uri| {:uri=>uri.to_s, :depth=>[-1, depth-1].max} }).uniq
+      
+      items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" } if options.debug
+      
+      if queue.nil?
+        triples += process items
+      else
+        items.each { |item| queue << item }
       end
 
       triples unless options.dump
