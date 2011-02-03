@@ -15,6 +15,7 @@ require 'scrappy/agent/extractor'
 require 'scrappy/agent/map_reduce'
 require 'scrappy/agent/cache'
 require 'scrappy/agent/dumper'
+require 'scrappy/agent/formats'
 require 'scrappy/agent/agent'
 
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'
