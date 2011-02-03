@@ -136,7 +136,6 @@ module Scrappy
 
       selector.rdf::type = Node('sc:UnivocalSelector')
       selector.sc::path = '/'
-      selector.sc::children = content.search('*').size.to_s
       selector.sc::uri = uri
 
       fragment.sc::selector = selector
