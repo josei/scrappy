@@ -1,3 +1,8 @@
+=== 0.1.15 2011-02-04
+
+* Added literal output formats such as HTML or Wikitext
+* Added support to infinite crawling
+
 === 0.1.14 2011-01-30
 
 * Added missing file to Manifest

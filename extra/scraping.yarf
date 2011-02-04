@@ -202,58 +202,97 @@ sc:attribute:
   rdfs:domain: sc:TagSelector
   rdfs:range: rdf:Literal
 
+sc:format:
+  rdfs:label: "format"
+  rdfs:comment: "Output text format of a selector"
+  rdfs:domain: sc:Selector
+  rdfs:range: sc:Format
+
+sc:Format:
+  rdf:type: rdf:Class
+  rdfs:label: "Format"
+  rdfs:comment: "A text serialization format"
+
+sc:Plain:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Format
+  rdfs:label: "Plain"
+  rdfs:comment: "A plain text serialization format"
+
+sc:Html:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Format
+  rdfs:label: "Format"
+  rdfs:comment: "HTML serialization format"
+
+sc:WikiText:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Format
+  rdfs:label: "Format"
+  rdfs:comment: "Wiki text serialization format"
+
 sc:Selector:
   rdf:type: rdf:Class
   rdfs:label: "Selector"
   rdfs:comment: "A restriction on the scope of a web fragment"
 
 sc:TagSelector:
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:label: "Tag selector"
   rdfs:comment: "A selector that limits the scope to a single HTML tag"
 
 sc:ListSelector:
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:label: "List selector"
   rdfs:comment: "A selector that outputs a list of results"
 
 sc:KeywordSelector:
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:label: "Keyword selector"
   rdfs:comment: "A selector that may limit the scope by using keywords"
 
 sc:BaseUriSelector:
   rdfs:label: "Base URI selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:comment: "A selector that returns the URI of a web resource"
 
 sc:NewUriSelector:
   rdfs:label: "New URI selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:comment: "A selector that returns a URI, built out of a fragment's text"
 
 sc:SectionSelector:
   rdfs:label: "Section selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:comment: "A selector that limits the scope to a text section which starts with a headline specified by some keyword"
 
 sc:SliceSelector:
   rdfs:label: "Slice selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:ListSelector
   rdfs:comment: "A selector that splits a fragment's text given a token a returns a specified slice"
 
 sc:UriSelector:
   rdfs:label: "URI selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:comment: "A selector that limits the scope to resources identified by a URI"
 
 sc:UriPatternSelector:
   rdfs:label: "URI pattern selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:Selector
   rdfs:comment: "A selector that limits the scope to resources identified by a URI pattern defined by a regular expression"
 
 sc:XPathSelector:
   rdfs:label: "XPath selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf:
     sc:TagSelector
     sc:ListSelector
@@ -261,11 +300,13 @@ sc:XPathSelector:
 
 sc:RootSelector:
   rdfs:label: "Root selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf: sc:TagSelector
   rdfs:comment: "A selector that performs no scoping"
 
 sc:CssSelector:
   rdfs:label: "CSS selector"
+  rdf:type: rdf:Class
   rdfs:subClassOf:
     sc:TagSelector
     sc:ListSelector
