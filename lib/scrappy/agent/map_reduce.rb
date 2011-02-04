@@ -4,16 +4,20 @@ require 'monitor'
 module MapReduce
 
   class Queue
+    include MonitorMixin
+    
     def initialize
-      @items = []
-      @items.extend MonitorMixin
+      super
+      @items   = []
+      @history = []
     end
     
     def pop
       yielded = false
       item = nil
-      @items.synchronize do
+      synchronize do
         item = @items.shift
+        @history << item
         if @items.empty?
           yield item if (block_given? and item)
           yielded = true
@@ -24,15 +28,19 @@ module MapReduce
     end
     
     def << value
-      @items << value
+      push value
     end
     
     def push value
-      self << value
+      synchronize { @items << value }
     end
 
+    def push_unless_done value
+      synchronize { @items << value unless @history.include?(value) }
+    end
+    
     def empty?
-      @items.synchronize { @items.empty? }
+      synchronize { @items.empty? }
     end
   end
 

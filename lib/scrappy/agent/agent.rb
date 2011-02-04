@@ -103,7 +103,7 @@ module Scrappy
       if queue.nil?
         triples += process items
       else
-        items.each { |item| queue << item }
+        items.each { |item| queue.push_unless_done item }
       end
 
       triples unless options.dump
