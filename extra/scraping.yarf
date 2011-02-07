@@ -78,6 +78,13 @@ sc:keyword:
   rdfs:domain: sc:KeywordSelector
   rdfs:range: rdf:Literal
 
+sc:prefix:
+  rdf:type: rdf:Property
+  rdfs:label: "prefix"
+  rdfs:comment: "Prefix used when building a URI on a new URI selector"
+  rdfs:domain: sc:NewUriSelector
+  rdfs:range: rdf:Literal
+
 sc:suffix:
   rdf:type: rdf:Property
   rdfs:label: "suffix"
