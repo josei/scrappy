@@ -8,15 +8,13 @@ module Scrappy
       
       # This return a array with the contexts from the xml data
       # Be careful: The array does NOT include '<' neither '>'
-      array = context_list.search("uri").map(&:text)
-      
-      #The array to return
       dev = []
-      array.each do |con|
-        datc = context_date(con)
+      (contexts).each do |context|
+        datc = context_date(context)
+        time_v = (@options[:time].to_i) * 60
 
         # Adds the context to the array
-        dev << ["%3C#{CGI::escape(con)}%3E"] if (CGI::escape(con).include?(CGI::escape(uri)) && check_date(datc, @options["time"].to_i*60))
+        dev << ["#{context}"] if (context.include?(CGI::escape(uri)) && check_date(datc, time_v))
       end
       return dev
     end
@@ -25,15 +23,15 @@ module Scrappy
       
       # This return a array with the contexts from the xml data
       # Be careful: The array does NOT include '<' neither '>'
-      array = context_list.search("uri").map(&:text)
+      array = contexts
       
       #The array to return
       dev = []
-      array.each do |con|
-        datc = context_date(con)
+      array.each do |context|
+        datc = context_date(context)
 
         # Adds the context to the array
-        dev << ["%3C#{CGI::escape(con)}%3E"] if (CGI::escape(con).include?(CGI::escape(uri)) && check_date(datc,time))
+        dev << ["%3C#{context}%3E"] if (context.include?(CGI::escape(uri)) && check_date(datc,time))
       end
       return dev
     end
@@ -49,7 +47,6 @@ module Scrappy
     # Checks if the context date is within indicated time
     # Be careful. The time must be expresed in seconds.    
     def check_date(datc, time)
-      # This won't work when different months are in the period
       ((Time.now.to_i - datc) <= time)
     end
 

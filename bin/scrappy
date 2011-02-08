@@ -153,7 +153,13 @@ Copyright
       # Looks for a configuration file. If it does not exist, Scrappy does not uses Sesame
       # It looks for it in the home .scrappy dir
       if File.exist?("#{home}/config.yml")
-        r_opt = YAML::load_file("#{home}/config.yml")
+        con_r = YAML::load_file("#{home}/config.yml")["repository"]
+        r_opt = {}
+        #Not elegant, but should work
+        con_r.each do |k,v|
+          sym = k.to_sym
+          r_opt[sym] = v
+        end
         Agent::Options.repository = Repository.new r_opt
       end
     end

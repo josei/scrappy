@@ -167,7 +167,7 @@ scrappy offers many different interfaces to get RDF data from a web page:
     time: 15
 
     # The name of the repository
-    repo: men-ses
+    repository: men-ses
 
     # The format to comunicate with the repository
     format: ntriples

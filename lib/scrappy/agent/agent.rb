@@ -39,7 +39,6 @@ module Scrappy
       @kb = args[:kb] || Options.kb
       @options = Options.clone
       @repository = args[:repository] || Options.repository
-      @time = Time.now.min*100 + Time.now.sec
     end
 
     def map args, queue=nil
@@ -86,7 +85,7 @@ module Scrappy
         # Checks if a repository if being used
         if @repository != nil
           # Checks if there is any previous extraction within the last 15 minutes
-          context_list = Nokogiri::XML(@repository.get_context)
+          context_list = @repository.contexts
           context_s = []
           if Options.time != nil
             context_s = @repository.process_contexts_period(context_list, uri, Options.time)
@@ -108,18 +107,23 @@ module Scrappy
               #ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
 
               #Adds data to sesame
-              result = @repository.post_data(graph,context)
+              result = @repository.data= [graph,context]
             else
               graph = RDF::Graph.new(triples.uniq)
-              result = @repository.post_data(graph, context)
+              result = @repository.data= [graph,context]
             end
           else
           
-            # Data found in sesame. Asking for it
-            graph = @repository.get_data(context_s)
+            #Data found in sesame. Asking for it
+            context_s.each do |con|
+              graph = @repository.data con
+              graph[Node(uri)].sc::extraction=[]
+              triples << graph.triples
+            end
+            #graph = @repository.data context_s
             #graph = RDF::Parser.parse(:rdf, ntriples)
-            graph[Node(uri)].sc::extraction=[]
-            triples = graph.triples
+            #graph[Node(uri)].sc::extraction=[]
+            #triples = graph.triples
           end
         else
           # Extracts data without using a repository
