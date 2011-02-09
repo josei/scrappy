@@ -5,7 +5,7 @@ module Scrappy
     include MapReduce
     include Cached
 
-    Options = OpenStruct.new :format=>:yarf, :depth=>0, :agent=>:blind, :delay=>0, :workers=>10
+    Options = OpenStruct.new :format=>:yarf, :format_header=>true, :depth=>0, :agent=>:blind, :delay=>0, :workers=>10
     ContentTypes = { :png => 'image/png', :rdfxml => 'application/rdf+xml',
                      :rdf => 'application/rdf+xml' }
 
@@ -139,7 +139,7 @@ module Scrappy
           print "Serializing..."; $stdout.flush
         end
         
-        output = response.serialize request[:format]
+        output = response.serialize request[:format], @options.format_header
       
         puts 'done!'if options.debug
         

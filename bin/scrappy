@@ -41,7 +41,7 @@ module Scrappy
         opts.on('-p URL', '--post URL')         { |url| Options.url = url; Options.http_method=:post }
         opts.on('-D', '--dump')                 { Agent::Options.dump = true; Agent::Options.format = :rdf }
         opts.on('-u', '--debug')                { Agent::Options.debug = true }
-        opts.on('-i', '--interactive')          { Options.shell = true }
+        opts.on('-i', '--interactive')          { Options.shell = true; Agent::Options.format_header = false }
         opts.on('-s', '--server')               { Options.server = true }
         opts.on('-S', '--proxy-server')         { Options.proxy = true }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
