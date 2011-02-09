@@ -143,10 +143,17 @@ Copyright
         open(cache_file) { |f| Marshal.load(f) }
       else
         # Load YARF files and cache kb
-        data = Dir["#{data_folder}/*"].inject(RDF::Graph.new) { |graph, file| extension = file.split('.').last.to_sym; graph.merge(extension==:ignore ? RDF::Graph.new : RDF::Parser.parse(extension, open(file).read)) }
+        data = Dir["#{data_folder}/*"].inject(RDF::Graph.new) do |kb, file|
+          extension = file.split('.').last.to_sym
+          graph = RDF::Parser.parse(extension, open(file).read)
+          kb.ns.merge! graph.ns
+          kb.merge!(extension==:ignore ? RDF::Graph.new : graph)
+          kb
+        end
         open(cache_file, "w") { |f| Marshal.dump(data, f) }
         data
       end
+      RDF::QURI.ns.merge! Agent::Options.kb.ns
     end
   end
 

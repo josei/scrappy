@@ -17,7 +17,7 @@ module Scrappy
         doc.search("li li").each {|n| n.replace(Nokogiri::XML::Text.new("** #{n.text.strip}", n.document)) }
         doc.search("li").each {|n| n.replace(Nokogiri::XML::Text.new("* #{n.text.strip}", n.document)) }
         doc.search("ul").each {|n| n.replace(Nokogiri::XML::Text.new(n.text.strip, n.document)) }
-        doc.search("pre, code").each {|n| n.replace(Nokogiri::XML::Text.new("<pre>\n#{n.text.strip}\n</pre>", n.document)) }
+        doc.search("pre, code").each {|n| n.replace(Nokogiri::XML::Text.new("<pre>#{n.text}</pre>", n.document)) }
         doc.search("p").each {|n| n.replace(Nokogiri::XML::Text.new("#{n.text.strip}\n", n.document)) }
         doc.text.strip
       when Node('sc:Html') then
