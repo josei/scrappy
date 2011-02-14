@@ -15,7 +15,7 @@ module XPathSelector
           selector.sc::attribute.map { |attribute| { :uri=>doc[:uri], :content=>result, :value=>result[attribute] } }
         else
           # Select node
-          [ { :uri=>doc[:uri], :content=>result, :value=>format(result, selector.sc::format) } ]
+          [ { :uri=>doc[:uri], :content=>result, :value=>format(result, selector.sc::format, doc[:uri]) } ]
         end
       end
     end.flatten

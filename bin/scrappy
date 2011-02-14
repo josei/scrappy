@@ -109,8 +109,8 @@ Options
   -S, --proxy-server       Runs web proxy
   -P, --port PORT          Selects port number (default is 3434)
   -v, --visual             Uses visual agent (slow)
-  -r, --reference          Outputs referenceable data (requires -v)
-  -R, --reference-all      Outputs all HTML referenceable data (requires -v)
+  -r, --reference          Outputs referenceable data
+  -R, --reference-all      Outputs all HTML referenceable data
   -w, --window             Shows browser window (requires -v)
 
 Authors
