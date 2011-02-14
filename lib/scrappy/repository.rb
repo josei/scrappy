@@ -14,24 +14,31 @@ module Scrappy
         time_v = (@options[:time].to_i) * 60
 
         # Adds the context to the array
-        dev << ["#{context}"] if (context.include?(CGI::escape(uri)) && check_date(datc, time_v))
+        dev << ["#{context}"] if (context.include?(uri) && check_date(datc, time_v))
       end
       return dev
     end
     
     def process_contexts_period(context_list, uri, time)
+      dev=[]
+      if uri != nil
+        
+        # This return a array with the contexts from the xml data
+        # Be careful: The array does NOT include '<' neither '>'
+        array = contexts
       
-      # This return a array with the contexts from the xml data
-      # Be careful: The array does NOT include '<' neither '>'
-      array = contexts
-      
-      #The array to return
-      dev = []
-      array.each do |context|
-        datc = context_date(context)
+        # The array to return
+        # This one does include both the '<' and '>'
+        array.each do |context|
+          datc = context_date(context)
 
-        # Adds the context to the array
-        dev << ["%3C#{context}%3E"] if (context.include?(CGI::escape(uri)) && check_date(datc,time))
+          # Adds the context to the array
+          #dev << ["%3C#{context}%3E"] if (context.include?(CGI::escape(uri)) && check_date(datc,time))
+          if (context.include?(uri) && check_date(datc,time))
+            dev<< ["%3C#{context}%3E"]
+            puts "Add context to the array with date #{(Time.now.to_i - datc)/86400} days"
+          end
+        end
       end
       return dev
     end

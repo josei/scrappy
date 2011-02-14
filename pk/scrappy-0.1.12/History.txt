@@ -1,0 +1,61 @@
+=== 0.1.12 2011-01-10
+
+* Correction for Windows compatibility
+
+=== 0.1.11 2010-12-23
+
+* Handling of timeout errors
+* Support for paged resources with sc:Page
+* Added missing gem dependecy (i18n)
+* Added debug mode
+
+=== 0.1.10 2010-12-20
+
+* Fixed gem dependencies
+
+=== 0.1.9 2010-12-16
+
+* Corrected bug when filtering URI selectors
+* Added sc:suffix to uri builder
+
+=== 0.1.8 2010-12-14
+
+* Added sc:sameas
+* Added sc:attribute support to sc:RootSelector
+* Added sc:NewUriSelector for constructing new uris
+
+=== 0.1.7 2010-12-09
+
+* Added section selector
+
+=== 0.1.6 2010-12-09
+
+* Added sc:superclass to sc:Fragments
+
+=== 0.1.5 2010-11-29
+
+* Better map-reduce-based design
+
+=== 0.1.4 2010-11-24
+
+* Support for node sets in extractions
+* Support for index selection in CSS and XPath selectors
+* Debugging mode
+
+=== 0.1.3 2010-11-18
+
+* RDF node caching
+
+=== 0.1.2 2010-11-03
+
+* Fix for script portability (shebang arguments)
+
+=== 0.1.1 2010-10-30
+
+* Extremely basic annotator tool
+* Visual agent forces no concurrency to prevent memory leaks
+* Minor fixes
+
+=== 0.1 2010-09-30
+
+* Initial release
