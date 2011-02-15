@@ -6,14 +6,13 @@ module Scrappy
       if options.debug
         print "Extracting #{uri}..."; $stdout.flush
       end
-      
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
-      uri_selectors  = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
-        class_name = uri_selector.rdf::type.first.to_s.split('#').last
-        results = Kernel.const_get(class_name).filter uri_selector, {:content=>content, :uri=>uri}
-        !results.empty?
+      uri_selectors = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
+          class_name = uri_selector.rdf::type.first.to_s.split('#').last
+          results = Kernel.const_get(class_name.to_sym).filter uri_selector, {:content=>content, :uri=>uri}
+          !results.empty?
       end
 
       fragments = uri_selectors.map { |uri_selector| kb.find(nil, Node('sc:selector'), uri_selector) }.flatten
@@ -136,7 +135,6 @@ module Scrappy
 
       selector.rdf::type = Node('sc:UnivocalSelector')
       selector.sc::path = '/'
-      selector.sc::children = content.search('*').size.to_s
       selector.sc::uri = uri
 
       fragment.sc::selector = selector

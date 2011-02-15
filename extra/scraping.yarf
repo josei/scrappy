@@ -1,0 +1,321 @@
+dc: http://purl.org/dc/elements/1.1/
+owl: http://www.w3.org/2002/07/owl#
+rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+rdfs: http://www.w3.org/2000/01/rdf-schema#
+sc: http://lab.gsi.dit.upm.es/scraping.rdf#
+
+sc:Fragment:
+  rdf:type: rdf:Class
+  rdfs:label: "Fragment"
+  rdfs:comment: "A fragment of a web page (or a complete web page)"
+
+sc:Index:
+  rdf:type: rdf:Class
+  rdfs:label: "Index"
+  rdfs:comment: "A web resource that contains a list of references to other resources"
+
+sc:Page:
+  rdf:type: rdf:Class
+  rdfs:label: "Page"
+  rdfs:comment: "A web resource that extends the data existing in another web resource, usually employing the user-interface pattern of pagination. When scraping a web resource, all sc:Pages should be scraped as well in order to retrieve all the data present in that web resource"
+
+sc:selector:
+  rdf:type: rdf:Property
+  rdfs:label: "selector"
+  rdfs:comment: "A selector that defines the scope of the subject, typically a web fragment"
+  rdfs:domain: sc:Fragment
+  rdfs:range: sc:Selector
+
+sc:identifier:
+  rdf:type: rdf:Property
+  rdfs:label: "identifier"
+  rdfs:comment: "A selector that defines the URI of the mapped resource of the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: sc:Selector
+
+sc:subfragment:
+  rdf:type: rdf:Property
+  rdfs:label: "subfragment"
+  rdfs:comment: "A fragment that is contained inside the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: sc:Fragment
+sc:type:
+  rdf:type: rdf:Property
+  rdfs:label: "type"
+  rdfs:comment: "The type of a resource that is mapped by the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Class
+sc:sameas:
+  rdf:type: rdf:Property
+  rdfs:label: "same as"
+  rdfs:comment: "A resource with the same semantics as the one mapped by the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Resource
+sc:superclass:
+  rdf:type: rdf:Property
+  rdfs:label: "superclass"
+  rdfs:comment: "The superclass of the mapped resource of the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Class
+sc:relation:
+  rdf:type: rdf:Property
+  rdfs:label: "relation"
+  rdfs:comment: "The relation between a mapped resource of the fragment subject and the mapped resource of its parent fragment"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Property
+
+sc:index:
+  rdf:type: rdf:Property
+  rdfs:label: "index"
+  rdfs:comment: "Index number of the value that should be returned by a list selector"
+  rdfs:domain: sc:ListSelector
+  rdfs:range: rdf:Literal
+
+sc:keyword:
+  rdf:type: rdf:Property
+  rdfs:label: "keyword"
+  rdfs:comment: "Keyword used to restrict the scope of a selector"
+  rdfs:domain: sc:KeywordSelector
+  rdfs:range: rdf:Literal
+
+sc:prefix:
+  rdf:type: rdf:Property
+  rdfs:label: "prefix"
+  rdfs:comment: "Prefix used when building a URI on a new URI selector"
+  rdfs:domain: sc:NewUriSelector
+  rdfs:range: rdf:Literal
+
+sc:suffix:
+  rdf:type: rdf:Property
+  rdfs:label: "suffix"
+  rdfs:comment: "Suffix used when building a URI on a new URI selector"
+  rdfs:domain: sc:NewUriSelector
+  rdfs:range: rdf:Literal
+
+sc:debug:
+  rdf:type: rdf:Property
+  rdfs:label: "debug"
+  rdfs:comment: "Indicates whether or not a selector must provide debugging information when processed by a scraper"
+  rdfs:domain: sc:Selector
+  rdfs:range: rdf:Literal
+
+sc:path:
+  rdf:type: rdf:Property
+  rdfs:label: "path"
+  rdfs:comment: "XPath to the fragment subject inside its web page"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Literal
+
+sc:uri:
+  rdf:type: rdf:Property
+  rdfs:label: "uri"
+  rdfs:comment: "URI of the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Resource
+
+sc:tag:
+  rdf:type: rdf:Property
+  rdfs:label: "tag"
+  rdfs:comment: "HTML tag that is the root of the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: rdf:Literal
+
+sc:presentation:
+  rdf:type: rdf:Property
+  rdfs:label: "presentation"
+  rdfs:comment: "The presentation information of the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: sc:Presentation
+
+sc:Presentation:
+  rdf:type: rdf:Class
+  rdfs:label: "Presentation"
+  rdfs:comment: "The presentation information of a web fragment when viewed on a browser"
+
+sc:x:
+  rdf:type: rdf:Property
+  rdfs:label: "x"
+  rdfs:comment: "Horizontal offset of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:y:
+  rdf:type: rdf:Property
+  rdfs:label: "y"
+  rdfs:comment: "Vertical offset of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:width:
+  rdf:type: rdf:Property
+  rdfs:label: "width"
+  rdfs:comment: "Width of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:height:
+  rdf:type: rdf:Property
+  rdfs:label: "height"
+  rdfs:comment: "Height a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:font_size:
+  rdf:type: rdf:Property
+  rdfs:label: "font size"
+  rdfs:comment: "Font size of the text in a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:font_weight:
+  rdf:type: rdf:Property
+  rdfs:label: "font weight"
+  rdfs:comment: "Font weight of the text in a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:color:
+  rdf:type: rdf:Property
+  rdfs:label: "color"
+  rdfs:comment: "Text color of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:background_color:
+  rdf:type: rdf:Property
+  rdfs:label: "background color"
+  rdfs:comment: "Background color of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:text:
+  rdf:type: rdf:Property
+  rdfs:label: "font weight"
+  rdfs:comment: "Text contained in a fragment"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:children_count:
+  rdf:type: rdf:Property
+  rdfs:label: "children count"
+  rdfs:comment: "Number of children that the fragment subject has"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+
+sc:attribute:
+  rdfs:label: "attribute"
+  rdfs:comment: "An HTML attribute whose content is the output of a tag selector"
+  rdfs:domain: sc:TagSelector
+  rdfs:range: rdf:Literal
+
+sc:format:
+  rdfs:label: "format"
+  rdfs:comment: "Output text format of a selector"
+  rdfs:domain: sc:Selector
+  rdfs:range: sc:Format
+
+sc:Format:
+  rdf:type: rdf:Class
+  rdfs:label: "Format"
+  rdfs:comment: "A text serialization format"
+
+sc:Plain:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Format
+  rdfs:label: "Plain"
+  rdfs:comment: "A plain text serialization format"
+
+sc:Html:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Format
+  rdfs:label: "Format"
+  rdfs:comment: "HTML serialization format"
+
+sc:WikiText:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Format
+  rdfs:label: "Format"
+  rdfs:comment: "Wiki text serialization format"
+
+sc:Selector:
+  rdf:type: rdf:Class
+  rdfs:label: "Selector"
+  rdfs:comment: "A restriction on the scope of a web fragment"
+
+sc:TagSelector:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:label: "Tag selector"
+  rdfs:comment: "A selector that limits the scope to a single HTML tag"
+
+sc:ListSelector:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:label: "List selector"
+  rdfs:comment: "A selector that outputs a list of results"
+
+sc:KeywordSelector:
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:label: "Keyword selector"
+  rdfs:comment: "A selector that may limit the scope by using keywords"
+
+sc:BaseUriSelector:
+  rdfs:label: "Base URI selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:comment: "A selector that returns the URI of a web resource"
+
+sc:NewUriSelector:
+  rdfs:label: "New URI selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:comment: "A selector that returns a URI, built out of a fragment's text"
+
+sc:SectionSelector:
+  rdfs:label: "Section selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:comment: "A selector that limits the scope to a text section which starts with a headline specified by some keyword"
+
+sc:SliceSelector:
+  rdfs:label: "Slice selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:ListSelector
+  rdfs:comment: "A selector that splits a fragment's text given a token a returns a specified slice"
+
+sc:UriSelector:
+  rdfs:label: "URI selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:comment: "A selector that limits the scope to resources identified by a URI"
+
+sc:UriPatternSelector:
+  rdfs:label: "URI pattern selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:Selector
+  rdfs:comment: "A selector that limits the scope to resources identified by a URI pattern defined by a regular expression"
+
+sc:XPathSelector:
+  rdfs:label: "XPath selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf:
+    sc:TagSelector
+    sc:ListSelector
+  rdfs:comment: "A selector that returns a set of HTML tags identified by an XPath expression"
+
+sc:RootSelector:
+  rdfs:label: "Root selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf: sc:TagSelector
+  rdfs:comment: "A selector that performs no scoping"
+
+sc:CssSelector:
+  rdfs:label: "CSS selector"
+  rdf:type: rdf:Class
+  rdfs:subClassOf:
+    sc:TagSelector
+    sc:ListSelector
+  rdfs:comment: "A selector that returns a set of HTML tags identified by a CSS expression"
+

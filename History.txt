@@ -1,3 +1,23 @@
+=== 0.1.16 2011-02-09
+
+* Added support to RDF abbreviated output by loading kb's prefixes
+* Fixed bug in wikitext <pre> formatting
+
+=== 0.1.15 2011-02-04
+
+* Added literal output formats such as HTML or Wikitext
+* Added support to infinite crawling
+
+=== 0.1.14 2011-01-30
+
+* Added missing file to Manifest
+
+=== 0.1.13 2011-01-27
+
+* Improvements on memory consumption
+* Correction in redirections in the web interface
+* Dump to disk feature
+
 === 0.1.12 2011-01-10
 
 * Correction for Windows compatibility

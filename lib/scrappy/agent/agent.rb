@@ -5,7 +5,7 @@ module Scrappy
     include MapReduce
     include Cached
 
-    Options = OpenStruct.new :format=>:yarf, :depth=>0, :agent=>:blind, :delay=>0, :workers=>10
+    Options = OpenStruct.new :format=>:yarf, :format_header=>true, :depth=>0, :agent=>:blind, :delay=>0, :workers=>10
     ContentTypes = { :png => 'image/png', :rdfxml => 'application/rdf+xml',
                      :rdf => 'application/rdf+xml' }
 
@@ -45,7 +45,11 @@ module Scrappy
       depth = args[:depth]
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
 
-      triples = nil
+      triples = []
+
+      # Expire cache
+      cache.expire! 300 # 5 minutes
+
       # Lookup in cache
       if cache[request]
         puts "Retrieving cached #{request[:uri]}...done!" if options.debug
@@ -69,8 +73,10 @@ module Scrappy
         puts 'done!' if options.debug
         
         response = if self.html_data?
-          add_visual_data! if options.referenceable     # Adds tags including visual information
-          triples = extract self.uri, html, options.referenceable # Extract data
+          add_visual_data! if options.referenceable                     # Adds tags including visual information
+          extraction = extract self.uri, html, options.referenceable       # Extract data
+          Dumper.dump self.uri, clean(extraction), options.format if options.dump # Dump results to disk
+          extraction
         else
           triples = []
         end
@@ -79,9 +85,10 @@ module Scrappy
         cache[request]                       = { :time=>Time.now, :response=>response }
         cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>response } unless self.uri.nil?
 
-        response
+        triples += response
       end
 
+      if self.html_data?
         # Checks if a repository if being used
         if @repository != nil
           # Checks if there is any previous extraction within the last 15 minutes
@@ -96,7 +103,9 @@ module Scrappy
           # Extract data
           if context_s.empty?
             #Extracts from the uri
+            add_visual_data! if options.referenceable                     # Adds tags including visual information
             triples = extract self.uri, html, options.referenceable if self.html_data?
+            Dumper.dump self.uri, clean(triples), options.format if options.dump # Dump results to disk
 
             context = "#{uri}:#{Time.now.to_i}"
             #Checks if the extraction returns nothing
@@ -104,7 +113,6 @@ module Scrappy
             
               #Creates a triple to indicate that nothing was extracted from the uri
               graph = RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])
-              #ntriples =  (RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])).serialize(:ntriples)
 
               #Adds data to sesame
               result = @repository.data= [graph,context]
@@ -118,7 +126,7 @@ module Scrappy
             context_s.each do |con|
               graph = @repository.data con
               graph[Node(uri)].sc::extraction=[]
-              triples << graph.triples
+              triples += graph.triples
             end
             #graph = @repository.data context_s
             #graph = RDF::Parser.parse(:rdf, ntriples)
@@ -126,37 +134,40 @@ module Scrappy
             #triples = graph.triples
           end
         else
+          add_visual_data! if options.referenceable                     # Adds tags including visual information
           # Extracts data without using a repository
           triples = extract self.uri, html, options.referenceable if self.html_data?
-        end
-
-      # Enqueue subresources
-      if depth >= 0
-        # Pages are enqueued without reducing depth
-        pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
-
-        # All other URIS are enqueued with depth reduced
-        uris = if depth > 0
-          (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
-        else
-          []
-        end
-        
-        items = (pages.map { |uri| {:uri=>uri.to_s, :depth=>depth} } + uris.map { |uri| {:uri=>uri.to_s, :depth=>depth-1} }).uniq
-        
-        items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" } if options.debug
-        
-        if queue.nil?
-          triples += process items
-        else
-          items.each { |item| queue << item }
+          Dumper.dump self.uri, clean(triples), options.format if options.dump # Dump results to disk
         end
       end
+
+      # Enqueue subresources
+      # Pages are enqueued without reducing depth
+      pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+
+      # All other URIS are enqueued with depth reduced
+      uris = if depth != 0
+        (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+      else
+        []
+      end
       
-      triples
+      items = (pages.map { |uri| {:uri=>uri.to_s, :depth=>[-1, depth].max} } + uris.map { |uri| {:uri=>uri.to_s, :depth=>[-1, depth-1].max} }).uniq
+      
+      items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" } if options.debug
+      
+      if queue.nil?
+        triples += process items
+      else
+        items.each { |item| queue.push_unless_done item }
+      end
+
+      triples unless options.dump
     end
     
     def reduce results
+      return [] if options.dump
+      
       if options.debug
         print "Merging results..."; $stdout.flush
       end
@@ -169,24 +180,26 @@ module Scrappy
     end
 
     def request args={}
-      # Expire cache
-      cache.expire! 300 # 5 minutes
-
-      RDF::Graph.new(map(args).uniq.select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) })
+      RDF::Graph.new clean(map(args) || [])
     end
 
     def proxy args={}
       request  = { :method=>:get, :inputs=>{}, :format=>options.format, :depth=>options.depth }.merge(args)
-      
       response = self.request(request)
       
-      if options.debug
-        print "Serializing..."; $stdout.flush
+      output = if options.dump
+        ""
+      else
+        if options.debug
+          print "Serializing..."; $stdout.flush
+        end
+        
+        output = response.serialize request[:format], @options.format_header
+      
+        puts 'done!'if options.debug
+        
+        output
       end
-      
-      output = response.serialize(request[:format])
-      
-      puts 'done!'if options.debug
 
       OpenStruct.new :output => output,
                      :content_type => ContentTypes[request[:format]] || 'text/plain',
@@ -211,6 +224,10 @@ module Scrappy
           time_sleep = 900 - (Time.now.to_i - time_init)
           sleep time_sleep
       end
+    end
+    
+    def clean triples
+      triples.uniq.select {|s,p,o|p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o)} 
     end
   end
 end

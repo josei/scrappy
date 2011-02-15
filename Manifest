@@ -8,6 +8,8 @@ lib/scrappy.rb
 lib/scrappy/agent/agent.rb
 lib/scrappy/agent/blind_agent.rb
 lib/scrappy/agent/cache.rb
+lib/scrappy/agent/dumper.rb
+lib/scrappy/agent/formats.rb
 lib/scrappy/agent/map_reduce.rb
 lib/scrappy/agent/extractor.rb
 lib/scrappy/agent/visual_agent.rb
