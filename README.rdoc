@@ -123,13 +123,13 @@ scrappy offers many different interfaces to get RDF data from a web page:
     require 'scrappy'
 
     # Parse a knowledge base
-    kb = RDF::Parser.parse(:rdf, open("kb.rdf").read)
+    kb = RDF::Parser.parse :yarf, open("https://github.com/josei/scrappy/raw/master/kb/elmundo.yarf").read
 
     # Create an agent
-    agent = scrappy::Agent.create :kb=>kb
+    agent = Scrappy::Agent.create :kb=>kb
 
     # Get RDF output
-    output = agent.request :method=>:get, :uri=>'http://www.example.com'
+    output = agent.request :method=>:get, :uri=>'http://www.elmundo.es'
 
     # Output all titles from the web page
     titles = output.find([], Node('dc:title'), nil)

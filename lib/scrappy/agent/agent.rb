@@ -41,7 +41,7 @@ module Scrappy
     end
 
     def map args, queue=nil
-      depth = args[:depth]
+      depth = args[:depth] || options.depth
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
 
       # Expire cache
