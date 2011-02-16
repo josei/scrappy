@@ -55,7 +55,11 @@ module Scrappy
         puts "Retrieving cached #{request[:uri]}...done!" if options.debug
         
         triples = cache[request][:response]
+      elsif @repository != nil && self.html_data?
+        # Extracts from the repository 
+        triples = use_sesame uri 
       else
+
         # Perform the request
         
         sleep 0.001 * options.delay.to_f # Sleep if requested
@@ -71,74 +75,14 @@ module Scrappy
         end
         
         puts 'done!' if options.debug
-        
-        response = if self.html_data?
-          add_visual_data! if options.referenceable                     # Adds tags including visual information
-          extraction = extract self.uri, html, options.referenceable       # Extract data
-          Dumper.dump self.uri, clean(extraction), options.format if options.dump # Dump results to disk
-          extraction
-        else
-          triples = []
-        end
-
-        # Cache the request
-        cache[request]                       = { :time=>Time.now, :response=>response }
-        cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>response } unless self.uri.nil?
-
-        triples += response
+        triples = do_request uri
       end
-
-      if self.html_data?
-        # Checks if a repository if being used
-        if @repository != nil
-          # Checks if there is any previous extraction within the last 15 minutes
-          context_list = @repository.contexts
-          context_s = []
-          if Options.time != nil
-            context_s = @repository.process_contexts_period(context_list, uri, Options.time)
-          else
-            context_s = @repository.process_contexts(context_list, uri)
-          end
-
-          # Extract data
-          if context_s.empty?
-            #Extracts from the uri
-            add_visual_data! if options.referenceable                     # Adds tags including visual information
-            triples = extract self.uri, html, options.referenceable if self.html_data?
-            Dumper.dump self.uri, clean(triples), options.format if options.dump # Dump results to disk
-
-            context = "#{uri}:#{Time.now.to_i}"
-            #Checks if the extraction returns nothing
-            if triples.empty?
-            
-              #Creates a triple to indicate that nothing was extracted from the uri
-              graph = RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])
-
-              #Adds data to sesame
-              result = @repository.data= [graph,context]
-            else
-              graph = RDF::Graph.new(triples.uniq)
-              result = @repository.data= [graph,context]
-            end
-          else
-          
-            #Data found in sesame. Asking for it
-            context_s.each do |con|
-              graph = @repository.data con
-              graph[Node(uri)].sc::extraction=[]
-              triples += graph.triples
-            end
-            #graph = @repository.data context_s
-            #graph = RDF::Parser.parse(:rdf, ntriples)
-            #graph[Node(uri)].sc::extraction=[]
-            #triples = graph.triples
-          end
-        else
-          add_visual_data! if options.referenceable                     # Adds tags including visual information
-          # Extracts data without using a repository
-          triples = extract self.uri, html, options.referenceable if self.html_data?
-          Dumper.dump self.uri, clean(triples), options.format if options.dump # Dump results to disk
-        end
+      
+      # If previous cache exists, do not cache it again
+      unless cache[request]
+      # Cache the request
+        cache[request]                       = { :time=>Time.now, :response=>triples }
+        cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>triples } unless self.uri.nil?
       end
 
       # Enqueue subresources
@@ -228,6 +172,62 @@ module Scrappy
     
     def clean triples
       triples.uniq.select {|s,p,o|p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o)} 
+    end
+    
+    # Do the extraction using Sesame
+    def use_sesame uri
+
+      triples = []
+      # Checks if there is any previous extraction within the last 15 minutes
+      context_list = @repository.contexts
+      context_s = []
+      if Options.time != nil
+        context_s = @repository.process_contexts_period(context_list, uri, Options.time)
+      else
+        context_s = @repository.process_contexts(context_list, uri)
+      end
+
+      # Extract data
+      if context_s.empty?
+        #Extracts from the uri
+        triples = do_request uri
+
+        context = "#{uri}:#{Time.now.to_i}"
+        #Checks if the extraction returns nothing
+        if triples.empty?
+
+          #Creates a triple to indicate that nothing was extracted from the uri
+          graph = RDF::Graph.new([[Node(uri), Node("sc:extraction"), Node("sc:Empty")]])
+
+          #Adds data to sesame
+          result = @repository.data= [graph,context]
+        else
+          graph = RDF::Graph.new(triples.uniq)
+          result = @repository.data= [graph,context]
+        end
+      else
+
+        #Data found in sesame. Asking for it
+        context_s.each do |con|
+          graph = @repository.data con
+          graph[Node(uri)].sc::extraction=[]
+          triples += graph.triples
+        end
+      end
+      triples
+    end
+    
+    # Extracts from the uri
+    def do_request uri
+      response = if self.html_data?
+        add_visual_data! if options.referenceable                     # Adds tags including visual information
+        extraction = extract self.uri, html, options.referenceable       # Extract data
+        Dumper.dump self.uri, clean(extraction), options.format if options.dump # Dump results to disk
+        extraction
+      else
+        response = []
+      end
+      response
     end
   end
 end
