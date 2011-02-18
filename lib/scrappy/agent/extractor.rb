@@ -121,7 +121,7 @@ module Scrappy
     def parse_uri(uri, rel_uri)
       return ID('*') if rel_uri.nil?
       begin
-        ID(URI::parse(uri.split('/')[0..3]*'/').merge(rel_uri))
+        ID(URI::parse(uri.split('/')[0..3]*'/').merge(rel_uri).to_s)
       rescue
         ID('*')
       end

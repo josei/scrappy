@@ -87,11 +87,11 @@ module Scrappy
 
       # Enqueue subresources
       # Pages are enqueued without reducing depth
-      pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+      pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(Symbol)}
 
       # All other URIS are enqueued with depth reduced
       uris = if depth != 0
-        (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+        (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(Symbol)}
       else
         []
       end

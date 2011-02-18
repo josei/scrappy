@@ -153,7 +153,7 @@ Copyright
         open(cache_file, "w") { |f| Marshal.dump(data, f) }
         data
       end
-      RDF::QURI.ns.merge! Agent::Options.kb.ns
+      RDF::ID.ns.merge! Agent::Options.kb.ns
     end
   end
 
