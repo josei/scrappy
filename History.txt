@@ -1,3 +1,8 @@
+=== 0.1.18 2011-02-18
+
+* Retry support when opening URLs
+* Update for latest lightRDF version
+
 === 0.1.17 2011-02-15
 
 * Enabling headless yarf serialization in shell mode
