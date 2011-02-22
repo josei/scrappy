@@ -12,14 +12,20 @@ module Scrappy
 
     def uri= uri
       synchronize do
-        begin
-          @mechanize.get uri
-          @loaded = true
-        rescue Timeout::Error
-          @loaded = false
-        rescue
-          @loaded = false
+        retries = 10
+        @loaded = false
+        while retries > 0 and !@loaded
+          begin
+            @mechanize.get uri
+            @loaded = true
+          rescue Timeout::Error
+            @loaded = false
+          rescue
+            @loaded = false
+          end
+          retries -= 1 unless @loaded
         end
+        @loaded
       end
     end
 

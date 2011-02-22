@@ -42,7 +42,7 @@ module Scrappy
     end
 
     def map args, queue=nil
-      depth = args[:depth]
+      depth = args[:depth] || options.depth
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
 
       triples = []
@@ -53,11 +53,11 @@ module Scrappy
       # Lookup in cache
       if cache[request]
         puts "Retrieving cached #{request[:uri]}...done!" if options.debug
-        
+
         triples = cache[request][:response]
       elsif @repository != nil && self.html_data?
         # Extracts from the repository 
-        triples = use_sesame uri 
+        triples = use_sesame
       else
 
         # Perform the request
@@ -75,23 +75,23 @@ module Scrappy
         end
         
         puts 'done!' if options.debug
-        triples = do_request uri
+        triples = do_request
       end
       
       # If previous cache exists, do not cache it again
       unless cache[request]
-      # Cache the request
+        # Cache the request
         cache[request]                       = { :time=>Time.now, :response=>triples }
-        cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>triples } unless self.uri.nil?
+        cache[request.merge(:uri=>self.uri)] = { :time=>Time.now, :response=>triples } if self.uri
       end
 
       # Enqueue subresources
       # Pages are enqueued without reducing depth
-      pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+      pages = triples.select { |s,p,o| p==Node("rdf:type") and o==Node("sc:Page") }.map{|s,p,o| s}.select{|n| n.is_a?(RDF::Node) and n.id.is_a?(Symbol)}
 
       # All other URIS are enqueued with depth reduced
       uris = if depth != 0
-        (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(URI)}
+        (triples.map { |s, p, o| [s,o] }.flatten - [Node(self.uri)] - pages).select{|n| n.is_a?(RDF::Node) and n.id.is_a?(Symbol)}
       else
         []
       end
@@ -175,22 +175,22 @@ module Scrappy
     end
     
     # Do the extraction using Sesame
-    def use_sesame uri
+    def use_sesame
 
       triples = []
       # Checks if there is any previous extraction within the last 15 minutes
       context_list = @repository.contexts
       context_s = []
       if Options.time != nil
-        context_s = @repository.process_contexts_period(context_list, uri, Options.time)
+        context_s = @repository.process_contexts_period(context_list, self.uri, Options.time)
       else
-        context_s = @repository.process_contexts(context_list, uri)
+        context_s = @repository.process_contexts(context_list, self.uri)
       end
 
       # Extract data
       if context_s.empty?
         #Extracts from the uri
-        triples = do_request uri
+        triples = do_request 
 
         context = "#{uri}:#{Time.now.to_i}"
         #Checks if the extraction returns nothing
@@ -206,7 +206,6 @@ module Scrappy
           result = @repository.data= [graph,context]
         end
       else
-
         #Data found in sesame. Asking for it
         context_s.each do |con|
           graph = @repository.data con
@@ -218,7 +217,7 @@ module Scrappy
     end
     
     # Extracts from the uri
-    def do_request uri
+    def do_request
       response = if self.html_data?
         add_visual_data! if options.referenceable                     # Adds tags including visual information
         extraction = extract self.uri, html, options.referenceable       # Extract data

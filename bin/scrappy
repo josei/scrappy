@@ -13,7 +13,7 @@ module Scrappy
   require 'optparse'
   require 'logger'
   require 'readline'
-  gem 'camping', '=2.0'
+#  gem 'camping', '=2.0'
   require 'camping'
   require 'camping/server'
   require "#{Root}/lib/scrappy"
@@ -69,10 +69,12 @@ module Scrappy
         puts Agent.create.proxy(:http_method=>:get, :uri=>Options.url).output
       elsif Options.proxy
         puts "Launching Scrappy Web Proxy..."
-        Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/proxy.rb"]).start
+        Camping::Server.new(OpenStruct.new(:Host => 'localhost', :Port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/proxy.rb"]).start
       elsif Options.server
         puts "Launching Scrappy Web Server..."
-        Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/server.rb"]).start
+        param = {:Host=>'localhost', :Port=>Options.port, :server=>'mongrel'}
+        param[:scripts]=["#{Scrappy::Root}/lib/scrappy/server.rb"]
+        Camping::Server.new(param).start
       elsif Options.shell
         puts "Launching Scrappy Shell..."
         Shell.new.run
@@ -167,7 +169,7 @@ Copyright
         con_r.each {|k,v| r_opt[k.to_sym] = v }
         Agent::Options.repository = Repository.new r_opt
       end
-      RDF::QURI.ns.merge! Agent::Options.kb.ns
+      RDF::ID.ns.merge! Agent::Options.kb.ns
     end
   end  
 

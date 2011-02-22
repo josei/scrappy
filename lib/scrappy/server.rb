@@ -5,8 +5,8 @@ require 'open3'
 Camping.goes :Scrappy
 
 module Scrappy
+  set :secret, "1a36591bceec49c832079e270d7e8b73"
   include Camping::Session
-  secret '1a36591bceec49c832079e270d7e8b73'
 
   module Controllers
     class Index
