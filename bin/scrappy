@@ -13,7 +13,6 @@ module Scrappy
   require 'optparse'
   require 'logger'
   require 'readline'
-#  gem 'camping', '=2.0'
   require 'camping'
   require 'camping/server'
   require "#{Root}/lib/scrappy"
@@ -69,12 +68,10 @@ module Scrappy
         puts Agent.create.proxy(:http_method=>:get, :uri=>Options.url).output
       elsif Options.proxy
         puts "Launching Scrappy Web Proxy..."
-        Camping::Server.new(OpenStruct.new(:Host => 'localhost', :Port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/proxy.rb"]).start
+        Camping::Server.new({:Host=>'localhost', :Port=>Options.port, :server=>'mongrel', :scripts=>["#{Scrappy::Root}/lib/scrappy/proxy.rb"]}).start
       elsif Options.server
         puts "Launching Scrappy Web Server..."
-        param = {:Host=>'localhost', :Port=>Options.port, :server=>'mongrel'}
-        param[:scripts]=["#{Scrappy::Root}/lib/scrappy/server.rb"]
-        Camping::Server.new(param).start
+        Camping::Server.new({:Host=>'localhost', :Port=>Options.port, :server=>'mongrel', :scripts=>["#{Scrappy::Root}/lib/scrappy/server.rb"]}).start
       elsif Options.shell
         puts "Launching Scrappy Shell..."
         Shell.new.run
@@ -135,7 +132,7 @@ Copyright
   def onload
       # Check local or global knowledge base
       home = RUBY_PLATFORM.include?("mswin") ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
-      
+
       if File.exists?("#{home}/kb")
         data_folder = "#{home}/kb"
         cache_file = "#{home}/kb.cache"

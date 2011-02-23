@@ -44,7 +44,11 @@ module Scrappy
     def map args, queue=nil
       depth = args[:depth] || options.depth
       request = { :method=>args[:method]||:get, :uri=>complete_uri(args[:uri]), :inputs=>args[:inputs]||{} }
-
+      if request[:method] == :get
+        self.uri = request[:uri]
+      else
+        raise Exception, 'POST requests not supported yet'
+      end
       triples = []
 
       # Expire cache
@@ -68,16 +72,10 @@ module Scrappy
           print "Opening #{request[:uri]}..."; $stdout.flush
         end
 
-        if request[:method] == :get
-          self.uri = request[:uri]
-        else
-          raise Exception, 'POST requests not supported yet'
-        end
-        
         puts 'done!' if options.debug
         triples = do_request
       end
-      
+
       # If previous cache exists, do not cache it again
       unless cache[request]
         # Cache the request
@@ -144,7 +142,6 @@ module Scrappy
         
         output
       end
-
       OpenStruct.new :output => output,
                      :content_type => ContentTypes[request[:format]] || 'text/plain',
                      :uri => self.uri,
