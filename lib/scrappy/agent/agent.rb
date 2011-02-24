@@ -61,7 +61,7 @@ module Scrappy
         triples = cache[request][:response]
       elsif @repository != nil && self.html_data?
         # Extracts from the repository 
-        triples = use_sesame
+        triples = use_repository
       else
 
         # Perform the request
@@ -172,7 +172,7 @@ module Scrappy
     end
     
     # Do the extraction using Sesame
-    def use_sesame
+    def use_repository
 
       triples = []
       # Checks if there is any previous extraction within the last 15 minutes

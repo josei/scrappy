@@ -1,41 +1,34 @@
-require 'camping'
-require 'camping/session'
-require 'open3'
-
-Camping.goes :Scrappy
+require 'sinatra'
+require 'thin'
 
 module Scrappy
-  module Controllers
-    class Index < R '.*'
-      include InputEscaping
+  class Proxy < Sinatra::Base
+    get '*' do
+      process_request :get
+    end
 
-      def get
-        process_request :get
+    post '*' do
+      process_request :post
+    end
+
+    protected
+    def process_request method
+      response = agent.proxy :method=>method, :uri=>request.env['REQUEST_URI'], :inputs=>params
+
+      case response.status
+      when :redirect
+        redirect response.uri
+      when :ok
+        headers 'Content-Type' => response.content_type
+        response.output
+      else
+        status 500
+        "Internal error"
       end
+    end
 
-      def post
-        process_request :post
-      end
-
-      protected
-      def process_request method
-        response = agent.proxy :method=>method, :uri=>request.env["REQUEST_URI"], :inputs=>@input
-
-        case response.status
-        when :redirect
-          redirect response.uri
-        when :ok
-          @headers['Content-Type'] = response.content_type
-          response.output
-        else
-          @status = 500
-          'Error'
-        end
-      end
-
-      def agent
-        Scrappy::Agent[@request.env["REMOTE_ADDR"]]
-      end
+    def agent
+      Scrappy::Agent[request.ip]
     end
   end
 end

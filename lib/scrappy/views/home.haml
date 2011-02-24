@@ -1,0 +1,23 @@
+!!!
+%html
+  %head
+    %title Scrappy Web Server
+  %body
+    %h1 Scrappy Web Server
+    %p Use following URL format: http://[host]/[format]/[url]
+    %p
+      For example:
+      %a{:href=>"http://localhost:3434/rdfxml/http://www.google.com"}
+        http://localhost:3434/rdfxml/http://www.google.com
+                                 
+      Remember to escape parameters: http://www.example.com/~user/%3Ftest%3D1%26test1%3D2
+      %br
+      or
+      %br
+      http%3A%2F%2Fwww.example.com%2F~user%2F%3Ftest%3D1%26test1%3D2
+      %br
+      instead of
+      %br
+      http://www.example.com/~user/?test=1&test1=2"
+    
+    %p Available formats are png, yarf, rdfxml, ntriples, turtle, json, jsonrdf, ejson

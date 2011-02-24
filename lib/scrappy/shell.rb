@@ -1,3 +1,5 @@
+require 'readline'
+
 module Scrappy
   class Shell
     def initialize file=nil
