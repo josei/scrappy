@@ -1,76 +1,55 @@
-require 'camping'
-require 'camping/session'
-require 'open3'
-
-Camping.goes :Scrappy
+require 'sinatra'
+require 'thin'
+require 'haml'
 
 module Scrappy
-  include Camping::Session
-  secret '1a36591bceec49c832079e270d7e8b73'
+  class Server < Sinatra::Base
+    enable :sessions
+    set    :views, File.dirname(__FILE__) + '/views'
 
-  module Controllers
-    class Index
-      def get
-        mab do
-          html do
-            head {}
-            body do
-              h1 "Scrappy Web Server"
-              p  "Use following URL format: http://[host]/[format]/[url]"
-              p  do
-                "For example: " + a("http://localhost:3434/rdfxml/http://www.google.com",
-                             :href=>"http://localhost:3434/rdfxml/http://www.google.com")
-              end
-              p do
-                "Remember to escape parameters: " +
-                "http://www.example.com/~user/%3Ftest%3D1%26test1%3D2<br/> or<br/> " +
-                "http%3A%2F%2Fwww.example.com%2F~user%2F%3Ftest%3D1%26test1%3D2<br/>" +
-                "instead of<br/> http://www.example.com/~user/?test=1&test1=2"
-              end
-              p do
-                "Available formats are png, yarf, rdfxml, ntriples, turtle, json, jsonrdf, ejson"
-              end
-            end
-          end
-        end
+    get '/' do
+      haml :home
+    end
+
+    get '/:format/*' do
+      process_request :get, params[:format], params[:splat] * "/", params[:callback]
+    end
+
+    post '/:format/*' do
+      process_request :post, params[:format], params[:splat] * "/", params[:callback]
+    end
+
+    protected
+    def process_request method, format, url, callback
+      response = agent.proxy :method=>method, :uri=>url, :inputs=>inputs, :format=>format.to_sym
+      case response.status
+      when :redirect
+        redirect "/#{format}/#{CGI::escape(response.uri).gsub('%2F','/').gsub('%3A',':')}#{textual_inputs}"
+      when :ok
+        headers 'Content-Type' => response.content_type
+        callback ? "#{callback}(#{response.output})" : response.output
+      else
+        status 500
+        "Internal error"
       end
     end
 
-    class Extract < R '/(\w+)/(.+)'
-      include InputEscaping
-
-      def get format, url
-        process_request :get, format, url
+    def agent
+      return @agent if @agent
+      if session[:agent].nil? || session[:token] != SESSION_TOKEN
+        session[:token] = SESSION_TOKEN
+        session[:agent] = Scrappy::Agent.create.id
       end
+      @agent = Scrappy::Agent[session[:agent]]
+    end
 
-      def post format, url
-        process_request :post, format, url
-      end
-
-      protected
-      def process_request method, format, url
-        callback = @input['callback']
-        response = agent.proxy :method=>method, :uri=>url, :inputs=>@input.reject{|k,v| k=='callback'}, :format=>format.to_sym
-        case response.status
-        when :redirect
-          redirect "/#{format}/#{CGI::escape(response.uri).gsub('%2F','/').gsub('%3A',':')}#{inputs}"
-        when :ok
-          @headers['Content-Type'] = response.content_type
-          callback ? "#{callback}(#{response.output})" : response.output
-        else
-          @status = 500
-          'Error'
-        end
-      end
-
-      def agent
-        return @agent if @agent
-        if @state[:agent].nil? || @state[:token] != SESSION_TOKEN
-          @state[:token] = SESSION_TOKEN
-          @state[:agent] = Scrappy::Agent.create.id
-        end
-        @agent = Scrappy::Agent[@state[:agent]]
-      end
+    def inputs
+      params.reject{|k,v| ['callback', 'splat', 'format']}
+    end
+    
+    def textual_inputs
+      return '' if inputs.empty?
+      "?" + (inputs.map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
     end
   end
 end

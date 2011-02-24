@@ -27,6 +27,7 @@ lib/scrappy/selectors/xpath.rb
 lib/scrappy/server.rb
 lib/scrappy/shell.rb
 lib/scrappy/support.rb
+lib/scrappy/views/home.html
 lib/scrappy/webkit/webkit.rb
 test/test_helper.rb
 test/test_scrappy.rb

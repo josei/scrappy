@@ -11,14 +11,8 @@ module Scrappy
 
   require 'rubygems'
   require 'optparse'
-  require 'logger'
-  require 'readline'
-  gem 'camping', '=2.0'
-  require 'camping'
-  require 'camping/server'
   require "#{Root}/lib/scrappy"
-  require 'scrappy/shell'
-
+  
   SESSION_TOKEN = rand(100000000)
   Options = OpenStruct.new
 
@@ -64,14 +58,20 @@ module Scrappy
         puts Agent.create.proxy(:http_method=>:get, :uri=>Options.url).output
       elsif Options.proxy
         puts "Launching Scrappy Web Proxy..."
-        Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/proxy.rb"]).start
+        require 'scrappy/proxy'
+        Thin::Logging.silent = true
+        Scrappy::Proxy.run! :host => 'localhost', :port => Options.port, :environment=>:production
       elsif Options.server
         puts "Launching Scrappy Web Server..."
-        Camping::Server.new(OpenStruct.new(:host => 'localhost', :port => Options.port, :server=>'mongrel'), ["#{Scrappy::Root}/lib/scrappy/server.rb"]).start
+        require 'scrappy/server'
+        Thin::Logging.silent = true
+        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment=>:production
       elsif Options.shell
         puts "Launching Scrappy Shell..."
+        require 'scrappy/shell'
         Shell.new.run
       else
+        require 'scrappy/shell'
         Options.quiet = true
         Shell.new(@file).run
       end

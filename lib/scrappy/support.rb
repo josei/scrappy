@@ -8,15 +8,6 @@ module URI
   end
 end
 
-module Scrappy
-  module InputEscaping
-    def inputs
-      return '' if @input.empty?
-      "?" + (@input.map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
-    end
-  end
-end
-
 module Nokogiri
   module XML
     class NodeSet
