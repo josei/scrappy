@@ -1,3 +1,7 @@
+=== 0.1.22 2011-02-25
+
+* Support for reverse proxy in web server
+
 === 0.1.21 2011-02-25
 
 * Fixed missing callback in server redirection

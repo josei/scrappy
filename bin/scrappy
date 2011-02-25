@@ -36,7 +36,7 @@ module Scrappy
         opts.on('-D', '--dump')                 { Agent::Options.dump = true; Agent::Options.format = :rdf }
         opts.on('-u', '--debug')                { Agent::Options.debug = true }
         opts.on('-i', '--interactive')          { Options.shell = true; Agent::Options.format_header = false }
-        opts.on('-s', '--server')               { Options.server = true }
+        opts.on('-s', '--server [ROOT]')        { |url| Options.server = true; Options.root = url }
         opts.on('-S', '--proxy-server')         { Options.proxy = true }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
         opts.on('-c C', '--concurrence C')      { |c| Agent::Options.workers = c.to_i }
@@ -65,7 +65,7 @@ module Scrappy
         puts "Launching Scrappy Web Server..."
         require 'scrappy/server'
         Thin::Logging.silent = true
-        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment=>:production
+        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment=>:production, :root=>Options.root
       elsif Options.shell
         puts "Launching Scrappy Shell..."
         require 'scrappy/shell'
@@ -105,7 +105,7 @@ Options
   -D, --dump               Dumps RDF data to disk
   -u, --debug              Shows debugging traces
   -i, --interactive        Runs interactive shell
-  -s, --server             Runs web server
+  -s, --server [ROOT]      Runs web server (optionally specify server's root url)
   -S, --proxy-server       Runs web proxy
   -P, --port PORT          Selects port number (default is 3434)
   -v, --visual             Uses visual agent (slow)

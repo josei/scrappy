@@ -24,7 +24,7 @@ module Scrappy
       response = agent.proxy :method=>method, :uri=>url, :inputs=>inputs, :format=>format.to_sym
       case response.status
       when :redirect
-        redirect "/#{format}/#{CGI::escape(response.uri).gsub('%2F','/').gsub('%3A',':')}#{textual_inputs}"
+        redirect "#{settings.root}/#{format}/#{CGI::escape(response.uri).gsub('%2F','/').gsub('%3A',':')}#{textual_inputs}"
       when :ok
         headers 'Content-Type' => response.content_type
         callback ? "#{callback}(#{response.output})" : response.output
@@ -48,8 +48,8 @@ module Scrappy
     end
     
     def textual_inputs
-      return '' if inputs.merge('callback'=>params[:callback]).empty?
-      "?" + (inputs.merge('callback'=>params[:callback]).map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
+      return '' if inputs.merge('callback'=>params[:callback]).reject{|k,v| v.nil?}.empty?
+      "?" + (inputs.merge('callback'=>params[:callback]).reject{|k,v| v.nil?}.map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
     end
   end
 end
