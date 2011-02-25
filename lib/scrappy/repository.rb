@@ -14,7 +14,7 @@ module Scrappy
         time_v = (@options[:time].to_i) * 60
 
         # Adds the context to the array
-        dev << ["#{context}"] if (context.include?(uri) && check_date(datc, time_v))
+        dev << context if (context.include?(uri) && check_date(datc, time_v))
       end
       return dev
     end
@@ -35,8 +35,7 @@ module Scrappy
           # Adds the context to the array
           #dev << ["%3C#{context}%3E"] if (context.include?(CGI::escape(uri)) && check_date(datc,time))
           if (context.include?(uri) && check_date(datc,time))
-            dev<< ["%3C#{context}%3E"]
-            puts "Add context to the array with date #{(Time.now.to_i - datc)/86400} days"
+            dev<< context
           end
         end
       end
