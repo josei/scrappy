@@ -11,12 +11,12 @@ module Scrappy
       haml :home
     end
 
-    get '/:format/*' do
-      process_request :get, params[:format], params[:splat] * "/", params[:callback]
+    get '/:format/*' do |format, url|
+      process_request :get, format, url, params[:callback]
     end
 
-    post '/:format/*' do
-      process_request :post, params[:format], params[:splat] * "/", params[:callback]
+    post '/:format/*' do |format, url|
+      process_request :post, format, url, params[:callback]
     end
 
     protected
