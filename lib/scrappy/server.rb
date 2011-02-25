@@ -48,8 +48,8 @@ module Scrappy
     end
     
     def textual_inputs
-      return '' if inputs.empty?
-      "?" + (inputs.map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
+      return '' if inputs.merge('callback'=>params[:callback]).empty?
+      "?" + (inputs.merge('callback'=>params[:callback]).map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
     end
   end
 end

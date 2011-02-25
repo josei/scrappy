@@ -1,3 +1,7 @@
+=== 0.1.21 2011-02-25
+
+* Fixed missing callback in server redirection
+
 === 0.1.20 2011-02-25
 
 * Added missing dependency (haml)
