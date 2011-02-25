@@ -1,3 +1,8 @@
+=== 0.1.20 2011-02-25
+
+* Added missing dependency (haml)
+* Support for more predicates in NewUriSelector
+
 === 0.1.19 2011-02-24
 
 * Using Sinatra (in production mode) instead of Camping
