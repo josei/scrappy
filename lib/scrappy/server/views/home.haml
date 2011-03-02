@@ -1,0 +1,43 @@
+!!!
+%html
+  %head
+    %title Scrappy
+    %style{:type=>'text/css'}
+      == body { font-family: Arial, sans; }
+      ==.center { text-align: center; margin-top: 100px; }
+      ==.search { margin-top: 40px; font-size:20px; }
+      ==.search input  { width: 400px; height:30px; font-size:16px; }
+      ==.search select { width: 80px; height: 30px; font-size:16px; }
+      ==.search button { width: 80px; height: 30px; font-size:16px; }
+      ==#help { margin: auto; width: 700px; padding: 15px; |
+        border: 1px solid; margin-top: 60px; font-size: 14px; color: #555; } |
+      ==#footer { margin-top:20px; text-align: center; font-size:14px; color: #555; }
+  %body
+    %div.center
+      %a{:href=>'http://github.com/josei/scrappy'}
+        %img{:src=>'/images/logo.png'}
+      %form.search
+        %div
+          %select{:name=>:format}
+            %option{:value=>:rdf} RDF
+            %option{:value=>:png} PNG
+            %option{:value=>:ejson} JSON
+            %option{:value=>:yarf} YARF
+            %option{:value=>:ntriples} nTriples
+          %input{:name=>:uri, :size=>30, :type=>:text, :value=>'Enter URI...', :onclick=>"if(this.value=='Enter URI...') this.value='';"}
+          %button Scrape
+    %div#help
+      %p Scrappy web server uses the following URL format: http://[host]/[format]/[url]
+      %p
+        For example: http://localhost:3434/rdf/http://example.com
+      %p
+        Remember to escape the URL's parameters:
+        %ul
+          %li http://localhost:3434/rdf/http://example.com/~user/%3Ftest%3D1
+          %li or http://localhost:3434/rdf/http%3A%2F%2Fexample.com%2F~user%2F%3Ftest%3D1
+        instead of:
+        %ul
+          %li http://localhost:3434/rdf/http://example.com/~user/?test=1
+      %p Available formats are png, yarf, rdfxml, ntriples, turtle, json, jsonrdf, ejson
+    %div#footer
+      %a{:href=>'http://github.com/josei/scrappy'} Scrappy at GitHub

@@ -5,12 +5,18 @@ require 'haml'
 module Scrappy
   class Server < Sinatra::Base
     enable :sessions
-    set    :views, File.dirname(__FILE__) + '/views'
+    set    :root,   File.dirname(__FILE__)
+    set    :views,  Proc.new { File.join(root, "views") }
+    set    :public, Proc.new { File.join(root, "public") }
 
     get '/' do
-      haml :home
+      if params[:format] and params[:uri]
+        redirect "#{settings.base_uri}/#{params[:format]}/#{simplify_uri(params[:uri])}"
+      else
+        haml :home
+      end
     end
-
+    
     get '/:format/*' do |format, url|
       process_request :get, format, url, params[:callback]
     end
@@ -24,7 +30,7 @@ module Scrappy
       response = agent.proxy :method=>method, :uri=>url, :inputs=>inputs, :format=>format.to_sym
       case response.status
       when :redirect
-        redirect "#{settings.root}/#{format}/#{CGI::escape(response.uri).gsub('%2F','/').gsub('%3A',':')}#{textual_inputs}"
+        redirect "#{settings.base_uri}/#{format}/#{simplify_uri(response.uri)}#{textual_inputs}"
       when :ok
         headers 'Content-Type' => response.content_type
         callback ? "#{callback}(#{response.output})" : response.output
@@ -50,6 +56,10 @@ module Scrappy
     def textual_inputs
       return '' if inputs.merge('callback'=>params[:callback]).reject{|k,v| v.nil?}.empty?
       "?" + (inputs.merge('callback'=>params[:callback]).reject{|k,v| v.nil?}.map{|k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}"}*'')
+    end
+    
+    def simplify_uri uri
+      CGI::escape(uri).gsub('%2F','/').gsub('%3A',':')
     end
   end
 end
