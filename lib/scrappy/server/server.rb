@@ -17,6 +17,10 @@ module Scrappy
       end
     end
     
+    get '/help' do
+      haml :help
+    end
+    
     get '/:format/*' do |format, url|
       process_request :get, format, url, params[:callback]
     end
