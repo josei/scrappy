@@ -1,24 +1,32 @@
 body {
   font-family: Arial, sans;
 }
-.center {
+#center {
   text-align: center;
   margin-top: 100px;
-}
-.search {
-  margin-top: 40px;
   margin-bottom: 100px;
+}
+#search {
+  margin-top: 40px;
   font-size:20px;
+  margin-bottom: 10px;
 }
-.search input  {
-  width: 400px; height:30px; font-size:16px;
+#search input  {
+  width: 700px; height:30px; font-size:16px;
 }
-.search select {
-  width: 80px; height: 30px; font-size:16px;
+#buttons {
+  width: 400px;
+  margin: auto;
 }
-.search button {
-  width: 80px; height: 30px; font-size:16px;
+#buttons select {
+  width: 100px; height: 30px; font-size:16px;
+  margin-left: 5px;
 }
+#buttons button {
+  width: 100px; height: 30px; font-size:16px;
+  margin-right: 5px;
+}
+
 pre {
   width: 600px;
   margin-left: auto;

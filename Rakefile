@@ -11,7 +11,7 @@ Echoe.new('scrappy', Scrappy::VERSION) do |p|
   p.email          = "joseignacio.fernandez@gmail.com"
   p.install_message = '**(Optional) Remember to install rbwebkitgtk for visual parsing features**'
   p.ignore_pattern = ["pkg/*"]
-  p.dependencies = [['activesupport','>= 2.3.5'], ['sinatra', '>= 1.1.2'], ['thin', '>= 1.2.7'], ['nokogiri', '>= 1.4.1'], ['mechanize','>= 1.0.0'], ['lightrdf','>= 0.1.9'], ['i18n', '>= 0.4.2'], ['haml', '>= 3.0.24']]
+  p.dependencies = [['activesupport','>= 2.3.5'], ['sinatra', '>= 1.1.2'], ['thin', '>= 1.2.7'], ['nokogiri', '>= 1.4.1'], ['mechanize','>= 1.0.0'], ['lightrdf','>= 0.2.0'], ['i18n', '>= 0.4.2'], ['haml', '>= 3.0.24']]
 end
 
 Rake::RDocTask.new(:rdoc) do |rdoc|

@@ -1,6 +1,10 @@
-module CssSelector
-  def self.filter selector, doc
-    # By using Nokogiri, CSS and XPath use the same search method
-    XPathSelector.filter selector, doc
+module Sc
+  class CssSelector
+    include RDF::NodeProxy
+
+    def filter doc
+      # By using Nokogiri, CSS and XPath use the same search method
+      Sc::XPathSelector.new(node).filter doc
+    end
   end
 end

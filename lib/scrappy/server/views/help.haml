@@ -2,10 +2,10 @@
 %html
   %head
     %title Help - Scrappy
-    %link{:type=>"text/css", :href=>"/stylesheets/application.css", :rel=>"stylesheet"}
+    %link{:type=>"text/css", :href=>"#{settings.base_uri}/stylesheets/application.css", :rel=>"stylesheet"}
   %body
     %div#header
-      %img{:src=>'/images/logo_small.png'}
+      %img{:src=>"#{settings.base_uri}/images/logo_small.png"}
     %div#body
       %h1 Help
       %p
@@ -15,11 +15,11 @@
         %pre http://[host]/[format]/[url]
       %p
         For example, to retrieve http://example.com/~user/?test=1 with RDF serialization:
-        %pre http://localhost:3434/rdf/http://example.com/~user/%3Ftest%3D1
+        %pre==#{settings.base_uri || "http://localhost:#{settings.port}"}/rdf/http://example.com/~user/%3Ftest%3D1
       %p Available serialization formats are rdf, rdfxml, png, yarf, ntriples, turtle, json, jsonrdf, and ejson.
     %div#footer
-      %a{:href=>"/"} Home
+      %a{:href=>"#{settings.base_uri}/"} Home
       |
-      %a{:href=>"/help"} Help
+      %a{:href=>"#{settings.base_uri}/help"} Help
       |
       %a{:href=>'http://github.com/josei/scrappy'} About

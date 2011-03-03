@@ -1,8 +1,14 @@
-module SliceSelector
-  def self.filter selector, doc
-    selector.rdf::value.map do |separator|
-      slices = doc[:value].split(separator)
-      selector.sc::index.map { |index| { :uri=>doc[:uri], :content=>doc[:content], :value=>slices[index.to_i].to_s.strip} }
-    end.flatten
+module Sc
+  class SliceSelector
+    include RDF::NodeProxy
+
+    def filter doc
+      rdf::value.map do |separator|
+        slices = doc[:value].split(separator)
+        selector.sc::index.map { |index| slices[index.to_i].to_s.strip }.
+                           select { |value| value != "" }.
+                           map { |value| { :uri=>doc[:uri], :content=>doc[:content], :value=>value} }
+      end.flatten
+    end
   end
 end

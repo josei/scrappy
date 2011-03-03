@@ -92,6 +92,13 @@ sc:suffix:
   rdfs:domain: sc:NewUriSelector
   rdfs:range: rdf:Literal
 
+sc:downcase:
+  rdf:type: rdf:Property
+  rdfs:label: "downcase"
+  rdfs:comment: "Indicates whether or not to build a downcased URI on a new URI selector"
+  rdfs:domain: sc:NewUriSelector
+  rdfs:range: rdf:Literal
+
 sc:debug:
   rdf:type: rdf:Property
   rdfs:label: "debug"

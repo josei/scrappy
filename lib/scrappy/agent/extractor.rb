@@ -7,12 +7,12 @@ module Scrappy
         print "Extracting #{uri}..."; $stdout.flush
       end
       
+      @selector_pool ||= {}
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
       uri_selectors  = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
-        class_name = uri_selector.rdf::type.first.to_s.split('#').last
-        results = Kernel.const_get(class_name).filter uri_selector, {:content=>content, :uri=>uri}
+        results = selector_pool(uri_selector).filter :content=>content, :uri=>uri
         !results.empty?
       end
 
@@ -36,7 +36,7 @@ module Scrappy
       uri = options[:doc][:uri]
 
       # Select nodes
-      docs = fragment.sc::selector.map { |s| filter s, options[:doc] }.flatten
+      docs = fragment.sc::selector.map { |s| selector_pool(s).filter(options[:doc]) }.flatten
 
       # Generate triples
       docs.each do |doc|
@@ -82,9 +82,6 @@ module Scrappy
     end
 
     def filter selector, doc
-      # From "BaseUriSelector" to "base_uri"
-      class_name = selector.rdf::type.first.to_s.split('#').last
-
       if !selector.sc::debug.empty? and options.debug
         puts '== DEBUG'
         puts '== Selector:'
@@ -96,7 +93,7 @@ module Scrappy
       end
 
       # Process selector
-      results = Kernel.const_get(class_name).filter selector, doc
+      results = selector_pool(selector).filter doc
 
       if !selector.sc::debug.empty? and options.debug
         puts "== No results" if results.empty?
@@ -176,6 +173,10 @@ module Scrappy
     def node_hash uri, path
       digest = Digest::MD5.hexdigest("#{uri} #{path}")
       "_:bnode#{digest}"
+    end
+    
+    def selector_pool selector
+      @selector_pool[selector.id] ||= kb.node(selector)
     end
   end
 end
