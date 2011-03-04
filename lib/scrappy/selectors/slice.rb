@@ -5,9 +5,9 @@ module Sc
     def filter doc
       rdf::value.map do |separator|
         slices = doc[:value].split(separator)
-        selector.sc::index.map { |index| slices[index.to_i].to_s.strip }.
-                           select { |value| value != "" }.
-                           map { |value| { :uri=>doc[:uri], :content=>doc[:content], :value=>value} }
+        sc::index.map { |index| slices[index.to_i].to_s.strip }.
+                  select { |value| puts value; value != "" }.
+                  map { |value| { :uri=>doc[:uri], :content=>doc[:content], :value=>value} }
       end.flatten
     end
   end

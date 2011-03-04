@@ -36,7 +36,7 @@ module Scrappy
       uri = options[:doc][:uri]
 
       # Select nodes
-      docs = fragment.sc::selector.map { |s| selector_pool(s).filter(options[:doc]) }.flatten
+      docs = fragment.sc::selector.map { |s| filter s, options[:doc] }.flatten
 
       # Generate triples
       docs.each do |doc|
