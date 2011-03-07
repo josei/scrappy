@@ -47,7 +47,7 @@ module Scrappy
     def get_date
       return Time.now.year * 100000000 + Time.now.month * 1000000 + Time.now.day * 10000 + Time.now.hour * 100 + Time.now.min
     end
-
+    
     protected
     
     # Checks if the context date is within indicated time

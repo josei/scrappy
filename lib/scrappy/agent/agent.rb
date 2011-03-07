@@ -156,13 +156,13 @@ module Scrappy
 
     # Method to observe several webs, and extract the data periodicaly
     def observe(uris)
-      array = uris.split
+      array = uris.split(',')
       while true
         time_init = Time.now.to_i
         array.each do |url|
           proxy :http_method=>:get, :uri=>url
         end
-          time_sleep = 900 - (Time.now.to_i - time_init)
+          time_sleep = ( @options.repository.get_time * 60 ) - (Time.now.to_i - time_init)
           sleep time_sleep
       end
     end
