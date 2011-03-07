@@ -115,8 +115,15 @@ sc:path:
 
 sc:uri:
   rdf:type: rdf:Property
-  rdfs:label: "uri"
-  rdfs:comment: "URI of the fragment subject"
+  rdfs:label: "URI"
+  rdfs:comment: "URI of an RDF resource"
+  rdfs:domain: rdf:Resource
+  rdfs:range: rdf:Resource
+
+sc:document:
+  rdf:type: rdf:Property
+  rdfs:label: "document"
+  rdfs:comment: "Document of the fragment subject"
   rdfs:domain: sc:Fragment
   rdfs:range: rdf:Resource
 
@@ -249,6 +256,11 @@ sc:Selector:
   rdf:type: rdf:Class
   rdfs:label: "Selector"
   rdfs:comment: "A restriction on the scope of a web fragment"
+
+sc:UnivocalSelector:
+  rdf:type: rdf:Class
+  rdfs:label: "Univocal selector"
+  rdfs:comment: "A selector that selects a specific node in the DOM tree of a particular URI"
 
 sc:TagSelector:
   rdf:type: rdf:Class
