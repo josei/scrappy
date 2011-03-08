@@ -163,10 +163,10 @@ Copyright
       # It looks for it in the home .scrappy dir
       if File.exist?("#{home}/config.yml")
         con_r = YAML::load_file("#{home}/config.yml")["repository"]
-        r_opt = {}
+        Agent::Options.r_opt = {}
         #Convert the strings from the YAML file into symbols
-        con_r.each {|k,v| r_opt[k.to_sym] = v }
-        Agent::Options.repository = Repository.new r_opt
+        con_r.each {|k,v| Agent::Options.r_opt[k.to_sym] = v }
+        Agent::Options.repository = Repository.new Agent::Options.r_opt
       end
       RDF::ID.ns.merge! Agent::Options.kb.ns
     end

@@ -160,9 +160,11 @@ module Scrappy
       while true
         time_init = Time.now.to_i
         array.each do |url|
+          puts "Extracting data from #{url}"
           proxy :http_method=>:get, :uri=>url
         end
-          time_sleep = ( @options.repository.get_time * 60 ) - (Time.now.to_i - time_init)
+          time_sleep = ( @options.r_opt[:time] * 60 ) - (Time.now.to_i - time_init)
+          puts "Sleeping..."
           sleep time_sleep
       end
     end
