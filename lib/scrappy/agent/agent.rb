@@ -160,11 +160,11 @@ module Scrappy
       while true
         time_init = Time.now.to_i
         array.each do |url|
-          puts "Extracting data from #{url}"
+          puts "Extracting data from #{url}" if @options.debug
           proxy :http_method=>:get, :uri=>url
         end
           time_sleep = ( @options.r_opt[:time] * 60 ) - (Time.now.to_i - time_init)
-          puts "Sleeping..."
+          puts "Sleeping..." if @options.debug
           sleep time_sleep
       end
     end
@@ -188,7 +188,7 @@ module Scrappy
 
       # Extract data
       if context_s.empty?
-        #Extracts from the uri
+        #Extracts data from the uri
         triples = do_request 
 
         context = "#{uri}:#{Time.now.to_i}"
