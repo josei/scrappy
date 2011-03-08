@@ -150,32 +150,32 @@ module Scrappy
       triples.push(*fragment.graph.merge(presentation.graph).merge(selector.graph).triples) if referenceable==:dump or resources.include?(fragment)
 
       content.search('*').each do |node|
+        next if node.text?
+
         fragment = Node(node_hash(uri, node.path))
-        
+
         if referenceable == :dump or resources[fragment]
-          selector = Node(nil)
+          selector     = Node(nil)
           presentation = Node(nil)
 
-          selector.rdf::type = Node('sc:UnivocalSelector')
-          selector.sc::path = node.path.to_s
-          selector.sc::tag = node.name.to_s
-          selector.sc::document = uri
+          triples << [selector, ID('rdf:type'), ID('sc:UnivocalSelector')]
+          triples << [selector, ID('sc:path'), node.path.to_s]
+          triples << [selector, ID('sc:tag'), node.name.to_s]
+          triples << [selector, ID('sc:document'), uri]
 
-          presentation.sc::x = node[:vx].to_s if node[:vx]
-          presentation.sc::y = node[:vy].to_s if node[:vy]
-          presentation.sc::width = node[:vw].to_s if node[:vw]
-          presentation.sc::height = node[:vh].to_s if node[:vh]
-          presentation.sc::font_size = node[:vsize].gsub("px","").to_s if node[:vsize]
-          presentation.sc::font_weight = node[:vweight].to_s if node[:vweight]
-          presentation.sc::color = node[:vcolor].to_s if node[:vcolor]
-          presentation.sc::background_color = node[:vbcolor].to_s if node[:vbcolor]
-          presentation.sc::text = node.text.strip
-          presentation.sc::children_count = node.search('*').size.to_s
+          triples << [presentation, ID('sc:x'), node[:vx].to_s] if node[:vx]
+          triples << [presentation, ID('sc:y'), node[:vy].to_s] if node[:vy]
+          triples << [presentation, ID('sc:width'), node[:vw].to_s] if node[:vw]
+          triples << [presentation, ID('sc:height'), node[:vh].to_s] if node[:vh]
+          triples << [presentation, ID('sc:font_size'), node[:vsize].gsub("px","").to_s] if node[:vsize]
+          triples << [presentation, ID('sc:font_weight'), node[:vweight].to_s] if node[:vweight]
+          triples << [presentation, ID('sc:color'), node[:vcolor].to_s] if node[:vcolor]
+          triples << [presentation, ID('sc:background_color'), node[:vbcolor].to_s] if node[:vbcolor]
+          triples << [presentation, ID('sc:text'), node.text.strip]
+          triples << [presentation, ID('sc:children_count'), node.children.select{|n| !n.text?}.size.to_s]
 
-          fragment.sc::selector = selector
-          fragment.sc::presentation = presentation unless presentation.empty?
-
-          triples.push(*fragment.graph.merge(presentation.graph).merge(selector.graph).triples)
+          triples << [fragment, ID('sc:selector'), selector]
+          triples << [fragment, ID('sc:presentation'), presentation]
         end
       end
     end
