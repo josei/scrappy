@@ -13,7 +13,6 @@ lib/scrappy/agent/formats.rb
 lib/scrappy/agent/map_reduce.rb
 lib/scrappy/agent/extractor.rb
 lib/scrappy/agent/visual_agent.rb
-lib/scrappy/proxy.rb
 lib/scrappy/selectors/base_uri.rb
 lib/scrappy/selectors/css.rb
 lib/scrappy/selectors/new_uri.rb
@@ -23,10 +22,15 @@ lib/scrappy/selectors/slice.rb
 lib/scrappy/selectors/uri.rb
 lib/scrappy/selectors/uri_pattern.rb
 lib/scrappy/selectors/xpath.rb
-lib/scrappy/server.rb
+lib/scrappy/server/proxy.rb
+lib/scrappy/server/server.rb
+lib/scrappy/server/public/images/logo.png
+lib/scrappy/server/public/images/logo_small.png
+lib/scrappy/server/public/stylesheets/application.css
+lib/scrappy/server/views/home.haml
+lib/scrappy/server/views/help.haml
 lib/scrappy/shell.rb
 lib/scrappy/support.rb
-lib/scrappy/views/home.haml
 lib/scrappy/webkit/webkit.rb
 test/test_helper.rb
 test/test_scrappy.rb

@@ -1,3 +1,26 @@
+=== 0.1.24 2011-03-08
+
+* Using RDF::NodeProxy from lightRDF 0.2
+* Added references (-r option) on constructed URIs
+* Minor corrections
+
+=== 0.1.23 2011-03-03
+
+* Prettier web interface
+
+=== 0.1.22 2011-02-25
+
+* Support for reverse proxy in web server
+
+=== 0.1.21 2011-02-25
+
+* Fixed missing callback in server redirection
+
+=== 0.1.20 2011-02-25
+
+* Added missing dependency (haml)
+* Support for more predicates in NewUriSelector
+
 === 0.1.19 2011-02-24
 
 * Using Sinatra (in production mode) instead of Camping

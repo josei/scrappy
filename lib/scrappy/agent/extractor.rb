@@ -6,13 +6,14 @@ module Scrappy
       if options.debug
         print "Extracting #{uri}..."; $stdout.flush
       end
+
+      @selector_pool ||= {}
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
-      uri_selectors = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
-          class_name = uri_selector.rdf::type.first.to_s.split('#').last
-          results = Kernel.const_get(class_name.to_sym).filter uri_selector, {:content=>content, :uri=>uri}
-          !results.empty?
+      uri_selectors  = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
+        results = selector_pool(uri_selector).filter :content=>content, :uri=>uri
+        !results.empty?
       end
 
       fragments = uri_selectors.map { |uri_selector| kb.find(nil, Node('sc:selector'), uri_selector) }.flatten
@@ -40,9 +41,19 @@ module Scrappy
       # Generate triples
       docs.each do |doc|
         # Build URIs if identifier present
-        nodes = fragment.sc::identifier.map { |s| filter s, doc }.flatten.map{ |d| Node(parse_uri(uri, d[:value])) }
+        nodes = fragment.sc::identifier.map { |s| filter s, doc  }.flatten.map do |d|
+          node = Node(parse_uri(uri, d[:value]))
+          if options[:referenceable]
+            # Include the fragment where the URI was built from
+            uri_node = Node(nil)
+            options[:triples] << [ node,     Node("sc:uri"),    uri_node ]
+            options[:triples] << [ uri_node, Node("rdf:value"), node.to_s ]
+            options[:triples] << [ uri_node, Node("sc:source"), Node(node_hash(d[:uri], d[:content].path)) ]
+          end
+          node
+        end
         nodes << Node(nil) if nodes.empty?
-
+        
         nodes.each do |node|
           # Build the object
           object = if fragment.sc::type.include?(Node('rdf:Literal'))
@@ -81,9 +92,6 @@ module Scrappy
     end
 
     def filter selector, doc
-      # From "BaseUriSelector" to "base_uri"
-      class_name = selector.rdf::type.first.to_s.split('#').last
-
       if !selector.sc::debug.empty? and options.debug
         puts '== DEBUG'
         puts '== Selector:'
@@ -95,7 +103,7 @@ module Scrappy
       end
 
       # Process selector
-      results = Kernel.const_get(class_name).filter selector, doc
+      results = selector_pool(selector).filter doc
 
       if !selector.sc::debug.empty? and options.debug
         puts "== No results" if results.empty?
@@ -127,7 +135,7 @@ module Scrappy
     end
 
     def add_referenceable_data content, triples, referenceable
-      resources = triples.map{|s,p,o| [[s],[o]]}.flatten
+      resources = {}; triples.each { |s,p,o| resources[o] = true }
 
       fragment = Node(node_hash(uri, '/'))
       selector = Node(nil)
@@ -135,7 +143,7 @@ module Scrappy
 
       selector.rdf::type = Node('sc:UnivocalSelector')
       selector.sc::path = '/'
-      selector.sc::uri = uri
+      selector.sc::document = uri
 
       fragment.sc::selector = selector
 
@@ -143,15 +151,15 @@ module Scrappy
 
       content.search('*').each do |node|
         fragment = Node(node_hash(uri, node.path))
-
-        if referenceable == :dump or resources.include?(fragment)
+        
+        if referenceable == :dump or resources[fragment]
           selector = Node(nil)
           presentation = Node(nil)
 
           selector.rdf::type = Node('sc:UnivocalSelector')
           selector.sc::path = node.path.to_s
           selector.sc::tag = node.name.to_s
-          selector.sc::uri = uri
+          selector.sc::document = uri
 
           presentation.sc::x = node[:vx].to_s if node[:vx]
           presentation.sc::y = node[:vy].to_s if node[:vy]
@@ -174,7 +182,11 @@ module Scrappy
 
     def node_hash uri, path
       digest = Digest::MD5.hexdigest("#{uri} #{path}")
-      "_:bnode#{digest}"
+      :"_:bnode#{digest}"
+    end
+    
+    def selector_pool selector
+      @selector_pool[selector.id] ||= kb.node(selector)
     end
   end
 end

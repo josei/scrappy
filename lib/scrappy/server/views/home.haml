@@ -1,0 +1,26 @@
+!!!
+%html
+  %head
+    %title Scrappy
+    %link{:type=>"text/css", :href=>"#{settings.base_uri}/stylesheets/application.css", :rel=>"stylesheet"}
+  %body
+    %div#center
+      %a{:href=>'http://github.com/josei/scrappy'}
+        %img{:src=>"#{settings.base_uri}/images/logo.png"}
+      %form
+        %div#search
+          %input{:name=>:uri, :size=>30, :type=>:text, :value=>'Enter URI...', :onclick=>"if(this.value=='Enter URI...') this.value='';"}
+        %div#buttons
+          %button Scrape
+          %select{:name=>:format}
+            %option{:value=>:rdf} RDF
+            %option{:value=>:png} PNG
+            %option{:value=>:ejson} JSON
+            %option{:value=>:yarf} YARF
+            %option{:value=>:ntriples} nTriples
+    %div#footer
+      %a{:href=>"#{settings.base_uri}/"} Home
+      |
+      %a{:href=>"#{settings.base_uri}/help"} Help
+      |
+      %a{:href=>'http://github.com/josei/scrappy'} About

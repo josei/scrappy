@@ -1,0 +1,25 @@
+!!!
+%html
+  %head
+    %title Help - Scrappy
+    %link{:type=>"text/css", :href=>"#{settings.base_uri}/stylesheets/application.css", :rel=>"stylesheet"}
+  %body
+    %div#header
+      %img{:src=>"#{settings.base_uri}/images/logo_small.png"}
+    %div#body
+      %h1 Help
+      %p
+        Scrappy web server is a web interface to Scrappy functionalities.
+        You can use it to get data from a web resource and integrate it with other system.
+        The service uses the following URL format:
+        %pre http://[host]/[format]/[url]
+      %p
+        For example, to retrieve http://example.com/~user/?test=1 with RDF serialization:
+        %pre==#{settings.base_uri || "http://localhost:#{settings.port}"}/rdf/http://example.com/~user/%3Ftest%3D1
+      %p Available serialization formats are rdf, rdfxml, png, yarf, ntriples, turtle, json, jsonrdf, and ejson.
+    %div#footer
+      %a{:href=>"#{settings.base_uri}/"} Home
+      |
+      %a{:href=>"#{settings.base_uri}/help"} Help
+      |
+      %a{:href=>'http://github.com/josei/scrappy'} About

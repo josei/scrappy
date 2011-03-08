@@ -30,20 +30,20 @@ module Scrappy
       args = ARGV.map { |arg| arg.split(" ") }.flatten
 
       OptionParser.new do |opts|
-        opts.on('-V', '--version')              { output_version; exit 0 }
+        opts.on('-v', '--version')              { output_version; exit 0 }
         opts.on('-h', '--help')                 { output_help; exit 0 }
         opts.on('-g URL', '--get URL')          { |url| Options.url = url; Options.http_method=:get }
         opts.on('-p URL', '--post URL')         { |url| Options.url = url; Options.http_method=:post }
         opts.on('-D', '--dump')                 { Agent::Options.dump = true; Agent::Options.format = :rdf }
         opts.on('-u', '--debug')                { Agent::Options.debug = true }
         opts.on('-i', '--interactive')          { Options.shell = true; Agent::Options.format_header = false }
-        opts.on('-s', '--server')               { Options.server = true }
+        opts.on('-s', '--server [BASE_URI]')    { |uri| Options.server = true; Options.base_uri = uri }
         opts.on('-S', '--proxy-server')         { Options.proxy = true }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
         opts.on('-c C', '--concurrence C')      { |c| Agent::Options.workers = c.to_i }
         opts.on('-d D', '--delay D')            { |d| Agent::Options.delay = d; Agent::Options.workers = 1 }
         opts.on('-l L', '--levels L')           { |l| Agent::Options.depth = l.to_i }
-        opts.on('-v', '--visual')               { Agent::Options.agent = :visual; Agent::Options.workers = 1 }
+        opts.on('-V', '--visual')               { Agent::Options.agent = :visual; Agent::Options.workers = 1 }
         opts.on('-r', '--reference')            { Agent::Options.referenceable = :minimum }
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
         opts.on('-w', '--window')               { Agent::Options.window = true }
@@ -63,15 +63,15 @@ module Scrappy
         Options.quiet = true
         puts Agent.create.proxy(:http_method=>:get, :uri=>Options.url).output
       elsif Options.proxy
-        puts "Launching Scrappy Web Proxy..."
-        require 'scrappy/proxy'
+        puts "Launching Scrappy Web Proxy (set http://localhost:#{Options.port} as proxy)..."
+        require 'scrappy/server/proxy'
         Thin::Logging.silent = true
         Scrappy::Proxy.run! :host => 'localhost', :port => Options.port, :environment=>:production
       elsif Options.server
-        puts "Launching Scrappy Web Server..."
-        require 'scrappy/server'
+        puts "Launching Scrappy Web Server (browse http://localhost:#{Options.port})..."
+        require 'scrappy/server/server'
         Thin::Logging.silent = true
-        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment=>:production
+        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment=>:production, :base_uri=>Options.base_uri
       elsif Options.shell
         puts "Launching Scrappy Shell..."
         require 'scrappy/shell'
@@ -91,8 +91,8 @@ module Scrappy
   Scrappy is a tool to scrape semantic data out of the unstructured web
 
 Examples
-  This command retrieves Google web page
-    scrappy -g http://www.google.com
+  This command retrieves a web page
+    scrappy -g http://www.example.com
 
 Usage 
   scrappy [options]
@@ -101,7 +101,7 @@ Usage
 
 Options
   -h, --help               Displays help message
-  -V, --version            Display the version, then exit
+  -v, --version            Display the version, then exit
   -f, --format             Picks output format (json, ejson, rdfxml, ntriples, png)
   -g, --get URL            Gets requested URL
   -p, --post URL           Posts requested URL
@@ -111,10 +111,10 @@ Options
   -D, --dump               Dumps RDF data to disk
   -u, --debug              Shows debugging traces
   -i, --interactive        Runs interactive shell
-  -s, --server             Runs web server
+  -s, --server [ROOT]      Runs web server (optionally specify server's root url)
   -S, --proxy-server       Runs web proxy
   -P, --port PORT          Selects port number (default is 3434)
-  -v, --visual             Uses visual agent (slow)
+  -V, --visual             Uses visual agent (slow)
   -r, --reference          Outputs referenceable data
   -R, --reference-all      Outputs all HTML referenceable data
   -w, --window             Shows browser window (requires -v)
