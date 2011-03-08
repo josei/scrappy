@@ -1,6 +1,7 @@
-=== 0.1.24 2011-03-03
+=== 0.1.24 2011-03-08
 
 * Using RDF::NodeProxy from lightRDF 0.2
+* Added references (-r option) on constructed URIs
 * Minor corrections
 
 === 0.1.23 2011-03-03
