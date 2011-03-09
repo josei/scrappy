@@ -1,3 +1,7 @@
+=== 0.2.0 2011-03-09
+
+* Integration with cmoft's improvements: Sesame support, time-aggregated requests and observing URLs
+
 === 0.1.24 2011-03-08
 
 * Using RDF::NodeProxy from lightRDF 0.2

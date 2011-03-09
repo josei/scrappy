@@ -34,8 +34,8 @@ module Scrappy
       OptionParser.new do |opts|
         opts.on('-v', '--version')              { output_version; exit 0 }
         opts.on('-h', '--help')                 { output_help; exit 0 }
-        opts.on('-g URL', '--get URL')          { |url| Options.url = url; Options.http_method=:get }
-        opts.on('-p URL', '--post URL')         { |url| Options.url = url; Options.http_method=:post }
+        opts.on('-g URI', '--get URI')          { |uri| Options.uri = uri; Options.http_method=:get }
+        opts.on('-p URI', '--post URI')         { |uri| Options.uri = uri; Options.http_method=:post }
         opts.on('-D', '--dump')                 { Agent::Options.dump = true; Agent::Options.format = :rdf }
         opts.on('-u', '--debug')                { Agent::Options.debug = true }
         opts.on('-i', '--interactive')          { Options.shell = true; Agent::Options.format_header = false }
@@ -50,15 +50,19 @@ module Scrappy
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
         opts.on('-w', '--window')               { Agent::Options.window = true }
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
+        opts.on('-t TIME', '--time TIME')       { |t| Agent::Options.time = t.to_i*60 } # converts minutes to seconds
+        opts.on('-o URIs', '--observe URIs')    { |uris| Options.observe = uris.split(',') }
       end.parse!(args)
       @file = args.shift
     end
 
     def run
       onload
-      if Options.url
+      if Options.uri
         Options.quiet = true
-        puts Agent.create.proxy(:http_method=>:get, :uri=>Options.url).output
+        puts Agent.create.proxy(:http_method=>:get, :uri=>Options.uri).output
+      elsif Options.observe
+        Agent.create.observe(Options.observe)
       elsif Options.proxy
         puts "Launching Scrappy Web Proxy (set http://localhost:#{Options.port} as proxy)..."
         require 'scrappy/server/proxy'
@@ -108,10 +112,12 @@ Options
   -D, --dump               Dumps RDF data to disk
   -u, --debug              Shows debugging traces
   -i, --interactive        Runs interactive shell
+  -o, --observe URLs       Observes the specified URLs storing their data into the repository
   -s, --server [ROOT]      Runs web server (optionally specify server's root url)
   -S, --proxy-server       Runs web proxy
   -P, --port PORT          Selects port number (default is 3434)
   -V, --visual             Uses visual agent (slow)
+  -t, --time DAYS          Returns repository data from the last given minutes
   -r, --reference          Outputs referenceable data
   -R, --reference-all      Outputs all HTML referenceable data
   -w, --window             Shows browser window (requires -v)
@@ -132,9 +138,10 @@ Copyright
       # Check local or global knowledge base
       home = WINDOWS_PLATFORM ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
       
-      data_dirname   = "kb"
-      cache_dirname  = "cache"
-      cache_filename = "scrappy-#{Scrappy::VERSION}.kb"
+      data_dirname    = "kb"
+      cache_dirname   = "cache"
+      cache_filename  = "scrappy-#{Scrappy::VERSION}.kb"
+      config_filename = "config.yml"
       
       if File.exists?(File.join(home, data_dirname))
         data_folder  = File.join home, data_dirname
@@ -144,7 +151,8 @@ Copyright
         cache_folder = Dir.tmpdir
       end
       Dir.mkdir cache_folder if Dir[cache_folder].empty?
-      cache_file = File.join cache_folder, cache_filename
+      cache_file  = File.join cache_folder, cache_filename
+      config_file = File.join home, config_filename
 
       # Load knowledge base
       Agent::Options.kb = if File.exists?(cache_file) and File.mtime(cache_file) >= Dir["#{data_folder}/*", data_folder].map{ |f| File.mtime(f) }.max
@@ -152,7 +160,7 @@ Copyright
         open(cache_file) { |f| Marshal.load(f) }
       else
         # Load YARF files and cache kb
-        data = Dir["#{data_folder}/*"].inject(RDF::Graph.new) do |kb, file|
+        data = Dir[File.join(data_folder, "*")].inject(RDF::Graph.new) do |kb, file|
           extension = file.split('.').last.to_sym
           graph = RDF::Parser.parse(extension, open(file).read)
           kb.ns.merge! graph.ns
@@ -162,6 +170,17 @@ Copyright
         open(cache_file, "w") { |f| Marshal.dump(data, f) }
         data
       end
+
+      # Looks for a configuration file. If it does not exist, Scrappy does not uses Sesame
+      # It looks for it in the home .scrappy dir
+      if File.exist?(config_file)
+        config = YAML::load_file(config_file)["repository"]
+        # Convert the strings from the YAML file into symbols
+        repository_options = {}
+        config.each { |k,v| repository_options[k.to_sym] = v }
+        Agent::Options.repository = Repository.new repository_options
+      end
+
       RDF::ID.ns.merge! Agent::Options.kb.ns
     end
   end

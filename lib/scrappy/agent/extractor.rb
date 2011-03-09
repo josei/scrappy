@@ -6,7 +6,7 @@ module Scrappy
       if options.debug
         print "Extracting #{uri}..."; $stdout.flush
       end
-      
+
       @selector_pool ||= {}
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
@@ -27,7 +27,11 @@ module Scrappy
 
       puts "done!" if options.debug
       
-      triples
+      triples.map do |s,p,o|
+        [ s.is_a?(RDF::Node) ? s.id : s,
+          p.is_a?(RDF::Node) ? p.id : p,
+          o.is_a?(RDF::Node) ? o.id : o ]
+      end 
     end
     
     private

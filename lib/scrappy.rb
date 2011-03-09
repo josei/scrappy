@@ -10,6 +10,7 @@ require 'tmpdir'
 require 'lightrdf'
 
 require 'scrappy/support'
+require 'scrappy/repository'
 
 require 'scrappy/agent/extractor'
 require 'scrappy/agent/map_reduce'
@@ -21,7 +22,7 @@ require 'scrappy/agent/agent'
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'
 
 module Scrappy
-  VERSION = '0.1.24'
+  VERSION = '0.2.0'
 end
 
 # Require selectors
