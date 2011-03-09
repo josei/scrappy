@@ -1,7 +1,10 @@
 #!/usr/bin/ruby
 # encoding: UTF-8
 
-if !RUBY_PLATFORM.include?("mswin")
+require 'rbconfig'
+WINDOWS_PLATFORM = Config::CONFIG['host_os'] =~ /mswin|mingw/
+
+if !WINDOWS_PLATFORM
   stty_save = `stty -g`.chomp
   trap('INT') { system('stty', stty_save); Scrappy::App.quit }
 end
@@ -127,15 +130,21 @@ Copyright
 
     def onload
       # Check local or global knowledge base
-      home = RUBY_PLATFORM.include?("mswin") ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
+      home = WINDOWS_PLATFORM ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
       
-      if File.exists?("#{home}/kb")
-        data_folder = "#{home}/kb"
-        cache_file  = "#{home}/kb.cache"
+      data_dirname   = "kb"
+      cache_dirname  = "cache"
+      cache_filename = "scrappy-#{Scrappy::VERSION}.kb"
+      
+      if File.exists?(File.join(home, data_dirname))
+        data_folder  = File.join home, data_dirname
+        cache_folder = File.join home, cache_dirname
       else
-        data_folder = "#{Scrappy::Root}/kb"
-        cache_file  = "#{Dir.tmpdir}/scrappy.kb.cache"
+        data_folder  = File.join Scrappy::Root, data_dirname
+        cache_folder = Dir.tmpdir
       end
+      Dir.mkdir cache_folder if Dir[cache_folder].empty?
+      cache_file = File.join cache_folder, cache_filename
 
       # Load knowledge base
       Agent::Options.kb = if File.exists?(cache_file) and File.mtime(cache_file) >= Dir["#{data_folder}/*", data_folder].map{ |f| File.mtime(f) }.max
