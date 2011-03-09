@@ -152,25 +152,25 @@ This would get all the data stored in Sesame for example.org in the last 3 minut
 
 * Sample config.yml
 
-  # This is a sample configuration file, with the options to communicate with Sesame using Scrappy
-  repository:
-    # The host were Sesame is. Do not add the trailing '/'
-    host: http://localhost
-  
-    # The port for the connection
-    port: 8080
-  
-    # The time to consider the data in the repository valid, in minutes
-    time: 15
-  
-    # The name of the repository
-    repository: memory
-  
-    # The format to communicate with the repository
-    format: ntriples
-  
-    # You can use any of the following formats:
-    # rdfxml, ntriples, turtle, n3, trix, trig
+    # This is a sample configuration file, with the options to communicate with Sesame using Scrappy
+    repository:
+      # The host were Sesame is. Do not add the trailing '/'
+      host: http://localhost
+    
+      # The port for the connection
+      port: 8080
+    
+      # The time to consider the data in the repository valid, in minutes
+      time: 15
+    
+      # The name of the repository
+      repository: memory
+    
+      # The format to communicate with the repository
+      format: ntriples
+    
+      # You can use any of the following formats:
+      # rdfxml, ntriples, turtle, n3, trix, trig
 
 
 == INSTALL:
