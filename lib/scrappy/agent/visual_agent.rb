@@ -24,6 +24,7 @@ module Scrappy
         @window.show_all
         @visible = true
       end
+      @mechanize = Mechanize.new
     end
 
     def uri
@@ -33,7 +34,7 @@ module Scrappy
     def uri= uri
       # First, check if the requested uri is a valid HTML page
       valid = begin
-        Mechanize.new.get(uri).is_a?(Mechanize::Page)
+        @mechanize.get(uri).is_a?(Mechanize::Page)
       rescue
         false
       end

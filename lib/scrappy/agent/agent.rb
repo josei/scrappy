@@ -102,10 +102,11 @@ module Scrappy
       end
       
       triples = []; results.each { |result| triples += result }
+      triples.uniq!
       
       puts 'done!'if options.debug
       
-      triples.uniq
+      triples
     end
 
     def request args={}
