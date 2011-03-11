@@ -1,0 +1,20 @@
+#body
+  %h1 Help
+  %p
+    Scrappy Web Server is a web interface to Scrappy functionalities.
+    You can use it to get data from a web resource and integrate it with other system.
+  %h2 URL format
+  %p
+    The service uses the following URL format:
+    %pre http://[host]/[format]/[url]
+  %p
+    For example, to retrieve http://example.com/~user/?test=1 with RDF serialization:
+    %pre==#{settings.base_uri || "http://localhost:#{settings.port}"}/rdf/http://example.com/~user/%3Ftest%3D1
+  %p Available serialization formats are rdf, rdfxml, png, yarf, ntriples, turtle, json, jsonrdf, and ejson.
+  %h2 Creating extractors
+  %p
+    Drag this to your bookmarks:
+    %a.bookmark{:href=>bookmark_js, :onclick=>drag_js} Scrappy
+  %p
+    Then visit the web page you want to build a extractor for.
+    Click on your "Scrappy" bookmark and annotate the web page.

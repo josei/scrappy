@@ -140,15 +140,15 @@ scrappy offers many different interfaces to get RDF data from a web page:
 
 * RDF repository:
 
-Sesame functionality has been included in Scrappy. You can configure
-the repository options by editing the file config.yml placed the folder .scrappy, in your home dir.
-An example of this file can be found at the end of this README.
+  Sesame functionality has been included in Scrappy. You can configure
+  the repository options by editing the file config.yml placed the folder .scrappy, in your home dir.
+  An example of this file can be found at the end of this README.
 
-You can get the data for a certain period of time, by using the time (-t, --time) option:
+  You can get the data for a certain period of time, by using the time (-t, --time) option:
 
-  $ scrappy -g example.org -t 3
+    $ scrappy -g example.org -t 3
 
-This would get all the data stored in Sesame for example.org in the last 3 minutes.
+  This would get all the data stored in Sesame for example.org in the last 3 minutes.
 
 * Sample config.yml
 

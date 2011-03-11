@@ -1,0 +1,15 @@
+#body
+  %h1 Knowledge base
+  %p
+    %ul.detail
+      -@uris.each do |uri|
+        %li
+          %span.name
+            -if !uri.include?('*')
+              %a{:href=>uri}=uri
+            -else
+              =uri
+          -if !uri.include?('*')
+            -[['RDF', :rdf], ['JSON', :ejson], ['YARF', :yarf], ['PNG', :png]].reverse.each do |format, format_code|
+              %span.format
+                %a{:href=>"#{settings.base_uri}/#{format_code}/#{uri}"}=format

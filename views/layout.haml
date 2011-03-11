@@ -1,0 +1,22 @@
+!!!
+%html
+  %head
+    %title Scrappy
+    %link{:type=>"text/css", :href=>"#{settings.base_uri}/stylesheets/application.css", :rel=>"stylesheet"}
+  %body
+    #bar
+      -if request.fullpath!='/'
+        %ul.left
+          %li
+            %a{:href=>"#{settings.base_uri}/"}
+              %img{:src=>"#{settings.base_uri}/images/logo_tiny.png", :alt=>"Scrappy"}
+      %ul.right
+        %li
+          %a{:href=>"#{settings.base_uri}/kb"} Knowledge base
+        %li
+          %a{:href=>"#{settings.base_uri}/help"} Help
+    =yield
+    #footer
+      %a{:href=>"#{settings.base_uri}/"} Home
+      |
+      %a{:href=>'http://github.com/josei/scrappy'} About

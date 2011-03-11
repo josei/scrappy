@@ -1,26 +1,18 @@
 require 'sinatra'
 require 'thin'
 require 'haml'
+require 'scrappy/server/helpers'
+require 'scrappy/server/admin'
 
 module Scrappy
   class Server < Sinatra::Base
+    helpers JavaScriptHelpers
+    
     enable :sessions
-    set    :root,   File.dirname(__FILE__)
+    set    :root,   File.join(File.dirname(__FILE__), '..', '..', '..')
     set    :views,  Proc.new { File.join(root, "views") }
     set    :public, Proc.new { File.join(root, "public") }
 
-    get '/' do
-      if params[:format] and params[:uri]
-        redirect "#{settings.base_uri}/#{params[:format]}/#{simplify_uri(params[:uri])}"
-      else
-        haml :home
-      end
-    end
-    
-    get '/help' do
-      haml :help
-    end
-    
     get '/:format/*' do |format, url|
       process_request :get, format, url, params[:callback]
     end

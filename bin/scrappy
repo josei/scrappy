@@ -40,7 +40,7 @@ module Scrappy
         opts.on('-u', '--debug')                { Agent::Options.debug = true }
         opts.on('-i', '--interactive')          { Options.shell = true; Agent::Options.format_header = false }
         opts.on('-s', '--server [BASE_URI]')    { |uri| Options.server = true; Options.base_uri = uri }
-        opts.on('-S', '--proxy-server')         { Options.proxy = true }
+        opts.on('-a', '--admin [BASE_URI]')     { |uri| Options.admin = true; Options.base_uri = uri }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
         opts.on('-c C', '--concurrence C')      { |c| Agent::Options.workers = c.to_i }
         opts.on('-d D', '--delay D')            { |d| Agent::Options.delay = d; Agent::Options.workers = 1 }
@@ -63,16 +63,19 @@ module Scrappy
         puts Agent.create.proxy(:http_method=>:get, :uri=>Options.uri).output
       elsif Options.observe
         Agent.create.observe(Options.observe)
-      elsif Options.proxy
-        puts "Launching Scrappy Web Proxy (set http://localhost:#{Options.port} as proxy)..."
-        require 'scrappy/server/proxy'
-        Thin::Logging.silent = true
-        Scrappy::Proxy.run! :host => 'localhost', :port => Options.port, :environment=>:production
-      elsif Options.server
-        puts "Launching Scrappy Web Server (browse http://localhost:#{Options.port})..."
+      elsif Options.admin
+        puts "Launching Scrappy Admin Web Server (browse http://localhost:#{Options.port})..."
         require 'scrappy/server/server'
         Thin::Logging.silent = true
-        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment=>:production, :base_uri=>Options.base_uri
+        Scrappy::Server.register Scrappy::Admin
+        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment => :production,
+                             :base_uri=>Options.base_uri
+      elsif Options.server
+        puts "Launching Scrappy Web Server..."
+        require 'scrappy/server/server'
+        Thin::Logging.silent = true
+        Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment => :production,
+                             :base_uri => Options.base_uri
       elsif Options.shell
         puts "Launching Scrappy Shell..."
         require 'scrappy/shell'
