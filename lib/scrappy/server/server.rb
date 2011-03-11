@@ -40,7 +40,7 @@ module Scrappy
       return @agent if @agent
       if session[:agent].nil? || session[:token] != SESSION_TOKEN
         session[:token] = SESSION_TOKEN
-        session[:agent] = Scrappy::Agent.create.id
+        session[:agent] = Scrappy::Agent.new.id
       end
       @agent = Scrappy::Agent[session[:agent]]
     end

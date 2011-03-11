@@ -150,7 +150,7 @@ ul.detail li span {
   display: inline-block;
 }
 ul.detail li span.name {
-  width: 600px;
+  width: 550px;
   overflow-x: hidden;
   font-family: monospace;
   font-size: 12px;

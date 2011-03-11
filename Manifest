@@ -12,7 +12,6 @@ lib/scrappy/agent/dumper.rb
 lib/scrappy/agent/extractor.rb
 lib/scrappy/agent/formats.rb
 lib/scrappy/agent/map_reduce.rb
-lib/scrappy/agent/visual_agent.rb
 lib/scrappy/repository.rb
 lib/scrappy/selectors/base_uri.rb
 lib/scrappy/selectors/css.rb
@@ -26,9 +25,7 @@ lib/scrappy/selectors/xpath.rb
 lib/scrappy/server/admin.rb
 lib/scrappy/server/helpers.rb
 lib/scrappy/server/server.rb
-lib/scrappy/shell.rb
 lib/scrappy/support.rb
-lib/scrappy/webkit/webkit.rb
 public/favicon.ico
 public/images/logo.png
 public/images/logo_tiny.png

@@ -10,6 +10,6 @@
             -else
               =uri
           -if !uri.include?('*')
-            -[['RDF', :rdf], ['JSON', :ejson], ['YARF', :yarf], ['PNG', :png]].reverse.each do |format, format_code|
+            -[['RDF', :rdf], ['JSON', :ejson], ['YARF', :yarf], ['nTriples', :ntriples], ['PNG', :png]].reverse.each do |format, format_code|
               %span.format
                 %a{:href=>"#{settings.base_uri}/#{format_code}/#{uri}"}=format

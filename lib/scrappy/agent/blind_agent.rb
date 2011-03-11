@@ -1,7 +1,7 @@
 module Scrappy
-  class BlindAgent < Agent
+  module BlindAgent
     def initialize args={}
-      super
+      super()
       @mechanize = Mechanize.new
       @mechanize.max_history = 20
     end
@@ -35,9 +35,6 @@ module Scrappy
 
     def html
       @mechanize.current_page.root.to_html :encoding=>'UTF-8'
-    end
-
-    def add_visual_data!
     end
   end
 end

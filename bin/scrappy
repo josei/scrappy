@@ -38,14 +38,12 @@ module Scrappy
         opts.on('-p URI', '--post URI')         { |uri| Options.uri = uri; Options.http_method=:post }
         opts.on('-D', '--dump')                 { Agent::Options.dump = true; Agent::Options.format = :rdf }
         opts.on('-u', '--debug')                { Agent::Options.debug = true }
-        opts.on('-i', '--interactive')          { Options.shell = true; Agent::Options.format_header = false }
         opts.on('-s', '--server [BASE_URI]')    { |uri| Options.server = true; Options.base_uri = uri }
         opts.on('-a', '--admin [BASE_URI]')     { |uri| Options.admin = true; Options.base_uri = uri }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
         opts.on('-c C', '--concurrence C')      { |c| Agent::Options.workers = c.to_i }
         opts.on('-d D', '--delay D')            { |d| Agent::Options.delay = d; Agent::Options.workers = 1 }
         opts.on('-l L', '--levels L')           { |l| Agent::Options.depth = l.to_i }
-        opts.on('-V', '--visual')               { Agent::Options.agent = :visual }
         opts.on('-r', '--reference')            { Agent::Options.referenceable = :minimum }
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
         opts.on('-w', '--window')               { Agent::Options.window = true }
@@ -60,11 +58,11 @@ module Scrappy
       onload
       if Options.uri
         Options.quiet = true
-        puts Agent.create.proxy(:http_method=>:get, :uri=>Options.uri).output
+        puts Agent.new.proxy(:http_method=>:get, :uri=>Options.uri).output
       elsif Options.observe
-        Agent.create.observe(Options.observe)
+        Agent.new.observe(Options.observe)
       elsif Options.admin
-        puts "Launching Scrappy Admin Web Server (browse http://localhost:#{Options.port})..."
+        puts "Launching Scrappy Web Admin (browse http://localhost:#{Options.port})..."
         require 'scrappy/server/server'
         Thin::Logging.silent = true
         Scrappy::Server.register Scrappy::Admin
@@ -76,14 +74,10 @@ module Scrappy
         Thin::Logging.silent = true
         Scrappy::Server.run! :host => 'localhost', :port => Options.port, :environment => :production,
                              :base_uri => Options.base_uri
-      elsif Options.shell
-        puts "Launching Scrappy Shell..."
-        require 'scrappy/shell'
-        Shell.new.run
       else
-        require 'scrappy/shell'
-        Options.quiet = true
-        Shell.new(@file).run
+        output_version
+        puts 'To get help use: scrappy -h'
+        exit 0
       end
       Scrappy::App.quit
     end
@@ -106,7 +100,7 @@ Usage
 Options
   -h, --help               Displays help message
   -v, --version            Display the version, then exit
-  -f, --format             Picks output format (json, ejson, rdfxml, ntriples, png)
+  -f, --format             Picks output format (json, ejson, rdf, ntriples, png)
   -g, --get URL            Gets requested URL
   -p, --post URL           Posts requested URL
   -c, --concurrence VALUE  Sets number of concurrent connections for crawling (default is 10)
@@ -114,12 +108,10 @@ Options
   -d, --delay VALUE        Sets delay (in ms) between requests (default is 0)
   -D, --dump               Dumps RDF data to disk
   -u, --debug              Shows debugging traces
-  -i, --interactive        Runs interactive shell
   -o, --observe URLs       Observes the specified URLs storing their data into the repository
   -s, --server [ROOT]      Runs web server (optionally specify server's root url)
-  -S, --proxy-server       Runs web proxy
+  -a, --admin [ROOT]       Runs admin web server (optionally specify server's root url)
   -P, --port PORT          Selects port number (default is 3434)
-  -V, --visual             Uses visual agent (slow)
   -t, --time DAYS          Returns repository data from the last given minutes
   -r, --reference          Outputs referenceable data
   -R, --reference-all      Outputs all HTML referenceable data

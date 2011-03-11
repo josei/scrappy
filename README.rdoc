@@ -58,62 +58,23 @@ scrappy offers many different interfaces to get RDF data from a web page:
 
 * Command-line interface:
 
-    $ scrappy -g elmundo.es
+    $ scrappy -g example.com
 
-* Interactive shell:
+* Web Admin interface:
 
-    $ scrappy -i
-    Launching scrappy Shell...
-    $ get elmundo.es
-    dc: http://purl.org/dc/elements/1.1/
-    owl: http://www.w3.org/2002/07/owl#
-    rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
-    sc: http://lab.gsi.dit.upm.es/scraping.rdf#
-    rdfs: http://www.w3.org/2000/01/rdf-schema#
-    http://www.elmundo.es/elmundo/2010/10/05/gentes/1286310993.html:
-      dc:description: "Las vacaciones del n\u00famero uno"
-      dc:title:
-        "Una suite de 5.000 euros para Nadal en Tailandia"
-        "Una suite de 5.000 euros para Nadal"
-      rdf:type: http://rdfs.org/sioc/ns#Post
-      dc:creator: "Fernando Domingo | John Bali (V\u00eddeo)"
-      http://www.daml.org/experiment/ontology/location-ont#location:
-        *:
-          rdf:label: "Bangkok"
-          rdf:type: http://www.daml.org/experiment/ontology/location-ont#Location
-      dc:date: "mi\u00e9rcoles 06/10/2010"
-    ...
+    $ scrappy -a
+    Launching Scrappy Web Admin (browse http://localhost:3434)...
+    == Sinatra/1.1.3 has taken the stage on 3434 for production with backup from Thin
 
-    http://www.elmundo.es$
+  Then point your browser to http://localhost:3434 for additional directions.
 
 * Web Service interface:
 
     $ scrappy -s
-    Launching scrappy Web Server...
-    ** Starting Mongrel on localhost:3434
+    Launching Scrappy Web Server...
+    == Sinatra/1.1.3 has taken the stage on 3434 for production with backup from Thin
 
-  Then point your browser to http://localhost:3434 for additional directions.
-
-* Web Proxy interface:
-
-    $ scrappy -S
-    Launching scrappy Web Proxy...
-    ** Starting Mongrel on localhost:3434
-
-  Then configure your browser's HTTP proxy to http://localhost:3434 and browse http://www.elmundo.es
-
-* Scripting (experimental):
-
-  You can create scripts that retrieve many web pages and run them using scrappy.
-
-    #!/usr/bin/scrappy
-    get elmundo.es
-    get google.com/search?q=testing
-
-  Then you can run your script from the command line just as any other bash script.
-
-  We plan to enable complex operations such as posting forms and definining a useful language
-  with variables to enable flow control in order to build web service mashups.
+  Then use the service in the same way as the Web Admin but for read-only operations.
 
 * Ruby interface:
 
@@ -129,7 +90,7 @@ scrappy offers many different interfaces to get RDF data from a web page:
     Scrappy::Agent::Options.kb = kb
 
     # Create an agent
-    agent = Scrappy::Agent.create
+    agent = Scrappy::Agent.new
 
     # Get RDF output
     output = agent.request :method=>:get, :uri=>'http://www.elmundo.es'

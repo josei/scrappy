@@ -4,8 +4,9 @@ module Scrappy
     include Extractor
     include MapReduce
     include Cached
+    include BlindAgent
 
-    Options = OpenStruct.new :format=>:yarf, :format_header=>true, :depth=>0, :agent=>:blind, :delay=>0, :workers=>10
+    Options = OpenStruct.new :format=>:yarf, :format_header=>true, :depth=>0, :delay=>0, :workers=>10
     ContentTypes = { :png => 'image/png', :rdfxml => 'application/rdf+xml',
                      :rdf => 'application/rdf+xml' }
 
@@ -13,17 +14,7 @@ module Scrappy
       @pool ||= {}
     end
     def self.[] id
-      pool[id] || Agent.create(:id=>id)
-    end
-
-    def self.create args={}
-      if (args[:agent] || Options.agent) == :visual
-        require 'scrappy/agent/visual_agent'
-        VisualAgent.new args
-      else
-        require 'scrappy/agent/blind_agent'
-        BlindAgent.new args
-      end
+      pool[id] || Agent.new(:id=>id)
     end
 
     attr_accessor :id, :options, :kb
@@ -160,7 +151,7 @@ module Scrappy
     end
 
     def clean triples
-      triples.uniq.select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) } 
+      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page')].include?(o) } 
     end
     
     # Do the extraction using RDF repository
