@@ -17,6 +17,8 @@
           %a{:href=>"#{settings.base_uri}/help"} Help
     =yield
     #footer
-      %a{:href=>"#{settings.base_uri}/"} Home
-      |
-      %a{:href=>'http://github.com/josei/scrappy'} About
+      %p
+        %a{:href=>"#{settings.base_uri}/"} Home
+        |
+        %a{:href=>'http://github.com/josei/scrappy'} About
+      %p==Scrappy v#{Scrappy::VERSION}
