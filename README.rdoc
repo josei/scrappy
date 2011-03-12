@@ -4,7 +4,7 @@
 
 == DESCRIPTION:
 
-scrappy is a tool that allows extracting information from web pages and producing RDF data.
+Scrappy is a tool that allows extracting information from web pages and producing RDF data.
 It uses the scraping ontology to define the mappings between HTML contents and RDF data.
 
 An example of mapping is shown next, which allows extracting all titles from http://www.elmundo.es:
@@ -54,7 +54,7 @@ tool by typing:
 
   $ scrappy --help
 
-scrappy offers many different interfaces to get RDF data from a web page:
+Scrappy offers many different interfaces to get RDF data from a web page:
 
 * Command-line interface:
 
@@ -78,7 +78,7 @@ scrappy offers many different interfaces to get RDF data from a web page:
 
 * Ruby interface:
 
-  You can use scrappy in a Ruby program by requiring the gem:
+  You can use Scrappy in a Ruby program by requiring the gem:
 
     require 'rubygems'
     require 'scrappy'
@@ -143,11 +143,7 @@ Install it as any other gem:
 The gem also requires raptor library (in Debian systems: sudo aptitude install raptor-utils), which is used
 for outputting different RDF serialization formats.
 
-Additionally, some extra libraries are needed for certain features:
-
-* Visual parsing requires rbwebkitgtk: http://github.com/danlucraft/rbwebkitgtk
-
-* PNG output of RDF graphs requires Graphviz (in Debian systems: sudo aptitude install graphviz).
+PNG output of RDF graphs requires Graphviz (in Debian systems: sudo aptitude install graphviz).
 
 In order to use Sesame, you will need to install it. Further instructions can be found
 in the openRDF website, more precisely, in http://www.openrdf.org/doc/sesame2/users/ch06.html .

@@ -151,7 +151,8 @@ module Scrappy
     end
 
     def clean triples
-      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page')].include?(o) } 
+      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page')].include?(o) }.
+                   select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) } 
     end
     
     # Do the extraction using RDF repository
@@ -222,7 +223,6 @@ module Scrappy
       puts 'done!' if options.debug
       
       if self.html_data?
-        add_visual_data! if options.referenceable               # Adds tags including visual information
         triples = extract(self.uri, html, options.referenceable) # Extract data
         Dumper.dump self.uri, clean(triples), options.format if options.dump # Dump results to disk
         triples

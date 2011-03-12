@@ -23,7 +23,7 @@ require 'scrappy/agent/agent'
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'
 
 module Scrappy
-  VERSION = '0.2.1'
+  VERSION = '0.3.0'
 end
 
 # Require selectors

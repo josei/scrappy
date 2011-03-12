@@ -3,10 +3,12 @@ require 'thin'
 require 'haml'
 require 'scrappy/server/helpers'
 require 'scrappy/server/admin'
+require 'scrappy/server/errors'
 
 module Scrappy
   class Server < Sinatra::Base
     helpers JavaScriptHelpers
+    register Errors
     
     enable :sessions
     set    :root,   File.join(File.dirname(__FILE__), '..', '..', '..')

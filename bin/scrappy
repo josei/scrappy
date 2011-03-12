@@ -46,7 +46,6 @@ module Scrappy
         opts.on('-l L', '--levels L')           { |l| Agent::Options.depth = l.to_i }
         opts.on('-r', '--reference')            { Agent::Options.referenceable = :minimum }
         opts.on('-R', '--reference-all')        { Agent::Options.referenceable = :dump }
-        opts.on('-w', '--window')               { Agent::Options.window = true }
         opts.on('-f FORMAT', '--format FORMAT') { |f| Agent::Options.format = f.to_sym }
         opts.on('-t TIME', '--time TIME')       { |t| Agent::Options.time = t.to_i*60 } # converts minutes to seconds
         opts.on('-o URIs', '--observe URIs')    { |uris| Options.observe = uris.split(',') }
@@ -112,10 +111,9 @@ Options
   -s, --server [ROOT]      Runs web server (optionally specify server's root url)
   -a, --admin [ROOT]       Runs admin web server (optionally specify server's root url)
   -P, --port PORT          Selects port number (default is 3434)
-  -t, --time DAYS          Returns repository data from the last given minutes
+  -t, --time TIME          Returns repository data from the last given minutes
   -r, --reference          Outputs referenceable data
   -R, --reference-all      Outputs all HTML referenceable data
-  -w, --window             Shows browser window (requires -v)
 
 Authors
   José Ignacio Fernández, Alberto Mardomingo, Jacobo Blasco

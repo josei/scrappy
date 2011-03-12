@@ -25,9 +25,17 @@ module Scrappy
         doc.search("p").each {|n| n.replace(Nokogiri::XML::Text.new("#{n.text.strip}\n", n.document)) }
         doc.text.strip
       when Node('sc:Html') then
-        node.to_html
+        if node.respond_to? :to_html
+          node.to_html
+        else
+          node.to_s
+        end
       else
-        node.text
+        if node.respond_to? :text
+          node.text
+        else
+          node.to_s
+        end
       end
     end
 

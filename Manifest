@@ -23,6 +23,7 @@ lib/scrappy/selectors/uri.rb
 lib/scrappy/selectors/uri_pattern.rb
 lib/scrappy/selectors/xpath.rb
 lib/scrappy/server/admin.rb
+lib/scrappy/server/errors.rb
 lib/scrappy/server/helpers.rb
 lib/scrappy/server/server.rb
 lib/scrappy/support.rb

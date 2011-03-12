@@ -96,7 +96,7 @@ module Scrappy
     end
 
     def filter selector, doc
-      if !selector.sc::debug.empty? and options.debug
+      if selector.sc::debug.first=="true" and options.debug
         puts '== DEBUG'
         puts '== Selector:'
         puts selector.serialize(:yarf, false)
@@ -109,7 +109,7 @@ module Scrappy
       # Process selector
       results = selector_pool(selector).filter doc
 
-      if !selector.sc::debug.empty? and options.debug
+      if selector.sc::debug.first=="true" and options.debug
         puts "== No results" if results.empty?
         results.each_with_index do |result, i|
           puts "== Result ##{i}:"
