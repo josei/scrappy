@@ -9,6 +9,7 @@ module Scrappy
   class Server < Sinatra::Base
     helpers JavaScriptHelpers
     register Errors
+    register Admin if Scrappy::Options.admin
     
     enable :sessions
     set    :root,   File.join(File.dirname(__FILE__), '..', '..', '..')

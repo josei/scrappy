@@ -109,8 +109,8 @@ sc:debug:
 sc:path:
   rdf:type: rdf:Property
   rdfs:label: "path"
-  rdfs:comment: "XPath to the fragment subject inside its web page"
-  rdfs:domain: sc:Fragment
+  rdfs:comment: "XPath to the element selected by the subject"
+  rdfs:domain: sc:UnivocalSelector
   rdfs:range: rdf:Literal
 
 sc:uri:
@@ -118,14 +118,14 @@ sc:uri:
   rdfs:label: "URI"
   rdfs:comment: "URI of an RDF resource"
   rdfs:domain: rdf:Resource
-  rdfs:range: rdf:Resource
+  rdfs:range: rdf:Literal
 
 sc:document:
   rdf:type: rdf:Property
   rdfs:label: "document"
-  rdfs:comment: "Document of the fragment subject"
-  rdfs:domain: sc:Fragment
-  rdfs:range: rdf:Resource
+  rdfs:comment: "Web document that sets the context of the subject selector, given by its URI"
+  rdfs:domain: sc:UnivocalSelector
+  rdfs:range: rdf:Literal
 
 sc:tag:
   rdf:type: rdf:Property
@@ -133,89 +133,6 @@ sc:tag:
   rdfs:comment: "HTML tag that is the root of the fragment subject"
   rdfs:domain: sc:Fragment
   rdfs:range: rdf:Literal
-
-sc:presentation:
-  rdf:type: rdf:Property
-  rdfs:label: "presentation"
-  rdfs:comment: "The presentation information of the fragment subject"
-  rdfs:domain: sc:Fragment
-  rdfs:range: sc:Presentation
-
-sc:Presentation:
-  rdf:type: rdf:Class
-  rdfs:label: "Presentation"
-  rdfs:comment: "The presentation information of a web fragment when viewed on a browser"
-
-sc:x:
-  rdf:type: rdf:Property
-  rdfs:label: "x"
-  rdfs:comment: "Horizontal offset of a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:y:
-  rdf:type: rdf:Property
-  rdfs:label: "y"
-  rdfs:comment: "Vertical offset of a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:width:
-  rdf:type: rdf:Property
-  rdfs:label: "width"
-  rdfs:comment: "Width of a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:height:
-  rdf:type: rdf:Property
-  rdfs:label: "height"
-  rdfs:comment: "Height a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:font_size:
-  rdf:type: rdf:Property
-  rdfs:label: "font size"
-  rdfs:comment: "Font size of the text in a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:font_weight:
-  rdf:type: rdf:Property
-  rdfs:label: "font weight"
-  rdfs:comment: "Font weight of the text in a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:color:
-  rdf:type: rdf:Property
-  rdfs:label: "color"
-  rdfs:comment: "Text color of a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:background_color:
-  rdf:type: rdf:Property
-  rdfs:label: "background color"
-  rdfs:comment: "Background color of a fragment when viewed on a browser"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:text:
-  rdf:type: rdf:Property
-  rdfs:label: "font weight"
-  rdfs:comment: "Text contained in a fragment"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
-sc:children_count:
-  rdf:type: rdf:Property
-  rdfs:label: "children count"
-  rdfs:comment: "Number of children that the fragment subject has"
-  rdfs:domain: sc:Presentation
-  rdfs:range: rdf:Literal
-
 
 sc:attribute:
   rdfs:label: "attribute"

@@ -11,14 +11,7 @@ module Scrappy
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
-      uri_selectors  = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) + kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).flatten.select do |uri_selector|
-        results = selector_pool(uri_selector).filter :content=>content, :uri=>uri
-        !results.empty?
-      end
-
-      fragments = uri_selectors.map { |uri_selector| kb.find(nil, Node('sc:selector'), uri_selector) }.flatten
-
-      fragments.each do |fragment|
+      fragments_for(uri).each do |fragment|
         extract_fragment fragment, :doc=>{:uri=>uri, :content=>content },
                                    :parent=>uri, :triples=>triples, :referenceable=>!referenceable.nil?
       end
@@ -32,6 +25,16 @@ module Scrappy
           p.is_a?(RDF::Node) ? p.id : p,
           o.is_a?(RDF::Node) ? o.id : o ]
       end 
+    end
+    
+    def fragments_for uri
+      uri_selectors  = (kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) +
+                        kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector'))).
+                        flatten.select do |uri_selector|
+        !selector_pool(uri_selector).filter(:uri=>uri).empty?
+      end
+
+      uri_selectors.map { |uri_selector| kb.find(nil, Node('sc:selector'), uri_selector) }.flatten
     end
     
     private
@@ -160,26 +163,13 @@ module Scrappy
 
         if referenceable == :dump or resources[fragment]
           selector     = Node(nil)
-          presentation = Node(nil)
 
           triples << [selector, ID('rdf:type'), ID('sc:UnivocalSelector')]
           triples << [selector, ID('sc:path'), node.path.to_s]
           triples << [selector, ID('sc:tag'), node.name.to_s]
           triples << [selector, ID('sc:document'), uri]
 
-          triples << [presentation, ID('sc:x'), node[:vx].to_s] if node[:vx]
-          triples << [presentation, ID('sc:y'), node[:vy].to_s] if node[:vy]
-          triples << [presentation, ID('sc:width'), node[:vw].to_s] if node[:vw]
-          triples << [presentation, ID('sc:height'), node[:vh].to_s] if node[:vh]
-          triples << [presentation, ID('sc:font_size'), node[:vsize].gsub("px","").to_s] if node[:vsize]
-          triples << [presentation, ID('sc:font_weight'), node[:vweight].to_s] if node[:vweight]
-          triples << [presentation, ID('sc:color'), node[:vcolor].to_s] if node[:vcolor]
-          triples << [presentation, ID('sc:background_color'), node[:vbcolor].to_s] if node[:vbcolor]
-          triples << [presentation, ID('sc:text'), node.text.strip]
-          triples << [presentation, ID('sc:children_count'), node.children.select{|n| !n.text?}.size.to_s]
-
           triples << [fragment, ID('sc:selector'), selector]
-          triples << [fragment, ID('sc:presentation'), presentation]
         end
       end
     end
@@ -190,6 +180,7 @@ module Scrappy
     end
     
     def selector_pool selector
+      @selector_pool ||= {}
       @selector_pool[selector.id] ||= kb.node(selector)
     end
   end

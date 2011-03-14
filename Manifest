@@ -30,11 +30,13 @@ lib/scrappy/support.rb
 public/favicon.ico
 public/images/logo.png
 public/images/logo_tiny.png
-public/javascripts/scrappy.js
+public/javascripts/annotator.js
+public/javascripts/remote.js
 public/stylesheets/application.css
 test/test_helper.rb
 test/test_scrappy.rb
+views/extractors.haml
 views/help.haml
 views/home.haml
-views/kb.haml
 views/layout.haml
+views/samples.haml

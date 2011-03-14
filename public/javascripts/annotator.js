@@ -1,4 +1,4 @@
-add_visual_data = function() {
+var add_visual_data = function() {
   var items = document.documentElement.getElementsByTagName('*');
   var i=0;
   for(var i=0; i<items.length; i++) {
@@ -26,17 +26,45 @@ add_visual_data = function() {
   }
 }
 
-$(document).ready(function(){
-  $("body").append("<div id='myTrees'></div>")
-	$("#page > *").bind('mouseover', function(e){
-	e.stopPropagation();
-		$(this).addClass("changeBg");
-		})
-		.mouseout(function(){
-		$(this).removeClass("changeBg");
-		});        
+
+jQuery(document).ready(function(){
+  var div;
+  if (window.scrappy_extractor) {
+    div = "<div id='scrappy_window' title='Scrappy'>" +
+          "<p>Extractor available for this URL</p>" +
+          "<p><a href='http://localhost:3434/rdf/"+escape(window.location)+"'>See output</a></p>" +
+          "<p><a class='sample' href='http://localhost:3434/samples'>Upload sample</a></p>" +
+          "</div>";
+  } else {
+    div = "<div id='scrappy_window' title='Scrappy'>" +
+          "<p>No extractor available for this URL</p>" +
+          "<p><a href='TODO'>Annotate page</a></p>" +
+          "<p><a class='extractor' href='http://localhost:3434/extractors'>Generate extractor</a></p>" +
+          "</div>";
+  }
+  
+  $("body").append(div);
+  
+  $('#scrappy_window .extractor, #scrappy_window .sample').live('click', function (e){
+    var link = $(this),
+        href = link.attr('href'),
+        html = $('<input name="html" type="hidden" />');
+        uri  = $('<input name="uri"  type="hidden" />');
+        form = $('<form method="post" action="'+href+'"></form>');
+    html.attr('value', document.documentElement.outerHTML);
+    uri.attr('value', window.location);
+    form.hide()
+        .append(html)
+        .append(uri)
+        .appendTo('body');
+    e.preventDefault();
+    form.submit();
+  });
+  
+  $("#scrappy_window").dialog();
 });
 
+/*
 $(document).ready(function(){
   $("*").bind('click', function(e){
     e.stopPropagation();
@@ -70,5 +98,8 @@ $(document).ready(function(){
     myTrees.appendChild(li);
   });
 });
+*/
+
+add_visual_data();
 
 window.scrappy_loaded = true

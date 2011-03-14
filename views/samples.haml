@@ -1,0 +1,23 @@
+#body
+  %h1 Sample pages
+  %p
+    Sample pages are used to build extractors as well as visual patterns that can be applied to retrieve data
+    from other pages.
+  %p
+    -if @samples.empty?
+      Currently, there are no samples.
+    -else
+      %ul.detail
+        -@samples.each_with_index do |sample,i|
+          %li
+            %span.action
+              %a{:href=>"#{settings.base_uri}/samples/#{i}", :'data-method'=>:delete, :'data-confirm'=>"Are you sure you want to delete the sample #{sample[:uri]}?"}
+                X
+            %span.name
+              -if !sample[:uri].include?('*')
+                %a{:href=>sample[:uri]}=sample[:uri]
+              -else
+                =sample[:uri]
+            %span.date
+              %a{:href=>"#{settings.base_uri}/samples/#{i}"}
+                =sample[:date].strftime("%Y/%m/%d - %H:%M")

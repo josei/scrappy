@@ -1,0 +1,24 @@
+#body
+  %h1 Extractors
+  %p
+    Extractors are mappings between HTML pages and RDF data. They are used to extract RDF data from plain web pages.
+  %p
+    -if @uris.empty?
+      Currently, there are no extractors.
+    -else
+      %ul.detail
+        -@uris.each do |uri|
+          %li
+            -if Scrappy::App.editable_kb?
+              %span.action
+                %a{:href=>"#{settings.base_uri}/extractors/#{CGI::escape(uri)}", :'data-method'=>:delete, :'data-confirm'=>"Are you sure you want to delete the extractor for #{uri}?"}
+                  X
+            %span.name
+              -if !uri.include?('*')
+                %a{:href=>uri}=uri
+              -else
+                =uri
+            -if !uri.include?('*')
+              -[['RDF', :rdf], ['JSON', :ejson], ['YARF', :yarf], ['nTriples', :ntriples], ['PNG', :png]].reverse.each do |format, format_code|
+                %span.format
+                  %a{:href=>"#{settings.base_uri}/#{format_code}/#{uri}"}=format

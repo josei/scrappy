@@ -18,7 +18,7 @@ a:hover, a:active {
   text-decoration: underline;
 }
 h1, h2, h3, h4 {
-  color: #777;
+  color: #888;
 }
 h2 {
   font-weight: normal;
@@ -149,6 +149,10 @@ ul.detail li {
 ul.detail li span {
   display: inline-block;
 }
+ul.detail li span.action {
+  font-size: 10px;
+  width: 10px;
+}
 ul.detail li span.name {
   width: 550px;
   overflow-x: hidden;
@@ -162,10 +166,26 @@ ul.detail li span.format {
   margin-left: 10px;
   text-align: center;
 }
+ul.detail li span.date {
+  float: right;
+  font-size: 12px;
+}
 
 ul.detail li span.format a:hover,
 ul.detail li span.format a:link,
 ul.detail li span.format a:visited,
 ul.detail li span.format a:active {
   color: #900;
+}
+ul.detail li span.action a:hover,
+ul.detail li span.action a:link,
+ul.detail li span.action a:visited,
+ul.detail li span.action a:active {
+  color: #900;
+}
+ul.detail li span.date a:hover,
+ul.detail li span.date a:link,
+ul.detail li span.date a:visited,
+ul.detail li span.date a:active {
+  color: #888;
 }

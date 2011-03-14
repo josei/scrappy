@@ -3,6 +3,8 @@
   %head
     %title Scrappy
     %link{:type=>"text/css", :href=>"#{settings.base_uri}/stylesheets/application.css", :rel=>"stylesheet"}
+    %script{:src=>"https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"}
+    %script{:src=>"#{settings.base_uri}/javascripts/remote.js"}
   %body
     #bar
       -if request.fullpath!='/'
@@ -12,7 +14,9 @@
               %img{:src=>"#{settings.base_uri}/images/logo_tiny.png", :alt=>"Scrappy"}
       %ul.right
         %li
-          %a{:href=>"#{settings.base_uri}/kb"} Knowledge base
+          %a{:href=>"#{settings.base_uri}/extractors"} Extractors
+        %li
+          %a{:href=>"#{settings.base_uri}/samples"} Samples
         %li
           %a{:href=>"#{settings.base_uri}/help"} Help
     =yield
