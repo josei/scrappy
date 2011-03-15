@@ -104,7 +104,7 @@ module Scrappy
       onload
     end
     def self.editable_kb?
-      @deleteable_extractors
+      @editable_kb
     end
     def self.delete_extractor uri
       Dir[File.join(@data_folder, '*')].each do |file|
