@@ -134,6 +134,88 @@ sc:tag:
   rdfs:domain: sc:Fragment
   rdfs:range: rdf:Literal
 
+sc:presentation:
+  rdf:type: rdf:Property
+  rdfs:label: "presentation"
+  rdfs:comment: "The presentation information of the fragment subject"
+  rdfs:domain: sc:Fragment
+  rdfs:range: sc:Presentation
+
+sc:Presentation:
+  rdf:type: rdf:Class
+  rdfs:label: "Presentation"
+  rdfs:comment: "The presentation information of a web fragment when viewed on a browser"
+
+sc:x:
+  rdf:type: rdf:Property
+  rdfs:label: "x"
+  rdfs:comment: "Horizontal offset of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:y:
+  rdf:type: rdf:Property
+  rdfs:label: "y"
+  rdfs:comment: "Vertical offset of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:width:
+  rdf:type: rdf:Property
+  rdfs:label: "width"
+  rdfs:comment: "Width of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:height:
+  rdf:type: rdf:Property
+  rdfs:label: "height"
+  rdfs:comment: "Height a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:font_size:
+  rdf:type: rdf:Property
+  rdfs:label: "font size"
+  rdfs:comment: "Font size of the text in a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:font_weight:
+  rdf:type: rdf:Property
+  rdfs:label: "font weight"
+  rdfs:comment: "Font weight of the text in a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:color:
+  rdf:type: rdf:Property
+  rdfs:label: "color"
+  rdfs:comment: "Text color of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:background_color:
+  rdf:type: rdf:Property
+  rdfs:label: "background color"
+  rdfs:comment: "Background color of a fragment when viewed on a browser"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:text:
+  rdf:type: rdf:Property
+  rdfs:label: "font weight"
+  rdfs:comment: "Text contained in a fragment"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
+sc:children_count:
+  rdf:type: rdf:Property
+  rdfs:label: "children count"
+  rdfs:comment: "Number of children that the fragment subject has"
+  rdfs:domain: sc:Presentation
+  rdfs:range: rdf:Literal
+
 sc:attribute:
   rdfs:label: "attribute"
   rdfs:comment: "An HTML attribute whose content is the output of a tag selector"

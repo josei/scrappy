@@ -1,3 +1,5 @@
+require 'iconv'
+
 module Scrappy
   module Admin
     def self.registered app
@@ -31,6 +33,8 @@ module Scrappy
       app.post '/extractors' do
         if params[:html]
           # Generate extractor automatically
+          iconv = Iconv.new(params[:encoding], 'UTF-8')
+          html  = iconv.iconv(params[:html]) 
           puts params[:html]
           puts params[:uri]
           raise Exception, "Automatic generation of extractors is not supported yet"
@@ -52,8 +56,14 @@ module Scrappy
       app.get '/samples/:id' do |id|
         Scrappy::App.samples[id.to_i][:html]
       end
+      app.get '/samples/:id/:format' do |id,format|
+        sample = Scrappy::App.samples[id.to_i]
+        headers 'Content-Type' => Scrappy::Agent::ContentTypes[format.to_sym] || 'text/plain'
+        RDF::Graph.new(agent.extract(sample[:uri], sample[:html], :minimum)).serialize(format)
+      end
       app.post '/samples' do
-        Scrappy::App.add_sample :html=>params[:html], :uri=>params[:uri], :date=>Time.now
+        html  = Iconv.iconv('UTF-8', params[:encoding], params[:html]).first
+        Scrappy::App.add_sample :html=>html, :uri=>params[:uri], :date=>Time.now
         redirect "#{settings.base_uri}/samples"
       end
       app.delete '/samples/:id' do |id|

@@ -49,12 +49,15 @@ jQuery(document).ready(function(){
     var link = $(this),
         href = link.attr('href'),
         html = $('<input name="html" type="hidden" />');
+        enc  = $('<input name="encoding"  type="hidden" />');
         uri  = $('<input name="uri"  type="hidden" />');
         form = $('<form method="post" action="'+href+'"></form>');
+    enc.attr('value', document.characterSet);
     html.attr('value', document.documentElement.outerHTML);
     uri.attr('value', window.location);
     form.hide()
         .append(html)
+        .append(enc)
         .append(uri)
         .appendTo('body');
     e.preventDefault();

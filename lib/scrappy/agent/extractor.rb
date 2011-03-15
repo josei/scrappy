@@ -7,7 +7,7 @@ module Scrappy
         print "Extracting #{uri}..."; $stdout.flush
       end
 
-      @selector_pool ||= {}
+      @selector_pool = {}
       triples = []
       content = Nokogiri::HTML(html, nil, 'utf-8')
 
@@ -163,13 +163,25 @@ module Scrappy
 
         if referenceable == :dump or resources[fragment]
           selector     = Node(nil)
+          presentation = Node(nil)
 
           triples << [selector, ID('rdf:type'), ID('sc:UnivocalSelector')]
           triples << [selector, ID('sc:path'), node.path.to_s]
           triples << [selector, ID('sc:tag'), node.name.to_s]
           triples << [selector, ID('sc:document'), uri]
+          
+          triples << [presentation, ID('sc:x'), node[:vx].to_s] if node[:vx]
+          triples << [presentation, ID('sc:y'), node[:vy].to_s] if node[:vy]
+          triples << [presentation, ID('sc:width'), node[:vw].to_s] if node[:vw]
+          triples << [presentation, ID('sc:height'), node[:vh].to_s] if node[:vh]
+          triples << [presentation, ID('sc:font_size'), node[:vsize].gsub("px","").to_s] if node[:vsize]
+          triples << [presentation, ID('sc:font_weight'), node[:vweight].to_s] if node[:vweight]
+          triples << [presentation, ID('sc:color'), node[:vcolor].to_s] if node[:vcolor]
+          triples << [presentation, ID('sc:background_color'), node[:vbcolor].to_s] if node[:vbcolor]
+          triples << [presentation, ID('sc:text'), node.text.strip]
 
           triples << [fragment, ID('sc:selector'), selector]
+          triples << [fragment, ID('sc:presentation'), presentation]
         end
       end
     end

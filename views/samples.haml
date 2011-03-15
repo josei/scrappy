@@ -13,11 +13,14 @@
             %span.action
               %a{:href=>"#{settings.base_uri}/samples/#{i}", :'data-method'=>:delete, :'data-confirm'=>"Are you sure you want to delete the sample #{sample[:uri]}?"}
                 X
-            %span.name
+            %span.short_name
               -if !sample[:uri].include?('*')
                 %a{:href=>sample[:uri]}=sample[:uri]
               -else
                 =sample[:uri]
+            -[['RDF', :rdf], ['JSON', :ejson], ['YARF', :yarf], ['nTriples', :ntriples], ['PNG', :png]].reverse.each do |format, format_code|
+              %span.format
+                %a{:href=>"#{settings.base_uri}/samples/#{i}/#{format_code}"}=format
             %span.date
               %a{:href=>"#{settings.base_uri}/samples/#{i}"}
                 =sample[:date].strftime("%Y/%m/%d - %H:%M")
