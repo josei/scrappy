@@ -142,6 +142,7 @@ ul.detail {
   list-style-type: none;
 }
 ul.detail li {
+  font-size: 12px;
   padding: 6px;
   background-color: #eee;
   margin: 1px;
@@ -156,22 +157,20 @@ ul.detail li span.action {
 ul.detail li span.name, ul.detail li span.short_name {
   width: 550px;
   overflow-x: hidden;
+  white-space: nowrap;
   font-family: monospace;
-  font-size: 12px;
 }
 ul.detail li span.short_name {
   width: 450px;
 }
 ul.detail li span.format {
   float: right;
-  font-size: 12px;
   font-weight: bold;
   margin-left: 10px;
   text-align: center;
 }
 ul.detail li span.date {
   float: right;
-  font-size: 12px;
 }
 
 ul.detail li span.format a:hover,
