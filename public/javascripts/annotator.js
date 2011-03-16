@@ -19,6 +19,9 @@ var add_visual_data = function() {
     var size = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-size');
     size = size.substring(0, size.length-2);
     item.setAttribute('vsize', size);
+    var fonts = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-family').split(",");
+    var font = fonts[fonts.length-1].trim();
+    item.setAttribute('vfont', font);
     var weight = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-weight');
     if (weight == 'normal') weight = 400;
     if (weight == 'bold')   weight = 700;

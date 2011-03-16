@@ -16,7 +16,7 @@ module Scrappy
                                    :parent=>uri, :triples=>triples, :referenceable=>!referenceable.nil?
       end
 
-      add_referenceable_data content, triples, referenceable if referenceable
+      add_referenceable_data uri, content, triples, referenceable if referenceable
 
       puts "done!" if options.debug
       
@@ -48,7 +48,7 @@ module Scrappy
       # Generate triples
       docs.each do |doc|
         # Build URIs if identifier present
-        nodes = fragment.sc::identifier.map { |s| filter s, doc  }.flatten.map do |d|
+        nodes = fragment.sc::identifier.map { |s| filter s, doc }.flatten.map do |d|
           node = Node(parse_uri(uri, d[:value]))
           if options[:referenceable]
             # Include the fragment where the URI was built from
@@ -62,6 +62,9 @@ module Scrappy
         nodes << Node(nil) if nodes.empty?
         
         nodes.each do |node|
+          # When the node is included in a triple, this is marked as true
+          referenced = false
+          
           # Build the object
           object = if fragment.sc::type.include?(Node('rdf:Literal'))
             value = doc[:value].to_s.strip
@@ -75,16 +78,16 @@ module Scrappy
               value
             end
           else
-            fragment.sc::type.each { |type| options[:triples] << [node, Node('rdf:type'), type] if type != Node('rdf:Resource') }
-            fragment.sc::superclass.each { |superclass| options[:triples] << [node, Node('rdfs:subClassOf'), superclass] }
-            fragment.sc::sameas.each { |samenode| options[:triples] << [node, Node('owl:sameAs'), samenode] }
+            fragment.sc::type.each       { |type|       referenced=true; options[:triples] << [node, Node('rdf:type'), type] if type != Node('rdf:Resource') }
+            fragment.sc::superclass.each { |superclass| referenced=true; options[:triples] << [node, Node('rdfs:subClassOf'), superclass] }
+            fragment.sc::sameas.each     { |samenode|   referenced=true; options[:triples] << [node, Node('owl:sameAs'), samenode] }
             node
           end
-          fragment.sc::relation.each { |relation| options[:triples] << [options[:parent], relation, object] }
+          fragment.sc::relation.each     { |relation|   referenced=true; options[:triples] << [options[:parent], relation, object] }
           
           # Add referenceable data if requested
-          if options[:referenceable]
-            sources = [doc[:content]].flatten.map { |node| Node(node_hash(doc[:uri], node.path)) }
+          if options[:referenceable] and referenced
+            sources = [doc[:content]].flatten.map { |n| Node(node_hash(doc[:uri], n.path)) }
             sources.each do |source|
               options[:triples] << [ object, Node("sc:source"), source ]
               fragment.sc::type.each { |t| options[:triples] << [ source, Node("sc:type"), t ] }
@@ -141,8 +144,8 @@ module Scrappy
       end
     end
 
-    def add_referenceable_data content, triples, referenceable
-      resources = {}; triples.each { |s,p,o| resources[o] = true }
+    def add_referenceable_data uri, content, triples, referenceable
+      resources = {}; triples.each { |s,p,o| resources[s] = resources[o] = true }
 
       fragment = Node(node_hash(uri, '/'))
       selector = Node(nil)
@@ -154,7 +157,7 @@ module Scrappy
 
       fragment.sc::selector = selector
 
-      triples.push(*fragment.graph.merge(presentation.graph).merge(selector.graph).triples) if referenceable==:dump or resources.include?(fragment)
+      triples.push(*fragment.graph.merge(presentation.graph).merge(selector.graph).triples) if referenceable==:dump or resources[fragment]
 
       content.search('*').each do |node|
         next if node.text?
@@ -175,9 +178,8 @@ module Scrappy
           triples << [presentation, ID('sc:width'), node[:vw].to_s] if node[:vw]
           triples << [presentation, ID('sc:height'), node[:vh].to_s] if node[:vh]
           triples << [presentation, ID('sc:font_size'), node[:vsize].gsub("px","").to_s] if node[:vsize]
+          triples << [presentation, ID('sc:font_family'), node[:vfont]] if node[:vfont]
           triples << [presentation, ID('sc:font_weight'), node[:vweight].to_s] if node[:vweight]
-          triples << [presentation, ID('sc:color'), node[:vcolor].to_s] if node[:vcolor]
-          triples << [presentation, ID('sc:background_color'), node[:vbcolor].to_s] if node[:vbcolor]
           triples << [presentation, ID('sc:text'), node.text.strip]
 
           triples << [fragment, ID('sc:selector'), selector]
