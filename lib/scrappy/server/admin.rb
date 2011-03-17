@@ -59,7 +59,7 @@ module Scrappy
       app.get '/samples/:id/:format' do |id,format|
         sample = Scrappy::App.samples[id.to_i]
         headers 'Content-Type' => Scrappy::Agent::ContentTypes[format.to_sym] || 'text/plain'
-        RDF::Graph.new(agent.extract(sample[:uri], sample[:html], :minimum)).serialize(format)
+        RDF::Graph.new(agent.extract(sample[:uri], sample[:html])).serialize(format)
       end
       app.post '/samples' do
         html  = Iconv.iconv('UTF-8', params[:encoding], params[:html]).first

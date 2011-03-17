@@ -1,8 +1,5 @@
 module Sc
-  class XPathSelector
-    include RDF::NodeProxy
-    include Scrappy::Formats
-    
+  class XPathSelector < Selector
     def filter doc
       rdf::value.map do |pattern|
         interval = if sc::index.first

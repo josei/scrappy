@@ -1,8 +1,5 @@
 module Sc
-  class RootSelector
-    include RDF::NodeProxy
-    include Scrappy::Formats
-
+  class RootSelector < Selector
     def filter doc
       if sc::attribute.first
         # Select node's attribute if given

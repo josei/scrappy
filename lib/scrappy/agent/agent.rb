@@ -151,8 +151,7 @@ module Scrappy
     end
 
     def clean triples
-      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page')].include?(o) }.
-                   select { |s,p,o| p!=Node('rdf:type') or ![Node('sc:Index'), Node('sc:Page')].include?(o) }
+      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page')].include?(o) }
     end
     
     # Do the extraction using RDF repository

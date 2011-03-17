@@ -1,7 +1,5 @@
 module Sc
-  class SliceSelector
-    include RDF::NodeProxy
-
+  class SliceSelector < Selector
     def filter doc
       rdf::value.map do |separator|
         slices = doc[:value].split(separator)

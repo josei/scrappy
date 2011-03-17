@@ -1,7 +1,5 @@
 module Sc
-  class NewUriSelector
-    include RDF::NodeProxy
-    
+  class NewUriSelector < Selector
     def filter doc
       contents = if sc::attribute.first
         # Select node's attribute if given

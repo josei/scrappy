@@ -1,8 +1,5 @@
 module Sc
-  class SectionSelector
-    include RDF::NodeProxy
-    include Scrappy::Formats
-    
+  class SectionSelector < Selector
     def filter doc
       rdf::value.map do |pattern|
         doc[:content].search('h1, h2, h3, h4, h5, h6, h7, h8, h9, h10').select { |n| n.parent.name!='script' and n.text.downcase.strip == pattern }.map do |node|

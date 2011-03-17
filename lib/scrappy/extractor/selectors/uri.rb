@@ -1,8 +1,5 @@
 module Sc
-  class UriSelector
-    include RDF::NodeProxy
-    include Scrappy::Formats
-
+  class UriSelector < Selector
     def filter doc
       # Check if the UriSelector has this URI as value (without params: ?param1=value1&param2=value2)
       if rdf::value.include?(doc[:uri].match(/\A([^\?]*)(\?.*\Z)?/).captures.first)

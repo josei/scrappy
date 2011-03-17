@@ -205,15 +205,19 @@ Copyright
         open(@cache_file) { |f| Marshal.load(f) }
       else
         # Load YARF files and cache kb
-        data = Dir[File.join(@data_folder, "*")].inject(RDF::Graph.new) do |kb, file|
+        kb = RDF::Graph.new
+        kb.triples = Dir[File.join(@data_folder, "*")].inject([]) do |triples, file|
           extension = file.split('.').last.to_sym
-          graph = RDF::Parser.parse(extension, open(file).read)
-          kb.ns.merge! graph.ns
-          kb.merge!(extension==:ignore ? RDF::Graph.new : graph)
-          kb
+          triples + if extension==:ignore
+            []
+          else
+            graph = RDF::Parser.parse(extension, open(file).read)
+            kb.ns.merge! graph.ns
+            graph.triples
+          end
         end
-        open(@cache_file, "w") { |f| Marshal.dump(data, f) }
-        data
+        open(@cache_file, "w") { |f| Marshal.dump(kb, f) }
+        kb
       end
       # Sets new kb
       Agent::Options.kb.replace new_kb
