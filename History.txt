@@ -1,3 +1,7 @@
+=== 0.3.2 2011-03-18
+
+* Correction of issue with certain Ruby versions
+
 === 0.3.1 2011-03-18
 
 * Support to visual selectors
