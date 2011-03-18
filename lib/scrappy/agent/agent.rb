@@ -2,6 +2,7 @@ module Scrappy
   class Agent
     include MonitorMixin
     include Extractor
+    include Trainer
     include MapReduce
     include Cached
     include BlindAgent
@@ -222,7 +223,7 @@ module Scrappy
       puts 'done!' if options.debug
       
       if self.html_data?
-        triples = extract(self.uri, html, options.referenceable) # Extract data
+        triples = extract(self.uri, html, self.kb, options.referenceable) # Extract data
         Dumper.dump self.uri, clean(triples), options.format if options.dump # Dump results to disk
         triples
       else

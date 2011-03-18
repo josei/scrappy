@@ -7,14 +7,14 @@ Dir["#{File.expand_path(File.dirname(__FILE__))}/selectors/*.rb"].each { |f| req
 
 module Scrappy
   module Extractor
-    def extract uri, html, referenceable=nil
+    def extract uri, html, kb, referenceable=nil
       synchronize do
         if options.debug
           print "Extracting #{uri}..."; $stdout.flush
         end
         
         # Restart stateful selectors
-        self.kb = RDF::Graph.new(self.kb.triples)
+        kb = RDF::Graph.new(kb.triples)
         
         # Parse document
         content = Nokogiri::HTML(html, nil, 'utf-8')
@@ -22,7 +22,7 @@ module Scrappy
         # Extract each fragment
         options = { :doc => { :uri=>uri, :content=>content }, :referenceable=>referenceable }
         triples = []
-        fragments_for(uri).each do |fragment|
+        fragments_for(kb, uri).each do |fragment|
           kb.node(fragment).extract(options).each do |node|
             triples += node.graph.triples
           end
@@ -37,14 +37,20 @@ module Scrappy
       end
     end
     
-    def fragments_for uri
+    def fragments_for kb, uri
       uri_selectors = ( kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) +
                         kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector')) ).
                         flatten.select do |uri_selector|
         !kb.node(uri_selector).filter(:uri=>uri).empty?
       end
 
-      uri_selectors.map { |uri_selector| kb.find(nil, Node('sc:selector'), uri_selector) }.flatten
+      visual_selectors = kb.find(nil, Node('rdf:type'), Node('sc:VisualSelector'))
+      
+      selectors = uri_selectors + visual_selectors
+
+      selectors.map { |selector| kb.find(nil, Node('sc:selector'), selector) }.
+                flatten.
+                select { |selector| selector.rdf::type.include?(Node('sc:Fragment')) }
     end
     
     private

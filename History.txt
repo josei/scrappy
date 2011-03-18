@@ -1,3 +1,9 @@
+=== 0.3.1 2011-03-18
+
+* Support to visual selectors
+* Automatic generation of (overfitting) patterns
+* Added management of patterns to web admin
+
 === 0.3.0 2011-03-11
 
 * Removed unused features: shell, browser, scripting

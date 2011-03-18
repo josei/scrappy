@@ -18,6 +18,7 @@ module Scrappy
   
   SESSION_TOKEN = rand(100000000)
   Options = OpenStruct.new
+  Kb      = OpenStruct.new
 
   class App
     def self.run
@@ -91,6 +92,7 @@ module Scrappy
     def self.add_sample sample
       self.samples.unshift sample
       save_samples
+      sample
     end
     def self.delete_sample id
       @samples.delete @samples[id]
@@ -99,15 +101,28 @@ module Scrappy
     def self.save_samples
       open(@samples_file, "w") { |f| Marshal.dump(@samples, f) }
     end
-    def self.add_extractor graph
-      open(File.join(@data_folder,"extractor_#{Dir[File.join(@data_folder,'*')].size}.yarf"), "w") { |f| f.write graph.serialize(:yarf) }
-      onload
-    end
     def self.editable_kb?
       @editable_kb
     end
+    def self.add_pattern graph
+      new_patterns = Scrappy::Kb.patterns.merge graph
+      open(@patterns_file, "w") { |f| f.write new_patterns.serialize(:yarf) }
+      onload
+    end
+    def self.delete_pattern uri
+      graph = Scrappy::Kb.patterns
+      fragments = graph.find(nil, Node('rdf:type'), Node('sc:Fragment')).
+                        select { |fragment| fragment.sc::type.include?(Node(uri)) }
+      fragments.each { |fragment| graph.triples -= fragment.all_triples }
+      open(@patterns_file, "w") { |f| f.write graph.serialize(:yarf) }
+      onload
+    end
+    def self.add_extractor graph
+      open(File.join(@extractors_folder,"extractor_#{Dir[File.join(@extractors_folder,'*')].size}.yarf"), "w") { |f| f.write graph.serialize(:yarf) }
+      onload
+    end
     def self.delete_extractor uri
-      Dir[File.join(@data_folder, '*')].each do |file|
+      Dir[File.join(@extractors_folder, '*')].each do |file|
         format = file.split('.').last.to_sym
         next if format==:ignore
         graph = RDF::Parser.parse format, open(file).read
@@ -173,26 +188,43 @@ Copyright
       # Check local or global knowledge base
       @home = WINDOWS_PLATFORM ? "#{ENV['HOME']}/scrappy" : "#{ENV['HOME']}/.scrappy"
       
-      data_dirname    = "kb"
-      cache_dirname   = "cache"
-      cache_filename  = "scrappy-#{Scrappy::VERSION}.kb"
-      config_filename = "config.yml"
-      samples_filename = "samples"
+      extractors_dirname = "extractors"
+      cache_dirname      = "cache"
+      cache_filename     = "scrappy-#{Scrappy::VERSION}.kb"
+      config_filename    = "config.yml"
+      samples_filename   = "samples"
+      patterns_filename  = "patterns.yarf"
       
-      if File.exists?(File.join(@home, data_dirname))
-        @editable_kb = true
-        @data_folder  = File.join @home, data_dirname
-        @cache_folder = File.join @home, cache_dirname
+      if File.exists?(File.join(@home, extractors_dirname))
+        @editable_kb       = true
+        @extractors_folder = File.join @home, extractors_dirname
+        @cache_folder      = File.join @home, cache_dirname
       else
-        @editable_kb = false
-        @data_folder  = File.join Scrappy::Root, data_dirname
-        @cache_folder = Dir.tmpdir
+        @editable_kb       = false
+        @extractors_folder = File.join Scrappy::Root, extractors_dirname
+        @cache_folder      = Dir.tmpdir
       end
-      Dir.mkdir @home        if Dir[@home].empty?
-      Dir.mkdir cache_folder if Dir[cache_folder].empty?
-      @cache_file   = File.join @cache_folder, cache_filename
-      @config_file  = File.join @home, config_filename
-      @samples_file = File.join @home, samples_filename
+      @cache_file    = File.join @cache_folder, cache_filename
+      @config_file   = File.join @home, config_filename
+      @samples_file  = File.join @home, samples_filename
+      @patterns_file = File.join @home, patterns_filename
+      Dir.mkdir @home            if Dir[@home].empty?
+      Dir.mkdir cache_folder     if Dir[cache_folder].empty?
+    end
+    
+    def self.load_files_from folder
+      kb = RDF::Graph.new
+      kb.triples = ( Dir[File.join(folder, "*")].inject([]) do |triples, file|
+        extension = file.split('.').last.to_sym
+        triples + if extension==:ignore or File.directory?(file)
+          []
+        else
+          graph = RDF::Parser.parse(extension, open(file).read)
+          kb.ns.merge! graph.ns
+          graph.triples
+        end
+      end )
+      kb
     end
     
     def self.onload
@@ -200,32 +232,25 @@ Copyright
       
       # Load knowledge base
       Agent::Options.kb ||= RDF::Graph.new
-      new_kb = if File.exists?(@cache_file) and File.mtime(@cache_file) >= Dir["#{@data_folder}/*", @data_folder].map{ |f| File.mtime(f) }.max
+      
+      Kb.extractors, Kb.patterns = if File.exists?(@cache_file) and File.mtime(@cache_file) >= Dir["#{@extractors_folder}/*",@extractors_folder,@patterns_file].map{ |f| File.mtime(f) }.max
         # Just load kb from cache
         open(@cache_file) { |f| Marshal.load(f) }
       else
         # Load YARF files and cache kb
-        kb = RDF::Graph.new
-        kb.triples = Dir[File.join(@data_folder, "*")].inject([]) do |triples, file|
-          extension = file.split('.').last.to_sym
-          triples + if extension==:ignore
-            []
-          else
-            graph = RDF::Parser.parse(extension, open(file).read)
-            kb.ns.merge! graph.ns
-            graph.triples
-          end
-        end
-        open(@cache_file, "w") { |f| Marshal.dump(kb, f) }
-        kb
+        extractors = load_files_from(@extractors_folder)
+        patterns   = File.exists?(@patterns_file) ? RDF::Parser.parse(:yarf, open(@patterns_file).read) : RDF::Graph.new
+        open(@cache_file, "w") { |f| Marshal.dump([extractors, patterns], f) }
+        [extractors, patterns]
       end
+
       # Sets new kb
-      Agent::Options.kb.replace new_kb
-      Agent::Options.kb.ns = new_kb.ns
+      Agent::Options.kb.replace Kb.extractors
+      Agent::Options.kb.ns = Kb.extractors.ns
       # Adds defined prefixes to namespace
       RDF::ID.ns.merge! Agent::Options.kb.ns
 
-      # Looks for a configuration file. If it does not exist, Scrappy does not uses Sesame
+      # Looks for a configuration file. If it does not exist, Scrappy does not use Sesame
       # It looks for it in the home .scrappy dir
       if File.exist?(@config_file)
         config = YAML::load_file(@config_file)["repository"]

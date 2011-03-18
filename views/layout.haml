@@ -16,9 +16,13 @@
         %li
           %a{:href=>"#{settings.base_uri}/extractors"} Extractors
         %li
+          %a{:href=>"#{settings.base_uri}/patterns"} Patterns
+        %li
           %a{:href=>"#{settings.base_uri}/samples"} Samples
         %li
           %a{:href=>"#{settings.base_uri}/help"} Help
+    -if flash[:notice]
+      #notice=flash[:notice]
     =yield
     #footer
       %p

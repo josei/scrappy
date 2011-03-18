@@ -15,13 +15,13 @@ require 'scrappy/support'
 require 'scrappy/repository'
 
 require 'scrappy/extractor/extractor'
+require 'scrappy/trainer/trainer'
 require 'scrappy/agent/map_reduce'
 require 'scrappy/agent/cache'
 require 'scrappy/agent/dumper'
-require 'scrappy/agent/formats'
 require 'scrappy/agent/blind_agent'
 require 'scrappy/agent/agent'
 
 module Scrappy
-  VERSION = '0.3.0'
+  VERSION = '0.3.1'
 end

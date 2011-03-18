@@ -73,14 +73,19 @@ img {
 #bar ul.right {
   float: right;
 }
-#column {
-  float:left;
+#notice {
   margin-top: 20px;
-  height: auto;
-  width: 200px;
-  height: 600px;
-  border-right: 1px solid #ddd;
-  overflow-y: auto;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 15px;
+  width: 800px;
+  color: #333;
+  font-size: 14px;
+  text-align: center;
+  background: -webkit-gradient(linear, left top, left bottom, from(#af9), to(#dfd));
+  background: -moz-linear-gradient(top, #af9, #dfd);
+  border-radius: 10px;
+  -moz-border-radius: 10px;
 }
 #body {
   margin: auto; width: 800px; padding: 15px;
@@ -161,7 +166,7 @@ ul.detail li span.name, ul.detail li span.short_name {
   font-family: monospace;
 }
 ul.detail li span.short_name {
-  width: 450px;
+  width: 420px;
 }
 ul.detail li span.format {
   float: right;

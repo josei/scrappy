@@ -48,7 +48,7 @@ RDFXML, JSON, NTriples formats, which can also be used to define the mappings).
 
 == SYNOPSIS:
 
-A knowledge base of mappings can be defined by storing RDF files inside ~/.scrappy/kb folder.
+A knowledge base of mappings can be defined by storing RDF files inside ~/.scrappy/extractors folder.
 Then, the command-line tool can be used to get RDF data from web sites. You can get help on this
 tool by typing:
 

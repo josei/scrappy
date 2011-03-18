@@ -1,0 +1,19 @@
+#body
+  %h1 Patterns
+  %p
+    Patterns are visual conditions that are used to identify data in sites which do not have a defined extractor.
+  %p
+    -if @uris.empty?
+      Currently, there are no patterns.
+    -else
+      %ul.detail
+        -@uris.each do |uri|
+          %li
+            %span.action
+              %a{:href=>"#{settings.base_uri}/patterns/#{CGI::escape(uri)}", :'data-method'=>:delete, :'data-confirm'=>"Are you sure you want to delete the pattern for #{uri}?"}
+                X
+            %span.name
+              -if !uri.include?('*')
+                %a{:href=>uri}=uri
+              -else
+                =uri

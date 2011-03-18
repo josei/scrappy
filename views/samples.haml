@@ -18,9 +18,11 @@
                 %a{:href=>sample[:uri]}=sample[:uri]
               -else
                 =sample[:uri]
-            -[['RDF', :rdf], ['JSON', :ejson], ['YARF', :yarf], ['nTriples', :ntriples], ['PNG', :png]].reverse.each do |format, format_code|
+            -[['Patterns output', :patterns], ['Extractors output', :extractors]].reverse.each do |text, action|
               %span.format
-                %a{:href=>"#{settings.base_uri}/samples/#{i}/#{format_code}"}=format
+                %a{:href=>"#{settings.base_uri}/samples/#{i}/#{action}"}=text
+            %span.format
+              %a{:href=>"#{settings.base_uri}/samples/#{i}/train", :'data-method'=>:post} Train
             %span.date
               %a{:href=>"#{settings.base_uri}/samples/#{i}"}
                 =sample[:date].strftime("%Y/%m/%d - %H:%M")

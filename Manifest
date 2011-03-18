@@ -30,6 +30,7 @@ lib/scrappy/server/errors.rb
 lib/scrappy/server/helpers.rb
 lib/scrappy/server/server.rb
 lib/scrappy/support.rb
+lib/scrappy/trainer/trainer.rb
 public/favicon.ico
 public/images/logo.png
 public/images/logo_tiny.png
@@ -42,4 +43,5 @@ views/extractors.haml
 views/help.haml
 views/home.haml
 views/layout.haml
+views/patterns.haml
 views/samples.haml
