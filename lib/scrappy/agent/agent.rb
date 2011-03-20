@@ -3,6 +3,7 @@ module Scrappy
     include MonitorMixin
     include Extractor
     include Trainer
+    include Optimizer
     include MapReduce
     include Cached
     include BlindAgent

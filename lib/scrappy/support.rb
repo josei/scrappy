@@ -30,3 +30,19 @@ class String
     downcase
   end
 end
+
+module RDF
+  class Node
+    def self.mix *nodes
+      id = nodes.first
+      graph = RDF::Graph.new( nodes.inject([]) do |triples, node|
+        triples + node.graph.triples.map do |s,p,o|
+          [ s==node.id ? id : s,
+            p==node.id ? id : p,
+            o==node.id ? id : o ]
+        end
+      end )
+      graph[id]
+    end
+  end
+end

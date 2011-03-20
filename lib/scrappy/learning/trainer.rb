@@ -6,10 +6,6 @@ module Scrappy
         triples + train_sample(sample).triples
       end )
     end
-
-    # Optimizes the knowledge base by generalizing patterns
-    def optimize
-    end
     
     private
     def train_sample sample
@@ -45,18 +41,14 @@ module Scrappy
           fragment.sc::type = node.rdf::type
         else
           if node[predicate].map(&:class).uniq.first != String
-            subfragments = node[predicate].map { |subnode| fragment_for(subnode, node) }
-            # Mix the subfragments
-            id = subfragments.first
-            graph = RDF::Graph.new( subfragments.inject([]) do |triples, subfragment|
-              triples + subfragment.graph.triples.map { |s,p,o| [s==subfragment.id ? id : s,p,o] }
-            end )
-            subfragment = graph[id]
-            subfragment.sc::relation = Node(predicate)
-            subfragment.sc::min_cardinality = "1"
+            node[predicate].map do |subnode|
+              subfragment = fragment_for(subnode, node)
+              subfragment.sc::relation = Node(predicate)
+              subfragment.sc::min_cardinality = "1"
           
-            fragment.graph << subfragment
-            fragment.sc::subfragment += [subfragment]
+              fragment.graph << subfragment
+              fragment.sc::subfragment += [subfragment]
+            end
           end
         end
       end

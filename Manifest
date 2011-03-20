@@ -24,13 +24,14 @@ lib/scrappy/extractor/selectors/uri.rb
 lib/scrappy/extractor/selectors/uri_pattern.rb
 lib/scrappy/extractor/selectors/visual.rb
 lib/scrappy/extractor/selectors/xpath.rb
+lib/scrappy/learning/optimizer.rb
+lib/scrappy/learning/trainer.rb
 lib/scrappy/repository.rb
 lib/scrappy/server/admin.rb
 lib/scrappy/server/errors.rb
 lib/scrappy/server/helpers.rb
 lib/scrappy/server/server.rb
 lib/scrappy/support.rb
-lib/scrappy/trainer/trainer.rb
 public/favicon.ico
 public/images/logo.png
 public/images/logo_tiny.png
