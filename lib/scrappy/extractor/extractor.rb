@@ -38,19 +38,23 @@ module Scrappy
     end
     
     def fragments_for kb, uri
-      uri_selectors = ( kb.find(nil, Node('rdf:type'), Node('sc:UriSelector')) +
-                        kb.find(nil, Node('rdf:type'), Node('sc:UriPatternSelector')) ).
-                        flatten.select do |uri_selector|
-        !kb.node(uri_selector).filter(:uri=>uri).empty?
+      all_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment'))
+      selectors = []
+      fragments = {}
+      all_fragments.each do |fragment|
+        fragment.sc::selector.each do |selector|
+          fragments[selector] = fragment
+          selectors << selector
+        end
       end
-
-      visual_selectors = kb.find(nil, Node('rdf:type'), Node('sc:VisualSelector'))
       
-      selectors = uri_selectors + visual_selectors
+      uri_selectors = selectors.select { |selector| selector.rdf::type.include?(Node('sc:UriSelector')) or
+                                                    selector.rdf::type.include?(Node('sc:UriPatternSelector')) }.
+                                select { |selector| !kb.node(selector).filter(:uri=>uri).empty? }
 
-      selectors.map { |selector| kb.find(nil, Node('sc:selector'), selector) }.
-                flatten.
-                select { |selector| selector.rdf::type.include?(Node('sc:Fragment')) }
+      visual_selectors = selectors.select { |selector| selector.rdf::type.include?(Node('sc:VisualSelector')) }
+
+      (uri_selectors + visual_selectors).map { |selector| fragments[selector] }
     end
     
     private
