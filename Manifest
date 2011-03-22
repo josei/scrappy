@@ -3,7 +3,7 @@ Manifest
 README.rdoc
 Rakefile
 bin/scrappy
-kb/elmundo.yarf
+extractors/elmundo.yarf
 lib/scrappy.rb
 lib/scrappy/agent/agent.rb
 lib/scrappy/agent/blind_agent.rb
