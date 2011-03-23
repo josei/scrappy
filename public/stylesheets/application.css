@@ -166,7 +166,7 @@ ul.detail li span.name, ul.detail li span.short_name {
   font-family: monospace;
 }
 ul.detail li span.short_name {
-  width: 420px;
+  width: 350px;
 }
 ul.detail li span.format {
   float: right;

@@ -11,72 +11,76 @@ module Sc
       # Generate nodes for each page mapping
       docs.map do |doc|
         # Build RDF nodes from identifier selectors (if present)
-        nodes = self.nodes(uri, doc, options[:referenceable])
+        node = self.node(uri, doc, options[:referenceable])
         
-        # Add info to each node
-        nodes.map do |node|
-          # Build the object -- it can be a node or a literal
-          object = if sc::type.include?(Node('rdf:Literal'))
-            value = doc[:value].to_s.strip
-            if options[:referenceable]
-              node.rdf::value = value
-              node.rdf::type  = Node('rdf:Literal')
-              node
-            else
-              value
-            end
-          else
-            # Add statements about the node
-            sc::type.each       { |type|       node.rdf::type += [type] if type != Node('rdf:Resource') }
-            sc::superclass.each { |superclass| node.rdfs::subClassOf += [superclass] }
-            sc::sameas.each     { |samenode|   node.owl::sameAs += [samenode] }
+        # Skip the node if no URI or bnode is created
+        next if !node
+        
+        # Add info to the node
 
-            node
-          end
-
-          # Process subfragments
-          consistent = true
-          sc::subfragment.each do |subfragment|
-            # Get subfragment object
-            subfragment = graph.node(subfragment, Node('sc:Fragment'))
-            # Extract data from the subfragment
-            subnodes    = subfragment.extract(options.merge(:doc=>doc))
-            
-            # Add relations
-            subnodes.each do |subnode|
-              node.graph << subnode if subnode.is_a?(RDF::Node)
-              subfragment.sc::relation.each { |relation| node[relation] += [subnode] }
-            end
-            
-            # Check consistency
-            consistent = false if subfragment.sc::min_cardinality.first and subnodes.size < subfragment.sc::min_cardinality.first.to_i
-            consistent = false if subfragment.sc::max_cardinality.first and subnodes.size > subfragment.sc::max_cardinality.first.to_i
-          end
-
-          # Skip the node if it has inconsistent relations
-          # For example: extracting a sioc:Post with no dc:title would
-          # violate the constraint sc:min_cardinality = 1
-          next if !consistent
-          
-          # Add referenceable data if requested
+        # Build the object -- it can be a node or a literal
+        object = if sc::type.include?(Node('rdf:Literal'))
+          value = doc[:value].to_s.strip
           if options[:referenceable]
-            sources = [doc[:content]].flatten.map { |n| Node(Scrappy::Extractor.node_hash(doc[:uri], n.path)) }
-            sources.each do |source|
-              sc::type.each     { |type|     source.sc::type     += [type] }
-              sc::relation.each { |relation| source.sc::relation += [relation] }
-              node.graph << source
-              node.sc::source += [source]
-            end
+            node.rdf::value = value
+            node.rdf::type  = Node('rdf:Literal')
+            node
+          else
+            value
+          end
+        else
+          # Add statements about the node
+          sc::type.each       { |type|       node.rdf::type += [type] if type != Node('rdf:Resource') }
+          sc::superclass.each { |superclass| node.rdfs::subClassOf += [superclass] }
+          sc::sameas.each     { |samenode|   node.owl::sameAs += [samenode] }
+
+          node
+        end
+
+        # Process subfragments
+        consistent = true
+        sc::subfragment.each do |subfragment|
+          # Get subfragment object
+          subfragment = graph.node(subfragment, Node('sc:Fragment'))
+          # Extract data from the subfragment
+          subnodes    = subfragment.extract(options.merge(:doc=>doc))
+          
+          # Add relations
+          subnodes.each do |subnode|
+            node.graph << subnode if subnode.is_a?(RDF::Node)
+            subfragment.sc::relation.each { |relation| node[relation] += [subnode] }
           end
           
-          # Object points to either the node or the literal
-          object
+          # Check consistency
+          consistent = false if subfragment.sc::min_cardinality.first and subnodes.size < subfragment.sc::min_cardinality.first.to_i
+          consistent = false if subfragment.sc::max_cardinality.first and subnodes.size > subfragment.sc::max_cardinality.first.to_i
         end
-      end.flatten.compact
+
+        # Skip the node if it has inconsistent relations
+        # For example: extracting a sioc:Post with no dc:title would
+        # violate the constraint sc:min_cardinality = 1
+        next if !consistent
+        
+        # Add referenceable data if requested
+        if options[:referenceable]
+          sources = [doc[:content]].flatten.map { |n| Node(Scrappy::Extractor.node_hash(doc[:uri], n.path)) }
+          sources.each do |source|
+            sc::type.each     { |type|     source.sc::type     += [type] }
+            sc::relation.each { |relation| source.sc::relation += [relation] }
+            node.graph << source
+            node.sc::source += [source]
+          end
+        end
+        
+        # Object points to either the node or the literal
+        object
+      end.compact
     end
     
-    def nodes uri, doc, referenceable
-      nodes = sc::identifier.map { |s| graph.node(s).select doc }.flatten.map do |d|
+    def node uri, doc, referenceable
+      return Node(nil) if sc::identifier.empty?
+      
+      sc::identifier.map { |s| graph.node(s).select doc }.flatten.map do |d|
         node = Node(parse_uri(uri, d[:value]))
         
         if referenceable
@@ -90,10 +94,7 @@ module Sc
         end
         
         node
-      end
-      nodes << Node(nil) if nodes.empty?
-      
-      nodes
+      end.first
     end
     
     private

@@ -62,7 +62,7 @@ module Scrappy
                 map { |node| node.sc::type }.flatten.map(&:to_s).sort
         haml :patterns
       end
-      
+
       app.delete '/patterns/*' do |uri|
         Scrappy::App.delete_pattern uri
         flash[:notice] = "Pattern deleted"
@@ -94,6 +94,12 @@ module Scrappy
         redirect "#{settings.base_uri}/samples"
       end
       
+      app.post '/samples/:id/optimize' do |id|
+        Scrappy::App.save_patterns agent.optimize(Scrappy::Kb.patterns, Scrappy::App.samples[id.to_i])
+        flash[:notice] = "Optimization completed"
+        redirect "#{settings.base_uri}/samples"
+      end
+
       app.post '/samples' do
         html   = Iconv.iconv('UTF-8', params[:encoding], params[:html]).first
         sample = Scrappy::App.add_sample(:html=>html, :uri=>params[:uri], :date=>Time.now)

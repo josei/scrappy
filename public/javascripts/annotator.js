@@ -16,16 +16,28 @@ var add_visual_data = function() {
     item.setAttribute('vy', y);
     item.setAttribute('vw', item.offsetWidth);
     item.setAttribute('vh', item.offsetHeight);
-    var size = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-size');
-    size = size.substring(0, size.length-2);
-    item.setAttribute('vsize', size);
-    var fonts = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-family').split(",");
-    var font = fonts[fonts.length-1].trim();
-    item.setAttribute('vfont', font);
-    var weight = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-weight');
-    if (weight == 'normal') weight = 400;
-    if (weight == 'bold')   weight = 700;
-    item.setAttribute('vweight', weight);
+    
+    var item_with_text = false;
+    for (var k=0; k<item.childNodes.length; k++) {
+      child = item.childNodes[k]
+      if (child.nodeName == "#text" && child.textContent.trim() != "") {
+        item_with_text = true;
+        break;
+      }
+    }
+    
+    if (item_with_text) {
+      var size = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-size');
+      size = size.substring(0, size.length-2);
+      item.setAttribute('vsize', size);
+      var fonts = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-family').split(",");
+      var font = fonts[fonts.length-1].trim();
+      item.setAttribute('vfont', font);
+      var weight = document.defaultView.getComputedStyle(item, null).getPropertyValue('font-weight');
+      if (weight == 'normal') weight = 400;
+      if (weight == 'bold')   weight = 700;
+      item.setAttribute('vweight', weight);
+    }
   }
 }
 

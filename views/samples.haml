@@ -22,6 +22,8 @@
               %span.format
                 %a{:href=>"#{settings.base_uri}/samples/#{i}/#{action}"}=text
             %span.format
+              %a{:href=>"#{settings.base_uri}/samples/#{i}/optimize", :'data-method'=>:post} Optimize
+            %span.format
               %a{:href=>"#{settings.base_uri}/samples/#{i}/train", :'data-method'=>:post} Train
             %span.date
               %a{:href=>"#{settings.base_uri}/samples/#{i}"}
