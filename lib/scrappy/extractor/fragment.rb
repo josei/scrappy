@@ -9,15 +9,13 @@ module Sc
     end
 
     def extract options={}
-      uri  = options[:doc][:uri]
-
       # Identify the fragment's mappings
       docs = sc::selector.map { |s| graph.node(s).select options[:doc] }.flatten
 
       # Generate nodes for each page mapping
       docs.map do |doc|
         # Build RDF nodes from identifier selectors (if present)
-        node = self.build_node(uri, doc, options[:referenceable])
+        node = build_node(doc, options[:referenceable])
         
         # Skip the node if no URI or bnode is created
         next if !node
@@ -68,7 +66,7 @@ module Sc
         next if !consistent
         
         # Add referenceable data if requested
-        if options[:referenceable]
+        if options[:referenceable] and node.size > 0
           source = reference(doc)
           node.graph << source
           sc::type.each     { |type|     source.sc::type     += [type] }
@@ -80,12 +78,14 @@ module Sc
         object
       end.compact
     end
-    
-    def build_node uri, doc, referenceable
+
+    private
+    # Builds a node given a document
+    def build_node doc, referenceable
       return Node(nil) if sc::identifier.empty?
       
       sc::identifier.map { |s| graph.node(s).select doc }.flatten.map do |d|
-        node = Node(parse_uri(uri, d[:value]))
+        node = Node(parse_uri(d[:uri], d[:value]))
         
         if referenceable
           # Include the fragment where the URI was built from
@@ -103,7 +103,6 @@ module Sc
       end.first
     end
     
-    private
     # Parses a URI by resolving relative paths
     def parse_uri(uri, rel_uri)
       return ID('*') if rel_uri.nil?
