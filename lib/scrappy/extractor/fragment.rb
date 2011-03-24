@@ -2,17 +2,56 @@ module Sc
   class Fragment
     include RDF::NodeProxy
 
+    # Extracts data out of a document and returns an RDF::Graph
     def extract_graph options={}
       graph = RDF::Graph.new
       extract(options).each { |node| graph << node }
       graph
     end
 
+    # Extracts data out of a document and returns an array of nodes
     def extract options={}
+      # Extracts all the mappings and any subfragment
+      mappings(options).map do |result|
+        node         = result[:node]
+        subfragments = result[:subfragments]
+        doc          = result[:doc]
+
+        # Process subfragments
+        consistent = true
+        subfragments.each do |subfragment|
+          # Get subfragment object
+          subfragment = subfragment.proxy Node('sc:Fragment')
+          
+          # Extract data from the subfragment
+          subnodes  = subfragment.extract(options.merge(:doc=>doc))
+
+          # Add relations
+          subnodes.each do |subnode|
+            node.graph << subnode if subnode.is_a?(RDF::Node)
+            subfragment.sc::relation.each { |relation| node[relation] += [subnode] }
+          end
+          
+          # Check consistency
+          consistent = false if subfragment.sc::min_cardinality.first and subnodes.size < subfragment.sc::min_cardinality.first.to_i
+          consistent = false if subfragment.sc::max_cardinality.first and subnodes.size > subfragment.sc::max_cardinality.first.to_i
+        end
+
+        # Skip the node if it has inconsistent relations
+        # For example: extracting a sioc:Post with no dc:title would
+        # violate the constraint sc:min_cardinality = 1
+        next if !consistent
+        
+        node
+      end.compact
+    end
+
+    # Returns all the mappings between this fragment and RDF nodes
+    def mappings options
       # Identify the fragment's mappings
       docs = sc::selector.map { |s| graph.node(s).select options[:doc] }.flatten
 
-      # Generate nodes for each page mapping
+      # Generate a result for each page mapping
       docs.map do |doc|
         # Build RDF nodes from identifier selectors (if present)
         node = build_node(doc, options[:referenceable])
@@ -41,30 +80,6 @@ module Sc
           node
         end
 
-        # Process subfragments
-        consistent = true
-        sc::subfragment.each do |subfragment|
-          # Get subfragment object
-          subfragment = graph.node(subfragment, Node('sc:Fragment'))
-          # Extract data from the subfragment
-          subnodes    = subfragment.extract(options.merge(:doc=>doc))
-          
-          # Add relations
-          subnodes.each do |subnode|
-            node.graph << subnode if subnode.is_a?(RDF::Node)
-            subfragment.sc::relation.each { |relation| node[relation] += [subnode] }
-          end
-          
-          # Check consistency
-          consistent = false if subfragment.sc::min_cardinality.first and subnodes.size < subfragment.sc::min_cardinality.first.to_i
-          consistent = false if subfragment.sc::max_cardinality.first and subnodes.size > subfragment.sc::max_cardinality.first.to_i
-        end
-
-        # Skip the node if it has inconsistent relations
-        # For example: extracting a sioc:Post with no dc:title would
-        # violate the constraint sc:min_cardinality = 1
-        next if !consistent
-        
         # Add referenceable data if requested
         if options[:referenceable] and node.size > 0
           source = reference(doc)
@@ -74,11 +89,13 @@ module Sc
           node.sc::source += [source]
         end
         
-        # Object points to either the node or the literal
-        object
+        # Variable object points to either a node or a literal
+        # Return the object, as well as its subfragments (if any)
+        # and the doc it was extracted from
+        { :node=>object, :subfragments=>sc::subfragment, :doc=>doc }
       end.compact
     end
-
+    
     private
     # Builds a node given a document
     def build_node doc, referenceable
