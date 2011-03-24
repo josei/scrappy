@@ -50,7 +50,7 @@ module Sc
       end.map do |content|
         if attributes.first
           # Select node's attribute if given
-          attributes.map { |attribute| { :uri=>doc[:uri], :content=>content, :value=>content[attribute] } }
+          attributes.map { |attribute| { :uri=>doc[:uri], :content=>content, :value=>content[attribute], :attribute=>attribute } }
         else
           [ { :uri=>doc[:uri], :content=>content, :value=>format(content, formats, doc[:uri]) } ]
         end

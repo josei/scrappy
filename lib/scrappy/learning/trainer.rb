@@ -30,11 +30,7 @@ module Scrappy
           fragment.graph << selector
           fragment.sc::selector = selector
         when ID("sc:uri") then
-          # Assumption: URIs are extracted from a link
           selector = selector_for(node.sc::uri.first.sc::source.first, node)
-          selector.sc::tag = "a"
-          selector.sc::attribute = "href"
-
           fragment.graph << selector
           fragment.sc::identifier = selector
         when ID("rdf:type") then
@@ -57,6 +53,7 @@ module Scrappy
     end
     
     def selector_for fragment, parent=nil
+      fragment_selector = fragment.sc::selector.first
       presentation = fragment.sc::presentation.first
       
       selector = Node(nil)
@@ -86,6 +83,9 @@ module Scrappy
       selector.sc::min_font_weight = presentation.sc::font_weight
       selector.sc::max_font_weight = presentation.sc::font_weight
       selector.sc::font_family     = presentation.sc::font_family
+
+      selector.sc::tag       = fragment_selector.sc::tag.select { |tag| ["a","img"].include?(tag) }
+      selector.sc::attribute = fragment_selector.sc::attribute
       
       selector
     end
