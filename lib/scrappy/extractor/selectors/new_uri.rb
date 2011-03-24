@@ -26,7 +26,7 @@ module Sc
         
         new_uri = "#{prefix}#{variable}#{suffix}"
         
-        { :uri=>new_uri, :content=>doc[:content], :value=>new_uri }
+        { :uri=>new_uri, :content=>doc[:content], :value=>new_uri, :attribute=>sc::attribute.first }
       end
     end
   end

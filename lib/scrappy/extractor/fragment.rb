@@ -63,13 +63,11 @@ module Sc
         
         # Add referenceable data if requested
         if options[:referenceable]
-          sources = [doc[:content]].flatten.map { |n| Node(Scrappy::Extractor.node_hash(doc[:uri], n.path)) }
-          sources.each do |source|
-            sc::type.each     { |type|     source.sc::type     += [type] }
-            sc::relation.each { |relation| source.sc::relation += [relation] }
-            node.graph << source
-            node.sc::source += [source]
-          end
+          source = reference(doc)
+          node.graph << source
+          sc::type.each     { |type|     source.sc::type     += [type] }
+          sc::relation.each { |relation| source.sc::relation += [relation] }
+          node.sc::source += [source]
         end
         
         # Object points to either the node or the literal
@@ -85,12 +83,14 @@ module Sc
         
         if referenceable
           # Include the fragment where the URI was built from
-          uri_node = Node(nil, node.graph)
-          hash     = Scrappy::Extractor.node_hash(d[:uri], d[:content].path)
-          
-          node.sc::uri        = uri_node
+          uri_node            = Node(nil)
+          source              = reference(d)
+          uri_node.graph     << source
           uri_node.rdf::value = node.to_s
-          uri_node.sc::source = Node(hash)
+          uri_node.sc::source = source
+          
+          node.graph  << uri_node
+          node.sc::uri = uri_node
         end
         
         node
@@ -108,5 +108,41 @@ module Sc
       end
     end
 
+    # Builds an RDF reference to an HTML node
+    def reference doc
+      node      = doc[:content]
+      attribute = doc[:attribute]
+      uri       = doc[:uri]
+
+      source       = Node(nil)
+      selector     = Node(nil)
+      presentation = Node(nil)
+      
+      source.graph       << selector
+      source.sc::selector = selector
+      
+      selector.rdf::type           = Node('sc:UnivocalSelector')
+      selector.sc::path            = node.path
+      selector.sc::document        = uri
+      selector.sc::attribute       = attribute if attribute
+      
+      if node.path != '/'
+        selector.sc::tag        = node.name
+        source.graph           << presentation
+        source.sc::presentation = presentation
+      end
+      
+      presentation.sc::x           = node[:vx] if node[:vx]
+      presentation.sc::y           = node[:vy] if node[:vy]
+      presentation.sc::width       = node[:vw] if node[:vw]
+      presentation.sc::height      = node[:vh] if node[:vh]
+      presentation.sc::font_size   = node[:vsize] if node[:vsize]
+      presentation.sc::font_family = node[:vfont] if node[:vfont]
+      presentation.sc::font_weight = node[:vweight] if node[:vweight]
+      presentation.sc::text        = node.text.strip
+      
+      source
+    end
+    
   end
 end
