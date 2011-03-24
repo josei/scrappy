@@ -35,10 +35,11 @@ module Scrappy
     end
     
     def fragments_for kb, uri
-      all_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment'))
+      root_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
+
       selectors = []
       fragments = {}
-      all_fragments.each do |fragment|
+      root_fragments.each do |fragment|
         fragment.sc::selector.each do |selector|
           fragments[selector] = fragment
           selectors << selector

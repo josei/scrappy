@@ -2,8 +2,14 @@ module Sc
   class Fragment
     include RDF::NodeProxy
 
+    def extract_graph options={}
+      graph = RDF::Graph.new
+      extract(options).each { |node| graph << node }
+      graph
+    end
+
     def extract options={}
-      uri    = options[:doc][:uri]
+      uri  = options[:doc][:uri]
 
       # Identify the fragment's mappings
       docs = sc::selector.map { |s| graph.node(s).select options[:doc] }.flatten
@@ -11,7 +17,7 @@ module Sc
       # Generate nodes for each page mapping
       docs.map do |doc|
         # Build RDF nodes from identifier selectors (if present)
-        node = self.node(uri, doc, options[:referenceable])
+        node = self.build_node(uri, doc, options[:referenceable])
         
         # Skip the node if no URI or bnode is created
         next if !node
@@ -75,7 +81,7 @@ module Sc
       end.compact
     end
     
-    def node uri, doc, referenceable
+    def build_node uri, doc, referenceable
       return Node(nil) if sc::identifier.empty?
       
       sc::identifier.map { |s| graph.node(s).select doc }.flatten.map do |d|

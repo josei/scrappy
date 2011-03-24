@@ -1,47 +1,57 @@
 module Scrappy
   module Optimizer
     # Iterates through a knowledge base and tries to merge and generalize
-    # selectors whenever the output of the new resulting is the same
+    # selectors whenever the output of the resulting kb is the same
     def optimize kb, sample
       # Get the output only once
       output = RDF::Graph.new extract(sample[:uri], sample[:html], kb)
-      begin
-        changes = optimize_once kb, sample, output
-      end until !changes
-      
-      puts kb.serialize(:yarf)
-      exit
 
-      kb
+      # Build an array of fragments
+      root_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
+      fragments = []; root_fragments.each { |f| fragments << kb.node(Node(f.id, RDF::Graph.new(f.all_triples))) }
+
+      # Parse the document
+      doc = { :uri=>sample[:uri], :content=>Nokogiri::HTML(sample[:html], nil, 'utf-8') }
+
+      begin
+        changed, fragments = optimize_once fragments, doc, output
+      end until !changed
+      
+      graph = RDF::Graph.new
+      fragments.each { |fragment| graph << fragment }
+
+      puts graph.serialize(:yarf)
+      exit
+      
+      graph
     end
     
     protected
-    def optimize_once kb, sample, output
-      fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment'))
-      
+    # Tries to optimize a set of fragments.
+    # Returns true if there were changes, false otherwise,
+    # and the new fragments as the second array element
+    def optimize_once fragments, doc, output
       fragments.each do |fragment1|
         fragments.each do |fragment2|
           next if fragment1 == fragment2
-          new_fragment = mix_if_gain(fragment1, fragment2, sample, output)
+          new_fragment = mix_if_gain(fragment1, fragment2, doc, output)
           
           # End if a new fragment was created
           if new_fragment
-            kb.triples -= fragment1.all_triples + fragment2.all_triples
-            kb.triples += new_fragment.all_triples
-            return true
+            return [true, fragments - [fragment1] - [fragment2] + [new_fragment]]
           end
         end
       end
-      false
+      [false, fragments]
     end
     
-    def mix_if_gain fragment1, fragment2, sample, output
+    def mix_if_gain fragment1, fragment2, doc, output
       new_fragment = mix fragment1, fragment2
       
-      separate_output1 = extract(sample[:uri], sample[:html], RDF::Graph.new(fragment1.all_triples))
-      separate_output2 = extract(sample[:uri], sample[:html], RDF::Graph.new(fragment2.all_triples))
-      separate_output  = RDF::Graph.new(separate_output1 + separate_output2)
-      new_output       = RDF::Graph.new extract(sample[:uri], sample[:html], new_fragment.graph)
+      separate_output1 = fragment1.extract_graph :doc=>doc
+      separate_output2 = fragment2.extract_graph :doc=>doc
+      separate_output  = separate_output1.merge separate_output2
+      new_output       = new_fragment.extract_graph :doc=>doc
       
       # Check if the output with the new fragment is a subset of the full output
       # and if the output of the fragments alone is a subset of the output of the new
@@ -71,12 +81,12 @@ module Scrappy
       all_subfragments = fragments.map { |f| f.sc::subfragment }.flatten
       all_subfragments.map { |sf| [sf.sc::type.sort_by(&:to_s), sf.sc::relation.sort_by(&:to_s)] }.uniq.each do |types, relations|
         subfragments = all_subfragments.select do |sf|
-          sf.sc::type.sort_by(&:to_s)      == types and
+          sf.sc::type.sort_by(&:to_s)     == types and
           sf.sc::relation.sort_by(&:to_s) == relations
         end
       end
       
-      new_fragment
+      new_fragment.proxy
     end
     
     def mix_selector *selectors
