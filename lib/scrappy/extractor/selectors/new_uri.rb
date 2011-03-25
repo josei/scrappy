@@ -10,21 +10,24 @@ module Sc
       
       @indexes ||= Hash.new(0)
       prefix = sc::prefix.first.to_s
-      prefix = (prefix =~ /\Ahttp/ ? URI::parse(doc[:uri]).merge(prefix).to_s : "#{doc[:uri]}#{prefix}")
+      prefix = (prefix =~ /\Ahttp\:/ or prefix =~ /\Ahttps\:/) ? URI::parse(doc[:uri]).merge(prefix).to_s : "#{doc[:uri]}#{prefix}"
       suffix = sc::suffix.first.to_s
       
       contents.map do |content, attribute|
-        variable = if sc::sequence.first.to_s=="true" 
-          @indexes[prefix] += 1
+        new_uri = if (content.to_s =~ /\Ahttp\:/ or content.to_s =~ /\Ahttps\:/)
+          "#{content}#{suffix}"
         else
-          if sc::downcase.first.to_s=="true"
-            content.to_s.underscore
+          variable = if sc::sequence.first.to_s=="true" 
+            @indexes[prefix] += 1
           else
-            content.to_s.wikify
+            if sc::downcase.first.to_s=="true"
+              content.to_s.underscore
+            else
+              content.to_s.wikify
+            end
           end
+          "#{prefix}#{variable}#{suffix}"
         end
-        
-        new_uri = "#{prefix}#{variable}#{suffix}"
         
         { :uri=>new_uri, :content=>doc[:content], :value=>new_uri, :attribute=>attribute }
       end

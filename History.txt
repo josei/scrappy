@@ -1,3 +1,10 @@
+=== 0.3.3 2011-03-25
+
+* Fix in NewUriSelector
+* Improved extraction process
+* Removed -R option
+* Removed irrelevant references to base URIs
+
 === 0.3.2 2011-03-18
 
 * Correction of issue with certain Ruby versions

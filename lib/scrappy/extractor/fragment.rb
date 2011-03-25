@@ -82,11 +82,13 @@ module Sc
 
         # Add referenceable data if requested
         if options[:referenceable] and node.size > 0
-          source = reference(doc)
-          node.graph << source
-          sc::type.each     { |type|     source.sc::type     += [type] }
-          sc::relation.each { |relation| source.sc::relation += [relation] }
-          node.sc::source += [source]
+          source                = reference(doc)
+          source.sc::type       = sc::type
+          source.sc::superclass = sc::superclass
+          source.sc::sameas     = sc::sameas
+          source.sc::relation   = sc::relation
+          node.graph           << source
+          node.sc::source       = source
         end
         
         # Variable object points to either a node or a literal

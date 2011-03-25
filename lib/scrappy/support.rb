@@ -31,6 +31,14 @@ class String
   end
 end
 
+class Array
+  # Return true if a given array has the same elements as this one
+  def equivalent? array
+    self.all?  { |i| array.include?(i) } and
+    array.all? { |i| self.include?(i)  }
+  end
+end
+
 module RDF
   class Node
     def self.mix *nodes

@@ -36,11 +36,10 @@ module Scrappy
         when ID("rdf:type") then
           fragment.sc::type = node.rdf::type
         else
-          if node[predicate].map(&:class).uniq.first != String
+          if node[predicate].map(&:class).uniq.first == RDF::Node
             node[predicate].map do |subnode|
               subfragment = fragment_for(subnode, node)
               subfragment.sc::relation = Node(predicate)
-              subfragment.sc::min_cardinality = "1"
           
               fragment.graph << subfragment
               fragment.sc::subfragment += [subfragment]
@@ -48,7 +47,9 @@ module Scrappy
           end
         end
       end
-      fragment.rdf::type = Node("sc:Fragment") if parent.nil?
+      fragment.rdf::type = Node("sc:Fragment")
+      fragment.sc::min_cardinality = "1"
+      fragment.sc::max_cardinality = "1"
       fragment
     end
     
