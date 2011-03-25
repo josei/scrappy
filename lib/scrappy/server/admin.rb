@@ -95,7 +95,8 @@ module Scrappy
       end
       
       app.post '/samples/:id/optimize' do |id|
-        Scrappy::App.save_patterns agent.optimize(Scrappy::Kb.patterns, Scrappy::App.samples[id.to_i])
+        Scrappy::Kb.patterns = agent.optimize(Scrappy::Kb.patterns, Scrappy::App.samples[id.to_i])
+        Scrappy::App.save_patterns Scrappy::Kb.patterns
         flash[:notice] = "Optimization completed"
         redirect "#{settings.base_uri}/samples"
       end
