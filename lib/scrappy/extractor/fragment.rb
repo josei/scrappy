@@ -2,20 +2,19 @@ module Sc
   class Fragment
     include RDF::NodeProxy
 
-    # Extracts data out of a document and returns an RDF::Graph
-    def extract_graph options={}
-      graph = RDF::Graph.new
-      extract(options).each { |node| graph << node }
-      graph
-    end
-
     # Extracts data out of a document and returns an array of nodes
     def extract options={}
+      all_mappings(options).map { |mapping| mapping[:node] }
+    end
+
+    # Returns all mappings of a fragment by
+    # recursively processing all submappings.
+    def all_mappings options={}
       # Extracts all the mappings and any subfragment
-      mappings(options).map do |result|
-        node         = result[:node]
-        subfragments = result[:subfragments]
-        doc          = result[:doc]
+      mappings(options).map do |mapping|
+        node         = mapping[:node]
+        subfragments = mapping[:subfragments]
+        doc          = mapping[:doc]
 
         # Process subfragments
         consistent = true
@@ -23,18 +22,19 @@ module Sc
           # Get subfragment object
           subfragment = subfragment.proxy Node('sc:Fragment')
           
-          # Extract data from the subfragment
-          subnodes  = subfragment.extract(options.merge(:doc=>doc))
+          # Add triples from submappings
+          submappings = subfragment.all_mappings(options.merge(:doc=>doc))
 
           # Add relations
-          subnodes.each do |subnode|
+          submappings.each do |submapping|
+            subnode = submapping[:node]
             node.graph << subnode if subnode.is_a?(RDF::Node)
             subfragment.sc::relation.each { |relation| node[relation] += [subnode] }
           end
           
           # Check consistency
-          consistent = false if subfragment.sc::min_cardinality.first and subnodes.size < subfragment.sc::min_cardinality.first.to_i
-          consistent = false if subfragment.sc::max_cardinality.first and subnodes.size > subfragment.sc::max_cardinality.first.to_i
+          consistent = false if subfragment.sc::min_cardinality.first and submappings.size < subfragment.sc::min_cardinality.first.to_i
+          consistent = false if subfragment.sc::max_cardinality.first and submappings.size > subfragment.sc::max_cardinality.first.to_i
         end
 
         # Skip the node if it has inconsistent relations
@@ -42,11 +42,12 @@ module Sc
         # violate the constraint sc:min_cardinality = 1
         next if !consistent
         
-        node
+        { :node=>node, :subfragments=>subfragments, :doc=>doc }
       end.compact
     end
 
-    # Returns all the mappings between this fragment and RDF nodes
+    # Returns the mappings between this fragment
+    # and the RDF nodes it matches
     def mappings options
       # Identify the fragment's mappings
       docs = sc::selector.map { |s| graph.node(s).select options[:doc] }.flatten

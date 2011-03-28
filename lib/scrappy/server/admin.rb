@@ -58,8 +58,9 @@ module Scrappy
       # Patterns
       
       app.get '/patterns' do
-        @uris = Scrappy::Kb.patterns.find(nil, Node('rdf:type'), Node('sc:Fragment')).
-                map { |node| node.sc::type }.flatten.map(&:to_s).sort
+        @uris = ( Scrappy::Kb.patterns.find(nil, Node('rdf:type'), Node('sc:Fragment')) -
+                  Scrappy::Kb.patterns.find([], Node('sc:subfragment'), nil) ).
+                  map { |node| node.sc::type }.flatten.map(&:to_s).sort
         haml :patterns
       end
 
@@ -95,7 +96,7 @@ module Scrappy
       end
       
       app.post '/samples/:id/optimize' do |id|
-        Scrappy::Kb.patterns = agent.optimize(Scrappy::Kb.patterns, Scrappy::App.samples[id.to_i])
+        Scrappy::Kb.patterns = agent.optimize_patterns(Scrappy::Kb.patterns, Scrappy::App.samples[id.to_i])
         Scrappy::App.save_patterns Scrappy::Kb.patterns
         flash[:notice] = "Optimization completed"
         redirect "#{settings.base_uri}/samples"

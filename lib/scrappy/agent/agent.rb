@@ -76,12 +76,12 @@ module Scrappy
                 uris.map  { |uri| {:uri=>uri.to_s, :depth=>[-1, depth-1].max} } ).
                 uniq.select{ |item| !RDF::ID.bnode?(item[:uri]) }
       
-      items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" } if options.debug
+      items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" if !queue or !queue.history.include?(item) } if options.debug
       
-      if queue.nil?
-        triples += process items
-      else
+      if queue
         items.each { |item| queue.push_unless_done item }
+      else
+        triples += process items
       end
 
       triples unless options.dump
