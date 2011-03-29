@@ -19,6 +19,11 @@ sc:Page:
   rdfs:label: "Page"
   rdfs:comment: "A web resource that extends the data existing in another web resource, usually employing the user-interface pattern of pagination. When scraping a web resource, all sc:Pages should be scraped as well in order to retrieve all the data present in that web resource"
 
+sc:NewUri:
+  rdf:type: rdf:Class
+  rdfs:label: "New URI"
+  rdfs:comment: "An empty web resource whose URI is the result of a scraping process and therefore should not be followed by a crawler"
+
 sc:selector:
   rdf:type: rdf:Property
   rdfs:label: "selector"
@@ -206,6 +211,12 @@ sc:attribute:
   rdfs:label: "attribute"
   rdfs:comment: "An HTML attribute whose content is the output of a tag selector"
   rdfs:domain: sc:TagSelector
+  rdfs:range: rdf:Literal
+
+sc:follow:
+  rdfs:label: "follow"
+  rdfs:comment: "Boolean indicating whether the resulting URI of a NewUriSelector must be followed or not"
+  rdfs:domain: sc:NewUriSelector
   rdfs:range: rdf:Literal
 
 sc:format:

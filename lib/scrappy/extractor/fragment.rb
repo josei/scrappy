@@ -67,7 +67,7 @@ module Sc
           value = doc[:value].to_s.strip
           if options[:referenceable]
             node.rdf::value = value
-            node.rdf::type  = Node('rdf:Literal')
+            node.rdf::type += [Node('rdf:Literal')]
             node
           else
             value
@@ -118,6 +118,7 @@ module Sc
           node.graph  << uri_node
           node.sc::uri = uri_node
         end
+        node.rdf::type += [Node("sc:NewUri")] if d[:nofollow]
         
         node
       end.first

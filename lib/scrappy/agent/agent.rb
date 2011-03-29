@@ -71,12 +71,17 @@ module Scrappy
       else
         []
       end
+
+      # Recently created URIs are not followed
+      nofollow = triples.select { |s,p,o| p==ID("rdf:type") and o==ID("sc:NewUri") }.map{|s,p,o| s}.select{|n| n.is_a?(Symbol)}
+      pages -= nofollow
+      uris  -= nofollow
       
       items = ( pages.map { |uri| {:uri=>uri.to_s, :depth=>[-1, depth].max} } +
                 uris.map  { |uri| {:uri=>uri.to_s, :depth=>[-1, depth-1].max} } ).
-                uniq.select{ |item| !RDF::ID.bnode?(item[:uri]) }
+                uniq.select { |item| !RDF::ID.bnode?(item[:uri]) }
       
-      items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" if !queue or !queue.history.include?(item) } if options.debug
+      items.each { |item| puts "Enqueuing (depth = #{item[:depth]}): #{item[:uri]}" if !queue or !(queue.history + queue.items).include?(item) } if options.debug
       
       if queue
         items.each { |item| queue.push_unless_done item }
@@ -153,7 +158,7 @@ module Scrappy
     end
 
     def clean triples
-      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page')].include?(o) }
+      triples.uniq.select { |s,p,o| p!=ID('rdf:type') or ![ID('sc:Index'), ID('sc:Page'), ID('sc:NewUri')].include?(o) }
     end
     
     # Do the extraction using RDF repository
