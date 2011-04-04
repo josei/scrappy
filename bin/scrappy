@@ -71,7 +71,7 @@ module Scrappy
     end
 
     def self.quit
-      puts "\"#{Quotes.sort_by{rand}.first}\"" unless Options.quiet
+      puts "\"#{Quotes[rand(Quotes.length)]}\"" unless Options.quiet
       exit
     end
     
@@ -111,11 +111,16 @@ module Scrappy
     def self.save_patterns new_patterns
       open(@patterns_file, "w") { |f| f.write new_patterns.serialize(:yarf) }
     end
-    def self.delete_pattern uri
+    def self.delete_patterns
       graph = Scrappy::Kb.patterns
-      fragments = graph.find(nil, Node('rdf:type'), Node('sc:Fragment')).
-                        select { |fragment| fragment.sc::type.include?(Node(uri)) }
-      fragments.each { |fragment| graph.triples -= fragment.all_triples }
+      graph.triples = []
+      open(@patterns_file, "w") { |f| f.write graph.serialize(:yarf) }
+      onload
+    end
+    def self.delete_pattern id
+      graph          = Scrappy::Kb.patterns
+      fragment       = graph[id]
+      graph.triples -= fragment.all_triples
       open(@patterns_file, "w") { |f| f.write graph.serialize(:yarf) }
       onload
     end
@@ -315,7 +320,7 @@ Dogs have owners, cats have staff
 I put all my genius into my life; I put only my talent into my works
 It is better to be beautiful than to be good, but it is better to be good than to be ugly
 All human beings, by nature, desire to know
-All life is an experiment
+All life is an experiment. The more experiments you make the better
 An investment in knowledge always pays the best interest
 An optimist is a person who sees a green light everywhere. The pessimist sees only the red light. But the truly wise person is color blind
 Chance favors only those who court her
@@ -347,7 +352,27 @@ The man who does things makes many mistakes, but he never makes the biggest mist
 The man who makes no mistakes does not usually make anything
 The results you achieve will be in direct proportion to the effort you apply
 The reward of a thing well done is to have done it
-Don’t argue with idiots. They will bring you down to their level and beat you with experience""".split("\n")
+Don’t argue with idiots. They will bring you down to their level and beat you with experience
+Choose a work you love, and you will never have to work a day in your life
+The secret of creativity is knowing how to hide your sources
+I never think of the future. It comes soon enough
+If you want to go quick, go alone. If you want to go far, go together
+The only thing that interferes with my learning is my education
+Excesive literary production is a social offense
+A man who dares to waste one hour of time has not discovered the value of life
+Any idiot can face a crisis -- it's day to day living that wears you out
+Every man dies. Not every man really lives
+After two weeks of working on a project, you know whether it will work or not
+All things are difficult before they are easy
+Sport is hard work for which you do not get paid
+Do not hire a man who does your work for money, but him who does it for love of it
+Failure is success if we learn from it
+Formal education will make you a living; self-education will make you a fortune
+Lost time is never found again
+Men talk of killing time, while time quietly kills them
+Only entropy comes easy
+Any man can make mistakes, but only an idiot persists in his error
+Managing is getting paid for home runs someone else hits""".split("\n")
 end
 
 Scrappy::App.run

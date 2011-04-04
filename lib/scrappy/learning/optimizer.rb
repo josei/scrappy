@@ -1,3 +1,5 @@
+require 'set'
+
 module Scrappy
   module Optimizer
     # Iterates through a knowledge base and tries to merge and generalize
@@ -5,124 +7,186 @@ module Scrappy
     def optimize_patterns kb, sample
       # Build an array of fragments
       root_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
-      fragments = []; root_fragments.each { |f| fragments << kb.node(Node(f.id, RDF::Graph.new(f.all_triples))) }
+      fragments = []
+      pool      = {}
+      root_fragments.each do |f|
+        fragment = Node(f.id, RDF::Graph.new(f.all_triples))
+        fragment.graph.pool = pool
+        fragments << fragment
+      end
 
       # Parse the document
       doc = { :uri=>sample[:uri], :content=>Nokogiri::HTML(sample[:html], nil, 'utf-8') }
 
-      # Optimize the fragment
-      fragments = optimize fragments, :docs=>[doc]
-      
-      graph = RDF::Graph.new
-      fragments.each { |fragment| graph << fragment }
-      
-      graph
+      # Optimize the fragments
+      @tried = []
+      fragments = optimize_all fragments, doc
+      RDF::Graph.new(fragments.inject([]) { |triples, fragment| triples += fragment.all_triples })
     end
     
     protected
-    # Tries to optimize a set of fragments
-    def optimize fragments, options
-      # Tries to iterate until no changes are made
-      @tried = []
-      new_fragments = fragments.map{ |f| f.proxy(Node('sc:Fragment')) }
+    # Optimizes a set of fragments
+    def optimize_all fragments, doc
+      # Get the output
+      output = extract_graph(fragments.map(&:proxy), :doc=>doc)
+
+      # Iterates until no changes are made
+      new_fragments = fragments
+
       begin
-        fragments = new_fragments
-        new_fragments = optimize_once fragments, options
-      end until fragments == new_fragments
+        fragments = new_fragments if improvement?(new_fragments, doc, output)
+        new_fragments = optimize fragments
+      end while new_fragments
       fragments
     end
     
-    # Tries to perform one optimization of two fragments out of a set of fragments
-    def optimize_once fragments, options
-      docs = options[:docs]
+    # Tries to perform one optimization in a set of fragments
+    def optimize fragments
       fragments.each do |fragment1|
         fragments.each do |fragment2|
-          next if fragment1 == fragment2
-          # Won't get gain if the fragment does not produce the same kind of RDF resource
-          next if !fragment1.sc::type.equivalent?(fragment2.sc::type) or
-                  !fragment1.sc::relation.equivalent?(fragment2.sc::relation) or
-                  !fragment1.sc::superclass.equivalent?(fragment2.sc::superclass) or
-                  !fragment1.sc::sameas.equivalent?(fragment2.sc::sameas) or
-                   fragment1.sc::identifier.size != fragment2.sc::identifier.size
-
-          next if @tried.include?([fragment1, fragment2])
-          next if @tried.include?([fragment2, fragment1])
+          next if @tried.include?([fragment1, fragment2]) or @tried.include?([fragment2, fragment1])
+          
+          new_fragment = if fragment1 == fragment2
+            simplify fragment1
+          else
+            group fragment1, fragment2
+          end
 
           @tried << [fragment1, fragment2]
 
-          # Get mappings without mixing fragments
-          old_mappings = []
-          docs.each do |doc|
-            old_mappings += fragment1.all_mappings(:doc=>doc)
-            old_mappings += fragment2.all_mappings(:doc=>doc)
-          end
-          old_docs = old_mappings.map { |mapping| mapping[:doc] }
-          
-          # Get mixed fragment
-          new_fragment = mix(fragment1, fragment2, options)
-          
-          # Get new mappings
-          new_mappings = []
-          docs.each { |doc| new_mappings += new_fragment.mappings(:doc=>doc) }
-          new_docs = new_mappings.map { |mapping| mapping[:doc] }
-
-          # Optimize subfragments
-          subfragments = optimize(fragment1.sc::subfragment + fragment2.sc::subfragment, options.merge(:docs=>new_docs))
-          subfragments.each { |subfragment| new_fragment.graph << subfragment }
-          new_fragment.sc::subfragment = subfragments.map &:node
-
-          # End if the new fragment returns the same results
-          if true
-            return fragments - [fragment1] - [fragment2] + [new_fragment]
-          end
+          # End by including the new fragment in the list and returning it
+          return fragments - [fragment1] - [fragment2] + [new_fragment] if new_fragment
         end
       end
-      fragments
+      return
     end
-    
-    def mix fragment1, fragment2, options
-      docs = options[:docs]
+
+    # Tries to perform one simplification inside a fragment
+    def simplify fragment
+      new_fragment            = fragment.rename
+      new_fragment.graph.pool = fragment.graph.pool
       
-      # Build new fragment
-      new_fragment = Node(nil).proxy(Node('sc:Fragment'))
-      new_fragment.rdf::type      = Node('sc:Fragment')
+      # Attempts to perform one optimization in the subfragments
+      subfragments = optimize new_fragment.sc::subfragment
+
+      if subfragments
+        # Removes old subfragments
+        new_fragment.sc::subfragment.each { |subfragment| new_fragment.graph.delete subfragment }
+        # Adds new subfragments
+        subfragments.each { |subfragment| new_fragment.graph << subfragment }
+        new_fragment.sc::subfragment = subfragments
+      else
+        # If subfragments cannot be optimized, try to optimize selectors or identifiers
+        if !generalize!(new_fragment, Node('sc:selector')) and
+           !generalize!(new_fragment, Node('sc:identifier'))
+          return
+        end
+      end
+      
+      new_fragment
+    end
+
+    # Groups two fragments into one
+    def group fragment1, fragment2, siblings=true
+      return unless signature(fragment1) == signature(fragment2)
+
+      new_fragment                = Node(nil)
+      new_fragment.rdf::type      = Node("sc:Fragment")
+      new_fragment.graph.pool     = fragment1.graph.pool
       new_fragment.sc::type       = fragment1.sc::type
       new_fragment.sc::relation   = fragment1.sc::relation
       new_fragment.sc::superclass = fragment1.sc::superclass
       new_fragment.sc::sameas     = fragment1.sc::sameas
 
-      # If fragments share the same parent, cardinality has to increase
-      # Otherwise, they might map the same subdocument, so cardinality
-      # limits are made more general.
-      if fragment1.sc::superfragment.first and fragment1.sc::superfragment == fragment2.sc::superfragment
-        new_fragment.sc::min_cardinality = (fragment1.sc::min_cardinality.first.to_i + fragment2.sc::min_cardinality.first.to_i).to_s
-        new_fragment.sc::max_cardinality = (fragment1.sc::max_cardinality.first.to_i + fragment2.sc::max_cardinality.first.to_i).to_s
-      else
-        new_fragment.sc::min_cardinality = [fragment1.sc::min_cardinality.first.to_i, + fragment2.sc::min_cardinality.first.to_i].min.to_s
-        new_fragment.sc::max_cardinality = [fragment1.sc::max_cardinality.first.to_i, + fragment2.sc::max_cardinality.first.to_i].max.to_s
+      if fragment1.sc::min_cardinality.first and fragment2.sc::min_cardinality.first
+        if siblings
+          new_fragment.sc::min_cardinality = (fragment1.sc::min_cardinality.first.to_i + fragment2.sc::min_cardinality.first.to_i).to_s
+        else
+          new_fragment.sc::min_cardinality = [fragment1.sc::min_cardinality.first.to_i, + fragment2.sc::min_cardinality.first.to_i].min.to_s
+        end
       end
-      
-      # sc:selector
-      selector = generalize(fragment1.sc::selector + fragment2.sc::selector)
-      new_fragment.graph       << selector
-      new_fragment.sc::selector = selector
-      
-      # sc:identifier
-      if fragment1.sc::identifier.first
-        selector = generalize(fragment1.sc::identifier + fragment2.sc::identifier)
-        new_fragment.graph         << selector
-        new_fragment.sc::identifier = selector
+      if fragment1.sc::max_cardinality.first and fragment2.sc::max_cardinality.first
+        if siblings
+          new_fragment.sc::max_cardinality = (fragment1.sc::max_cardinality.first.to_i + fragment2.sc::max_cardinality.first.to_i).to_s
+        else
+          new_fragment.sc::max_cardinality = [fragment1.sc::max_cardinality.first.to_i, + fragment2.sc::max_cardinality.first.to_i].max.to_s
+        end
       end
 
-      # All new nodes are expected to be inconsistent after performing
-      # subfragments' extractions. Otherwise, if new nodes are consistent, it means
-      # the output from the mixed fragment is different from the separate fragments
-      # and therefore the generalization has failed, so no mixed fragment is returned
+      # sc:selector
+      selectors = fragment1.sc::selector + fragment2.sc::selector
+      selectors.each { |s| new_fragment.graph << s }
+      new_fragment.sc::selector = selectors
+      
+      # sc:identifier
+      identifiers = fragment1.sc::identifier + fragment2.sc::identifier
+      identifiers.each { |s| new_fragment.graph << s }
+      new_fragment.sc::identifier = identifiers
+      
+      subfragments = mix(fragment1.sc::subfragment, fragment2.sc::subfragment)
+      return unless subfragments
+      
+      subfragments.each { |f| new_fragment.graph << f }
+      new_fragment.sc::subfragment = subfragments
+      
       new_fragment
     end
 
-    # Generalize a set of selectors
-    def generalize selectors
+    # Mixes and aligns two set of fragments
+    def mix fragments1, fragments2
+      return unless fragments1.size == fragments2.size
+
+      # Build new fragments
+      used_fragments = []
+      fragments1.map do |fragment1|
+        fragment2 = fragments2.select { |fragment2| signature(fragment1) == signature(fragment2) }.first
+        return unless fragment2
+        return if used_fragments.include?(fragment2)
+
+        used_fragments << fragment2
+        
+        group fragment1, fragment2, false
+      end
+    end
+
+    # Tries to merge a pair of selectors inside a fragment
+    # It accepts a property to indicate sc:selector or sc:identifier
+    def generalize! fragment, property
+      done = false
+      selectors = fragment[property]
+      return false if selectors.size <= 1
+      selectors.each do |selector1|
+        selectors.each do |selector2|
+          next if selector1 == selector2
+          next if @tried.include?([selector1, selector2]) or @tried.include?([selector2, selector1])
+
+          new_selector = merge selector1, selector2
+
+          # Replace the two selectors with the new one
+          fragment.graph.delete selector1
+          fragment.graph.delete selector2
+          fragment.graph << new_selector
+          fragment[property] = fragment[property] - [selector1] - [selector2] + [new_selector]
+          
+          @tried << [selector1, selector2]
+          
+          return true
+        end
+      end
+      false
+    end
+    
+    def signature fragment
+      [ fragment.sc::type.map(&:to_sym).to_set,
+        fragment.sc::relation.map(&:to_sym).to_set,
+        fragment.sc::superclass.map(&:to_sym).to_set,
+        fragment.sc::sameas.map(&:to_sym).to_set,
+        fragment.sc::identifier.size,
+        fragment.sc::subfragment.map { |sf| signature(sf) }.to_set ]
+    end
+    
+    # Merges a set of selectors, returning a new more general one
+    def merge *selectors
       selector = Node(nil)
       selector.rdf::type           = Node('sc:VisualSelector')
       selector.sc::min_relative_x  = selectors.map { |s| s.sc::min_relative_x.map(&:to_i) }.flatten.min.to_s
@@ -146,6 +210,10 @@ module Scrappy
       selector.sc::attribute       = selectors.first.sc::attribute if selectors.map { |s| s.sc::attribute }.flatten.uniq.size == 1
 
       selector
+    end
+    
+    def improvement? fragments, doc, output
+      extract_graph(fragments.map(&:proxy), :doc=>doc) == output if fragments
     end
   end
 end

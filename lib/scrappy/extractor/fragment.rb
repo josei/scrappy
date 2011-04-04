@@ -1,7 +1,7 @@
 module Sc
   class Fragment
     include RDF::NodeProxy
-
+    
     # Extracts data out of a document and returns an array of nodes
     def extract options={}
       all_mappings(options).map { |mapping| mapping[:node] }

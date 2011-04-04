@@ -40,6 +40,8 @@ module Scrappy
             node[predicate].map do |subnode|
               subfragment = fragment_for(subnode, node)
               subfragment.sc::relation = Node(predicate)
+              subfragment.sc::min_cardinality = "1"
+              subfragment.sc::max_cardinality = "1"
           
               fragment.graph << subfragment
               fragment.sc::subfragment += [subfragment]
@@ -48,8 +50,6 @@ module Scrappy
         end
       end
       fragment.rdf::type = Node("sc:Fragment")
-      fragment.sc::min_cardinality = "1"
-      fragment.sc::max_cardinality = "1"
       fragment
     end
     

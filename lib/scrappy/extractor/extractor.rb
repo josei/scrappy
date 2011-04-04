@@ -21,19 +21,15 @@ module Scrappy
         
         # Extract each fragment
         options = { :doc => { :uri=>uri, :content=>content }, :referenceable=>referenceable }
-        triples = []
-        fragments_for(kb, uri).each do |fragment|
-          kb.node(fragment).extract(options).each do |node|
-            triples += node.graph.triples
-          end
-        end
+        output  = extract_graph(fragments_for(kb, uri), options)
 
         puts "done!" if self.options.debug
 
-        triples
+        output.triples
       end
     end
     
+    # Returns a list of fragments that have mappings in a given URI
     def fragments_for kb, uri
       root_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
 
@@ -52,7 +48,14 @@ module Scrappy
 
       visual_selectors = selectors.select { |selector| selector.rdf::type.include?(Node('sc:VisualSelector')) }
 
-      (uri_selectors + visual_selectors).map { |selector| fragments[selector] }
+      (uri_selectors + visual_selectors).map { |selector| fragments[selector].proxy }
+    end
+
+    # Extracts all mappings from a fragment and returns a graph
+    def extract_graph fragments, options
+      output = RDF::Graph.new
+      fragments.each { |fragment| fragment.extract(options).each { |result| output << result } }
+      output
     end
   end
 end

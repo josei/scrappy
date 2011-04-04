@@ -58,14 +58,30 @@ module Scrappy
       # Patterns
       
       app.get '/patterns' do
-        @uris = ( Scrappy::Kb.patterns.find(nil, Node('rdf:type'), Node('sc:Fragment')) -
-                  Scrappy::Kb.patterns.find([], Node('sc:subfragment'), nil) ).
-                  map { |node| node.sc::type }.flatten.map(&:to_s).sort
+        @patterns = ( Scrappy::Kb.patterns.find(nil, Node('rdf:type'), Node('sc:Fragment')) -
+                      Scrappy::Kb.patterns.find([], Node('sc:subfragment'), nil) )
         haml :patterns
       end
 
-      app.delete '/patterns/*' do |uri|
-        Scrappy::App.delete_pattern uri
+      app.get '/patterns/visual' do
+        @patterns = ( Scrappy::Kb.patterns.find(nil, Node('rdf:type'), Node('sc:Fragment')) -
+                      Scrappy::Kb.patterns.find([], Node('sc:subfragment'), nil) )
+        html = @patterns.map { |pattern| render_fragment(pattern) } * ""
+        "<html><body>#{html}</body></html>"
+      end
+
+      app.get '/patterns/*' do |id|
+        "<html><body>#{render_fragment(Scrappy::Kb.patterns[id])}</body></html>"
+      end
+
+      app.delete '/patterns' do
+        Scrappy::App.delete_patterns
+        flash[:notice] = "Pattern deleted"
+        redirect "#{settings.base_uri}/patterns"
+      end
+      
+      app.delete '/patterns/*' do |id|
+        Scrappy::App.delete_pattern id
         flash[:notice] = "Pattern deleted"
         redirect "#{settings.base_uri}/patterns"
       end
@@ -114,6 +130,32 @@ module Scrappy
         flash[:notice] = "Sample deleted"
         redirect "#{settings.base_uri}/samples"
       end
+      
+      def render_fragment fragment, selected_branch=nil
+        label = if fragment.sc::relation.first
+          fragment.sc::relation.map {|id| RDF::ID.compress(id)} * ', '
+        else
+          fragment.sc::type.map {|id| RDF::ID.compress(id)} * ', '
+        end
+        subfragments = [selected_branch || [:min, :max]].flatten.map do |branch|
+          fragment.sc::subfragment.map { |f| render_fragment(f, branch) } * ""
+        end * ""
+
+        [selected_branch || [:min, :max]].flatten.map do |branch|
+          fragment.sc::selector.map do |selector|
+            x,y,w,h,font,size,weight,color = case branch
+            when :min then
+              [selector.sc::min_relative_x, selector.sc::min_relative_y, selector.sc::min_width, selector.sc::min_height, selector.sc::font_family, selector.sc::min_font_size, selector.sc::min_font_weight, :blue]
+            when :max then
+              [selector.sc::max_relative_x, selector.sc::max_relative_y, selector.sc::max_width, selector.sc::max_height, selector.sc::font_family, selector.sc::max_font_size, selector.sc::max_font_weight, :red]
+            end
+            style = "position: absolute; left: #{x}px; top: #{y}px; width: #{w}px; height: #{h}px; font-family: #{font}; font-size: #{size}px; font-weight: #{weight}; border: 1px solid #{color}; color: #555;"
+            "<div style='#{style}'>#{label}#{subfragments}</div>"
+          end * ""
+        end * ""        
+      end
+      
+      app.helpers Admin
     end
   end
 end
