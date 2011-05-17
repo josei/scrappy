@@ -76,7 +76,7 @@ module Scrappy
 
       app.delete '/patterns' do
         Scrappy::App.delete_patterns
-        flash[:notice] = "Pattern deleted"
+        flash[:notice] = "Patterns deleted"
         redirect "#{settings.base_uri}/patterns"
       end
       
@@ -111,8 +111,8 @@ module Scrappy
         redirect "#{settings.base_uri}/samples"
       end
       
-      app.post '/samples/:id/optimize' do |id|
-        Scrappy::Kb.patterns = agent.optimize_patterns(Scrappy::Kb.patterns, Scrappy::App.samples[id.to_i])
+      app.get '/samples/:id/optimize' do |id|
+        Scrappy::Kb.patterns = agent.optimize_patterns(Scrappy::Kb.patterns, Scrappy::App.samples)
         Scrappy::App.save_patterns Scrappy::Kb.patterns
         flash[:notice] = "Optimization completed"
         redirect "#{settings.base_uri}/samples"

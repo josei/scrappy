@@ -4,7 +4,7 @@ module Scrappy
   module Optimizer
     # Iterates through a knowledge base and tries to merge and generalize
     # selectors whenever the output of the resulting kb is the same
-    def optimize_patterns kb, sample
+    def optimize_patterns kb, samples
       # Build an array of fragments
       root_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
       fragments = []
@@ -15,26 +15,31 @@ module Scrappy
         fragments << fragment
       end
 
-      # Parse the document
-      doc = { :uri=>sample[:uri], :content=>Nokogiri::HTML(sample[:html], nil, 'utf-8') }
+      # Parse the documents
+      docs = samples.map do |sample|
+        output  = extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
+        content = Nokogiri::HTML(sample[:html], nil, 'utf-8')
+        { :uri=>sample[:uri], :content=>content, :output=>output }
+      end
 
       # Optimize the fragments
       @tried = []
-      fragments = optimize_all fragments, doc
+      fragments = optimize_all fragments, docs
       RDF::Graph.new(fragments.inject([]) { |triples, fragment| triples += fragment.all_triples })
     end
     
     protected
     # Optimizes a set of fragments
-    def optimize_all fragments, doc
-      # Get the output
-      output = extract_graph(fragments.map(&:proxy), :doc=>doc)
-
+    def optimize_all fragments, docs
       # Iterates until no changes are made
       new_fragments = fragments
-
+      score         = 0.0
       begin
-        fragments = new_fragments if improvement?(new_fragments, doc, output)
+        new_score = score(new_fragments, docs)
+        if new_score >= score # Improvement after optimization?
+          score     = new_score
+          fragments = new_fragments
+        end
         new_fragments = optimize fragments
       end while new_fragments
       fragments
@@ -212,8 +217,22 @@ module Scrappy
       selector
     end
     
-    def improvement? fragments, doc, output
-      extract_graph(fragments.map(&:proxy), :doc=>doc) == output if fragments
+    def score fragments, docs
+      return 0.0 unless fragments
+      docs.inject(0) { |sum,doc| fscore(fragments, doc)+sum } / docs.size
+    end
+    
+    def fscore fragments, doc
+      extraction = extract_graph(fragments.map(&:proxy), :doc=>doc).triples
+      correct    = doc[:output]
+      
+      right      = correct.size - (correct - extraction).size
+      
+      precision  = extraction.size != 0 ? right/extraction.size.to_f : 1.0
+      recall     = correct.size != 0 ? right/correct.size.to_f : 1.0
+      
+      # Calculate fscore
+      2.0*(recall*precision)/(precision+recall)
     end
   end
 end
