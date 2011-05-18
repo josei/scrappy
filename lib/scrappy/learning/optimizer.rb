@@ -225,14 +225,19 @@ module Scrappy
     def fscore fragments, doc
       extraction = extract_graph(fragments.map(&:proxy), :doc=>doc).triples
       correct    = doc[:output]
-      
+      metrics(correct, extraction).last
+    end
+    
+    def metrics correct, extraction
       right      = correct.size - (correct - extraction).size
       
       precision  = extraction.size != 0 ? right/extraction.size.to_f : 1.0
       recall     = correct.size != 0 ? right/correct.size.to_f : 1.0
       
       # Calculate fscore
-      2.0*(recall*precision)/(precision+recall)
+      fscore = 2.0*(recall*precision)/(precision+recall)
+      
+      [ fscore, precision, recall ]
     end
   end
 end

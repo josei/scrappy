@@ -3,28 +3,39 @@
   %p
     Sample pages are used to build extractors as well as visual patterns that can be applied to retrieve data
     from other pages.
-  %p
-    -if @samples.empty?
-      Currently, there are no samples.
-    -else
-      %ul.detail
-        -@samples.each_with_index do |sample,i|
-          %li
+  %form{:method=>:post}
+    %p
+      -if @samples.empty?
+        Currently, there are no samples.
+      -else
+        %ul.detail
+          %li.special
             %span.action
-              %a{:href=>"#{settings.base_uri}/samples/#{i}", :'data-method'=>:delete, :'data-confirm'=>"Are you sure you want to delete the sample #{sample[:uri]}?"}
-                X
-            %span.short_name
-              -if !sample[:uri].include?('*')
-                %a{:href=>sample[:uri]}=sample[:uri]
-              -else
-                =sample[:uri]
-            -[['Patterns output', :patterns], ['Extractors output', :extractors]].reverse.each do |text, action|
+            %span.format
+              %input.checkall{:type=>:checkbox}
+            %span.format
+              Select all
+          -@samples.each_with_index do |sample,i|
+            %li
+              %span.action
+                %a{:href=>"#{settings.base_uri}/samples/#{i}", :'data-method'=>:delete, :'data-confirm'=>"Are you sure you want to delete the sample #{sample[:uri]}?"}
+                  X
+              %span.short_name
+                -if !sample[:uri].include?('*')
+                  %a{:href=>sample[:uri]}=sample[:uri]
+                -else
+                  =sample[:uri]
               %span.format
-                %a{:href=>"#{settings.base_uri}/samples/#{i}/#{action}"}=text
-            %span.format
-              %a{:href=>"#{settings.base_uri}/samples/#{i}/optimize", :'data-method'=>:post} Optimize
-            %span.format
-              %a{:href=>"#{settings.base_uri}/samples/#{i}/train", :'data-method'=>:post} Train
-            %span.date
-              %a{:href=>"#{settings.base_uri}/samples/#{i}"}
-                =sample[:date].strftime("%Y/%m/%d - %H:%M")
+                %input{:type=>:checkbox, :name=>'samples[]', :value=>i}
+              -[['Patterns output', :patterns], ['Extractors output', :extractors]].reverse.each do |text, action|
+                %span.format
+                  %a{:href=>"#{settings.base_uri}/samples/#{i}/#{action}"}=text
+              %span.date
+                %a{:href=>"#{settings.base_uri}/samples/#{i}"}
+                  =sample[:date].strftime("%Y/%m/%d - %H:%M")
+    %p
+      %a.checksend{:href=>"#{settings.base_uri}/samples/train"} Train
+      |
+      %a.checksend{:href=>"#{settings.base_uri}/samples/optimize"} Optimize
+      |
+      %a.checksend{:href=>"#{settings.base_uri}/samples/test"} Test

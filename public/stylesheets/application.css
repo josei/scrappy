@@ -152,6 +152,9 @@ ul.detail li {
   background-color: #eee;
   margin: 1px;
 }
+ul.detail li.special {
+  background-color: #fff;
+}
 ul.detail li span {
   display: inline-block;
 }
@@ -174,6 +177,9 @@ ul.detail li span.format {
   margin-left: 10px;
   text-align: center;
 }
+ul.detail li.special span.format {
+  font-weight: normal;
+}
 ul.detail li span.date {
   float: right;
 }
@@ -195,4 +201,11 @@ ul.detail li span.date a:link,
 ul.detail li span.date a:visited,
 ul.detail li span.date a:active {
   color: #888;
+}
+
+fieldset {
+  border:  0;
+  padding: 0;
+  margin:  0;
+  vertical-align: baseline;
 }

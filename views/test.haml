@@ -1,0 +1,38 @@
+#body
+  %h1 Testing pattern extraction
+  %p
+    -(@results.keys-[:total]).each do |label|
+      ==#{label}:
+      %ul.detail
+        %li
+          %span.name
+            Precision
+          %span.date
+            =percentage(@results[label][:precision])
+        %li
+          %span.name
+            Recall
+          %span.date
+            =percentage(@results[label][:recall])
+        %li
+          %span.name
+            F-score
+          %span.date
+            =percentage(@results[label][:fscore])
+    Total:
+    %ul.detail
+      %li
+        %span.name
+          Precision
+        %span.date
+          =percentage(@results[:total][:precision])
+      %li
+        %span.name
+          Recall
+        %span.date
+          =percentage(@results[:total][:recall])
+      %li
+        %span.name
+          F-score
+        %span.date
+          =percentage(@results[:total][:fscore])

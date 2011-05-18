@@ -104,18 +104,75 @@ module Scrappy
         RDF::Graph.new(agent.extract(sample[:uri], sample[:html], kb, Agent::Options.referenceable)).serialize(:yarf)
       end
       
-      app.post '/samples/:id/train' do |id|
-        new_extractor = agent.train Scrappy::App.samples[id.to_i]
-        Scrappy::App.add_pattern new_extractor
+      app.post '/samples/train' do
+        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
+        pattern = agent.train(*samples)
+        Scrappy::App.add_pattern pattern
         flash[:notice] = "Training completed"
-        redirect "#{settings.base_uri}/samples"
+        redirect "/samples"
       end
       
-      app.get '/samples/:id/optimize' do |id|
-        Scrappy::Kb.patterns = agent.optimize_patterns(Scrappy::Kb.patterns, Scrappy::App.samples)
+      app.post '/samples/optimize' do
+        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
+        Scrappy::Kb.patterns = agent.optimize_patterns(Scrappy::Kb.patterns, samples)
         Scrappy::App.save_patterns Scrappy::Kb.patterns
         flash[:notice] = "Optimization completed"
         redirect "#{settings.base_uri}/samples"
+      end
+      
+      app.post '/samples/test' do
+        @results = {}
+        samples = (params['samples'] || []).map do |i|
+          sample     = Scrappy::App.samples[i.to_i]
+          output     = agent.extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
+          extraction = agent.extract(sample[:uri], sample[:html], Scrappy::Kb.patterns)
+          
+          predicates = output.map { |s,p,o| p }.uniq
+          types      = output.map { |s,p,o| o if p == ID('rdf:type') }.compact.uniq
+
+          predicates.each do |predicate|
+            new_output     = output.select     { |s,p,o| p==predicate }
+            new_extraction = extraction.select { |s,p,o| p==predicate }
+            fscore, precision, recall = agent.send :metrics, new_output, new_extraction
+            @results[predicate] ||= Hash.new(0.0)
+            @results[predicate][:count]     += 1
+            @results[predicate][:fscore]    += fscore
+            @results[predicate][:precision] += precision
+            @results[predicate][:recall]    += recall
+          end
+          
+          types.each do |type|
+            new_output     = output.select     { |s,p,o| p==ID("rdf:type") and o==type }
+            new_extraction = extraction.select { |s,p,o| p==ID("rdf:type") and o==type }
+
+            fscore, precision, recall = agent.send :metrics, new_output, new_extraction
+            @results[type] ||= Hash.new(0.0)
+            @results[type][:count]     += 1
+            @results[type][:fscore]    += fscore
+            @results[type][:precision] += precision
+            @results[type][:recall]    += recall
+          end
+          
+          fscore, precision, recall = agent.send :metrics, output, extraction
+          @results[:total] ||= Hash.new(0.0)
+          @results[:total][:count]     += 1
+          @results[:total][:fscore]    += fscore
+          @results[:total][:precision] += precision
+          @results[:total][:recall]    += recall
+          
+          sample
+        end
+
+        # Here we get sth like: { :'dc:title'=>{:fscore=>0.3, ...}, :total=>{:fscore=>0.4, ...} }
+        @results.each do |key, result|
+          count = result[:count]
+          result.each do |k,v|
+            result[k] /= count
+          end
+        end
+        
+        flash[:notice] = "Testing completed"
+        haml :test
       end
 
       app.post '/samples' do
@@ -152,7 +209,12 @@ module Scrappy
             style = "position: absolute; left: #{x}px; top: #{y}px; width: #{w}px; height: #{h}px; font-family: #{font}; font-size: #{size}px; font-weight: #{weight}; border: 1px solid #{color}; color: #555;"
             "<div style='#{style}'>#{label}#{subfragments}</div>"
           end * ""
-        end * ""        
+        end * ""
+        
+      end
+      
+      def percentage value
+        "%.2f%" % (value * 100.0)
       end
       
       app.helpers Admin
