@@ -29,7 +29,10 @@ module Sc
         attributes      =  sc::attribute
         formats         =  sc::format
         
-        doc[:content].search(sc::tag.first || "*").select do |node|
+        elements  = doc[:content].search(sc::tag.first || "*")
+        elements += Nokogiri::XML::NodeSet.new(doc[:content].document, [doc[:content]]) if sc::tag.include?(doc[:content].name)
+        
+        elements.select do |node|
           relative_x = node['vx'].to_i - doc[:content]['vx'].to_i
           relative_y = node['vy'].to_i - doc[:content]['vy'].to_i
           
