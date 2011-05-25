@@ -239,15 +239,15 @@ Copyright
       # Load knowledge base
       Agent::Options.kb ||= RDF::Graph.new
       
-      Kb.extractors, Kb.patterns = if File.exists?(@cache_file) and File.mtime(@cache_file) >= Dir["#{@extractors_folder}/*",@extractors_folder,@patterns_file].map{ |f| File.mtime(f) }.max
+      Kb.extractors, Kb.patterns, RDF::ID::count = if File.exists?(@cache_file) and File.mtime(@cache_file) >= Dir["#{@extractors_folder}/*",@extractors_folder,@patterns_file].map{ |f| File.mtime(f) }.max
         # Just load kb from cache
         open(@cache_file) { |f| Marshal.load(f) }
       else
         # Load YARF files and cache kb
         extractors = load_files_from(@extractors_folder)
         patterns   = File.exists?(@patterns_file) ? RDF::Parser.parse(:yarf, open(@patterns_file).read) : RDF::Graph.new
-        open(@cache_file, "w") { |f| Marshal.dump([extractors, patterns], f) }
-        [extractors, patterns]
+        open(@cache_file, "w") { |f| Marshal.dump([extractors, patterns, RDF::ID::count], f) }
+        [extractors, patterns, RDF::ID::count]
       end
 
       # Sets new kb
