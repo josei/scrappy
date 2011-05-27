@@ -223,7 +223,10 @@ module Scrappy
     end
     
     def fscore fragments, doc
+      count = RDF::ID.count
       extraction = extract_graph(fragments.map(&:proxy), :doc=>doc).triples
+      RDF::ID.count = count # Hack to reduce symbol creation
+
       correct    = doc[:output]
       metrics(correct, extraction).last
     end
