@@ -109,19 +109,31 @@ module Scrappy
       onload
     end
     def self.save_patterns new_patterns
-      open(@patterns_file, "w") { |f| f.write new_patterns.serialize(:yarf) }
+      fragments = case new_patterns
+      when Array then
+        new_patterns
+      when RDF::Graph then
+        ( new_patterns.find(nil, Node('rdf:type'), Node('sc:Fragment')) - new_patterns.find([], Node('sc:subfragment'), nil) ).
+          map { |f| RDF::Graph.new(f.all_triples) }
+      end
+
+      content  = RDF::ID.ns.map{|k,v| "#{k}: #{v}\n"} * ''
+      fragments.each { |f| content += f.serialize(:yarf, false) }
+      open(@patterns_file, "w") { |f| f.write content }
     end
     def self.delete_patterns
-      graph = Scrappy::Kb.patterns
+      graph         = Scrappy::Kb.patterns
       graph.triples = []
-      open(@patterns_file, "w") { |f| f.write graph.serialize(:yarf) }
+      content       = graph.serialize(:yarf)
+      open(@patterns_file, "w") { |f| f.write content }
       onload
     end
     def self.delete_pattern id
       graph          = Scrappy::Kb.patterns
       fragment       = graph[id]
       graph.triples -= fragment.all_triples
-      open(@patterns_file, "w") { |f| f.write graph.serialize(:yarf) }
+      content        = graph.serialize(:yarf)
+      open(@patterns_file, "w") { |f| f.write content }
       onload
     end
     def self.add_extractor graph

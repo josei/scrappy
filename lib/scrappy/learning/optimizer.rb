@@ -34,14 +34,33 @@ module Scrappy
       # Iterates until no changes are made
       new_fragments = fragments
       score         = 0.0
+      i             = 0
+      last_save     = 0
       begin
         new_score = score(new_fragments, docs)
         if new_score >= score # Improvement after optimization?
+          puts 'Succesful optimization' if i > 0
           score     = new_score
           fragments = new_fragments
+          
+          # Save to disk
+          if (Time.now - last_save).to_i > 60 and i > 0
+            print "Saving..."; $stdout.flush
+            Scrappy::App.save_patterns fragments
+            puts "done!"
+
+            last_save = Time.now
+          end
+        else
+          puts 'Unsuccesful optimization, rolling back...'
         end
+        puts
+        puts "Fragments: #{fragments.size}"
+        puts "Trying optimization #{i+=1}..."
         new_fragments = optimize fragments
       end while new_fragments
+      puts 'Optimization finished'
+      
       fragments
     end
     
@@ -88,6 +107,8 @@ module Scrappy
         end
       end
       
+      puts "  new fragment #{new_fragment} (#{short_name(new_fragment)}) out of #{fragment}"
+      
       new_fragment
     end
 
@@ -120,13 +141,21 @@ module Scrappy
 
       # sc:selector
       selectors = fragment1.sc::selector + fragment2.sc::selector
-      selectors.each { |s| new_fragment.graph << s }
-      new_fragment.sc::selector = selectors
+      new_fragment.sc::selector = selectors.map do |selector|
+        new_selector = Node(selector)
+        selector.each { |k,v| new_selector[k] = v }
+        new_fragment.graph << new_selector
+        new_selector
+      end
       
       # sc:identifier
       identifiers = fragment1.sc::identifier + fragment2.sc::identifier
-      identifiers.each { |s| new_fragment.graph << s }
-      new_fragment.sc::identifier = identifiers
+      new_fragment.sc::identifier = identifiers.map do |selector|
+        new_selector = Node(selector)
+        selector.each { |k,v| new_selector[k] = v }
+        new_fragment.graph << new_selector
+        new_selector
+      end
       
       subfragments = mix(fragment1.sc::subfragment, fragment2.sc::subfragment)
       return unless subfragments
@@ -134,6 +163,8 @@ module Scrappy
       subfragments.each { |f| new_fragment.graph << f }
       new_fragment.sc::subfragment = subfragments
       
+      puts "  new fragment #{new_fragment} (#{short_name(new_fragment)}) out of #{fragment1} and #{fragment2}"
+
       new_fragment
     end
 
@@ -175,6 +206,8 @@ module Scrappy
           
           @tried << [selector1, selector2]
           
+          puts "  new selector #{new_selector} out of #{selector1} and #{selector2}"
+
           return true
         end
       end
@@ -241,6 +274,13 @@ module Scrappy
       fscore = 2.0*(recall*precision)/(precision+recall)
       
       [ fscore, precision, recall ]
+    end
+    
+    private
+    def short_name fragment
+      [ fragment.sc::type.first, fragment.sc::relation.first ].
+        compact.
+        map { |id| RDF::ID.compress(id) } * ", "
     end
   end
 end
