@@ -121,47 +121,55 @@ module Scrappy
       end
       
       app.post '/samples/test' do
-        @results = {}
+        @results   = {}
+        @missing   = []
+        @wrong     = []
+        output     = RDF::Parser.parse(:ntriples, params["output"].to_s).triples
+        extraction = []
         samples = (params['samples'] || []).map do |i|
-          sample     = Scrappy::App.samples[i.to_i]
-          output     = agent.extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
-          extraction = agent.extract(sample[:uri], sample[:html], Scrappy::Kb.patterns)
-          
-          predicates = output.map { |s,p,o| p }.uniq
-          types      = output.map { |s,p,o| o if p == ID('rdf:type') }.compact.uniq
-
-          predicates.each do |predicate|
-            new_output     = output.select     { |s,p,o| p==predicate }
-            new_extraction = extraction.select { |s,p,o| p==predicate }
-            fscore, precision, recall = agent.send :metrics, new_output, new_extraction
-            @results[predicate] ||= Hash.new(0.0)
-            @results[predicate][:count]     += 1
-            @results[predicate][:fscore]    += fscore
-            @results[predicate][:precision] += precision
-            @results[predicate][:recall]    += recall
-          end
-          
-          types.each do |type|
-            new_output     = output.select     { |s,p,o| p==ID("rdf:type") and o==type }
-            new_extraction = extraction.select { |s,p,o| p==ID("rdf:type") and o==type }
-
-            fscore, precision, recall = agent.send :metrics, new_output, new_extraction
-            @results[type] ||= Hash.new(0.0)
-            @results[type][:count]     += 1
-            @results[type][:fscore]    += fscore
-            @results[type][:precision] += precision
-            @results[type][:recall]    += recall
-          end
-          
-          fscore, precision, recall = agent.send :metrics, output, extraction
-          @results[:total] ||= Hash.new(0.0)
-          @results[:total][:count]     += 1
-          @results[:total][:fscore]    += fscore
-          @results[:total][:precision] += precision
-          @results[:total][:recall]    += recall
-          
-          sample
+          sample       = Scrappy::App.samples[i.to_i]
+          output     += agent.extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
+          extraction += agent.extract(sample[:uri], sample[:html], Scrappy::Kb.patterns)
         end
+        
+        output     = output.uniq
+        extraction = extraction.uniq
+
+        predicates = output.map { |s,p,o| p }.uniq
+        types      = output.map { |s,p,o| o if p == ID('rdf:type') }.compact.uniq
+
+        predicates.each do |predicate|
+          new_output     = output.select     { |s,p,o| p==predicate }
+          new_extraction = extraction.select { |s,p,o| p==predicate }
+          fscore, precision, recall = agent.send :metrics, new_output, new_extraction
+          @results[predicate] ||= Hash.new(0.0)
+          @results[predicate][:count]     += 1
+          @results[predicate][:fscore]    += fscore
+          @results[predicate][:precision] += precision
+          @results[predicate][:recall]    += recall
+        end
+        
+        types.each do |type|
+          new_output     = output.select     { |s,p,o| p==ID("rdf:type") and o==type }
+          new_extraction = extraction.select { |s,p,o| p==ID("rdf:type") and o==type }
+
+          fscore, precision, recall = agent.send :metrics, new_output, new_extraction
+          @results[type] ||= Hash.new(0.0)
+          @results[type][:count]     += 1
+          @results[type][:fscore]    += fscore
+          @results[type][:precision] += precision
+          @results[type][:recall]    += recall
+        end
+        
+        fscore, precision, recall = agent.send :metrics, output, extraction
+        @results[:total] ||= Hash.new(0.0)
+        @results[:total][:count]     += 1
+        @results[:total][:fscore]    += fscore
+        @results[:total][:precision] += precision
+        @results[:total][:recall]    += recall
+
+        @missing += output     - extraction
+        @wrong   += extraction - output
 
         # Here we get sth like: { :'dc:title'=>{:fscore=>0.3, ...}, :total=>{:fscore=>0.4, ...} }
         @results.each do |key, result|
@@ -170,6 +178,9 @@ module Scrappy
             result[k] /= count
           end
         end
+        
+        @missing    = RDF::Graph.new(@missing)
+        @wrong      = RDF::Graph.new(@wrong)
         
         flash[:notice] = "Testing completed"
         haml :test
@@ -202,15 +213,14 @@ module Scrappy
           fragment.sc::selector.map do |selector|
             x,y,w,h,font,size,weight,color = case branch
             when :min then
-              [selector.sc::min_relative_x, selector.sc::min_relative_y, selector.sc::min_width, selector.sc::min_height, selector.sc::font_family, selector.sc::min_font_size, selector.sc::min_font_weight, :blue]
+              [selector.sc::min_relative_x.first, selector.sc::min_relative_y.first, selector.sc::min_width.first, selector.sc::min_height.first, selector.sc::font_family.first, selector.sc::min_font_size.first, selector.sc::min_font_weight.first, :blue]
             when :max then
-              [selector.sc::max_relative_x, selector.sc::max_relative_y, selector.sc::max_width, selector.sc::max_height, selector.sc::font_family, selector.sc::max_font_size, selector.sc::max_font_weight, :red]
+              [selector.sc::max_relative_x.first, selector.sc::max_relative_y.first, selector.sc::max_width.first, selector.sc::max_height.first, selector.sc::font_family.first, selector.sc::max_font_size.first, selector.sc::max_font_weight.first, :red]
             end
             style = "position: absolute; left: #{x}px; top: #{y}px; width: #{w}px; height: #{h}px; font-family: #{font}; font-size: #{size}px; font-weight: #{weight}; border: 1px solid #{color}; color: #555;"
             "<div style='#{style}'>#{label}#{subfragments}</div>"
           end * ""
         end * ""
-        
       end
       
       def percentage value

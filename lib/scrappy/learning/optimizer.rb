@@ -55,7 +55,7 @@ module Scrappy
           puts 'Unsuccesful optimization, rolling back...'
         end
         puts
-        puts "Fragments: #{fragments.size}"
+        puts "Fragments: #{fragments.size}, score: #{score}"
         puts "Trying optimization #{i+=1}..."
         new_fragments = optimize fragments
       end while new_fragments

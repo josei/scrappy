@@ -85,7 +85,10 @@ module Scrappy
       selector.sc::max_font_weight = presentation.sc::font_weight
       selector.sc::font_family     = presentation.sc::font_family
 
-      selector.sc::tag       = fragment_selector.sc::tag.select { |tag| ["a","img"].include?(tag) }
+      selector.sc::tag = ["text"] if presentation.sc::font_family.first
+      special_tag      = fragment_selector.sc::tag.select { |tag| ["a","img"].include?(tag) }
+      selector.sc::tag = special_tag if special_tag.size > 0
+      
       selector.sc::attribute = fragment_selector.sc::attribute
       
       selector

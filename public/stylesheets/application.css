@@ -9,6 +9,17 @@ pre {
   border: 1px solid;
   padding: 10px;
 }
+pre.wide {
+  width: 770px;
+  max-height: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid;
+  font-size: 12px;
+  overflow: scroll;
+  padding: 10px;
+  font-family: monospace;
+}
 a:link, a:visited {
   color: #33f;
   text-decoration: none;
@@ -208,4 +219,8 @@ fieldset {
   padding: 0;
   margin:  0;
   vertical-align: baseline;
+}
+
+textarea {
+  width: 100%;
 }

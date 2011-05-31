@@ -4,7 +4,9 @@ module Sc
     include Scrappy::Formats
     
     def select doc
-      if sc::debug.first=="true" and Scrappy::Agent::Options.debug
+      if sc::debug.first=="true" and Scrappy::Agent::Options.debug and
+        (Scrappy::Agent::Options.debug_key.nil? or doc[:value].downcase.include?(Scrappy::Agent::Options.debug_key) )
+        
         puts '== DEBUG'
         puts '== Selector:'
         puts node.serialize(:yarf, false)
@@ -18,7 +20,9 @@ module Sc
       # Filter method is defined in each subclass
       results = filter doc
 
-      if sc::debug.first=="true" and Scrappy::Agent::Options.debug
+      if sc::debug.first=="true" and Scrappy::Agent::Options.debug and
+        (Scrappy::Agent::Options.debug_key.nil? or doc[:value].downcase.include?(Scrappy::Agent::Options.debug_key) )
+        
         puts "== No results" if results.empty?
         results.each_with_index do |result, i|
           puts "== Result ##{i}:"

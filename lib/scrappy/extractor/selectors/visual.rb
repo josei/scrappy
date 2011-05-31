@@ -28,19 +28,21 @@ module Sc
         font_family     =  sc::font_family.first
         attributes      =  sc::attribute
         formats         =  sc::format
+        tag             =  sc::tag
         
-        elements  = doc[:content].search(sc::tag.first || "*")
-        elements += Nokogiri::XML::NodeSet.new(doc[:content].document, [doc[:content]]) if sc::tag.include?(doc[:content].name)
+        elements  = doc[:content].search((tag - ["text"]).first || "*")
+        elements += Nokogiri::XML::NodeSet.new(doc[:content].document, [doc[:content]]) if tag.include?(doc[:content].name)
         
         elements.select do |node|
           relative_x = node['vx'].to_i - doc[:content]['vx'].to_i
           relative_y = node['vy'].to_i - doc[:content]['vy'].to_i
           
           !node.text? and
-          ( !min_relative_x  or relative_x          >= min_relative_x) and
-          ( !max_relative_x  or relative_x          <= max_relative_x) and
-          ( !min_relative_y  or relative_y          >= min_relative_y) and
-          ( !max_relative_y  or relative_y          <= max_relative_y) and
+          ( (node['vfont']   and node.name!="a" and node.name!="img") or !tag.include?("text") ) and
+          ( !min_relative_x  or relative_x           >= min_relative_x) and
+          ( !max_relative_x  or relative_x           <= max_relative_x) and
+          ( !min_relative_y  or relative_y           >= min_relative_y) and
+          ( !max_relative_y  or relative_y           <= max_relative_y) and
           
           ( !min_x           or node['vx'].to_i      >= min_x) and
           ( !max_x           or node['vx'].to_i      <= max_x) and

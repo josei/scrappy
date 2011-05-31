@@ -1,5 +1,6 @@
 #body
   %h1 Testing pattern extraction
+  %h2 Results
   %p
     -(@results.keys-[:total]).each do |label|
       ==#{label}:
@@ -36,3 +37,21 @@
           F-score
         %span.date
           =percentage(@results[:total][:fscore])
+
+  %h2 Details
+  %p
+    Wrong triples:
+    %pre.wide=escape_html @wrong.to_ntriples
+    Missing triples:
+    %pre.wide=escape_html @missing.to_ntriples
+  %h2
+    Retry?
+  %form{:method=>:post}
+    %p
+      Add here any triples that should have counted as correct ones:
+    %p
+      %textarea{:name=>:output, :rows=>20, :wrap=>:off}=params["output"]
+      -params[:samples].each do |sample|
+        %input{:name=>"samples[]", :type=>:hidden, :value=>sample}
+    %p
+      %button Retry
