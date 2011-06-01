@@ -179,6 +179,10 @@ module Scrappy
           end
         end
         
+        @total      = output.size
+        @extracted  = extraction.size
+        @correct    = @extracted - @wrong.size
+        
         @missing    = RDF::Graph.new(@missing)
         @wrong      = RDF::Graph.new(@wrong)
         

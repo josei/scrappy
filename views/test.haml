@@ -40,6 +40,22 @@
 
   %h2 Details
   %p
+    %ul.detail
+      %li
+        %span.name
+          Triples
+        %span.date
+          =@total
+      %li
+        %span.name
+          Extracted triples
+        %span.date
+          =@extracted
+      %li
+        %span.name
+          Correct triples
+        %span.date
+          =@correct
     Wrong triples:
     %pre.wide=escape_html @wrong.to_ntriples
     Missing triples:
@@ -48,7 +64,7 @@
     Retry?
   %form{:method=>:post}
     %p
-      Add here any triples that should have counted as correct ones:
+      Add here any triples that should be counted as correct ones:
     %p
       %textarea{:name=>:output, :rows=>20, :wrap=>:off}=params["output"]
       -params[:samples].each do |sample|
