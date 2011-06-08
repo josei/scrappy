@@ -33,7 +33,7 @@ module Scrappy
         opts.on('-g URI', '--get URI')          { |uri| Options.uri = uri; Options.http_method=:get }
         opts.on('-p URI', '--post URI')         { |uri| Options.uri = uri; Options.http_method=:post }
         opts.on('-D', '--dump')                 { Agent::Options.dump = true; Agent::Options.format = :rdf }
-        opts.on('-u [KEY]', '--debug [KEY]')    { |key| Agent::Options.debug = true; Agent::Options.debug_key = key.downcase }
+        opts.on('-u [KEY]', '--debug [KEY]')    { |key| Agent::Options.debug = true; Agent::Options.debug_key = key.downcase if key }
         opts.on('-s', '--server [BASE_URI]')    { |uri| Options.server = true; Options.base_uri = uri }
         opts.on('-a', '--admin [BASE_URI]')     { |uri| Options.admin = true; Options.base_uri = uri }
         opts.on('-P P', '--port P')             { |p| Options.port = p }
