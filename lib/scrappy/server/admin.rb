@@ -94,9 +94,25 @@ module Scrappy
       end
       
       app.get '/samples/:id' do |id|
+        Nokogiri::HTML(Scrappy::App.samples[id.to_i][:html], nil, 'utf-8').search("*").map do |node|
+          next if node.text?
+          text  = node.children.map { |n| n.content if n.text? } * " "
+          x = node[:vx].to_i
+          y = node[:vy].to_i
+          w = node[:vw].to_i
+          h = node[:vh].to_i
+          font = node[:vfont]
+          size = node[:vsize].to_i
+          weight = node[:vweight].to_i
+          style = "position: absolute; left: #{x}px; top: #{y}px; width: #{w}px; height: #{h}px; font-family: #{font}; font-size: #{size}px; font-weight: #{weight}; border: 1px solid gray; color: #555;"
+          "<div style='#{style}'>#{text}</div>"
+        end * ""
+      end
+
+      app.get '/samples/:id/raw' do |id|
         Scrappy::App.samples[id.to_i][:html]
       end
-      
+
       app.get '/samples/:id/:kb_type' do |id,kb_type|
         kb = (kb_type == "patterns" ? Scrappy::Kb.patterns : Scrappy::Kb.extractors)
         sample = Scrappy::App.samples[id.to_i]

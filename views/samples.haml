@@ -30,6 +30,8 @@
               -[['Patterns output', :patterns], ['Extractors output', :extractors]].reverse.each do |text, action|
                 %span.format
                   %a{:href=>"#{settings.base_uri}/samples/#{i}/#{action}"}=text
+              %span.format
+                %a{:href=>"#{settings.base_uri}/samples/#{i}/raw"} RAW
               %span.date
                 %a{:href=>"#{settings.base_uri}/samples/#{i}"}
                   =sample[:date].strftime("%Y/%m/%d - %H:%M")
