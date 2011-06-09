@@ -104,7 +104,11 @@ module Scrappy
           font = node[:vfont]
           size = node[:vsize].to_i
           weight = node[:vweight].to_i
-          style = "position: absolute; left: #{x}px; top: #{y}px; width: #{w}px; height: #{h}px; font-family: #{font}; font-size: #{size}px; font-weight: #{weight}; border: 1px solid gray; color: #555;"
+          color  = "#555"
+          color  = "#55f" if node.name == "a"
+          style  = "position: absolute; left: #{x}px; top: #{y}px; width: #{w}px; height: #{h}px; font-family: #{font}; font-size: #{size}px; font-weight: #{weight}; border: 1px solid gray; color: #{color};"
+          style += "background-color: #f00; opacity: 0.2;" if node.name == "img"
+          style += "text-decoration: underline;" if node.name == "a"
           "<div style='#{style}'>#{text}</div>"
         end * ""
       end
