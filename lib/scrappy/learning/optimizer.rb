@@ -261,11 +261,16 @@ module Scrappy
       RDF::ID.count = count # Hack to reduce symbol creation
 
       correct    = doc[:output]
-      metrics(correct, extraction).last
+      metrics(correct, extraction, true).last
     end
     
-    def metrics correct, extraction
+    def metrics correct, extraction, debug=false
       right      = correct.size - (correct - extraction).size
+      
+      if debug
+        puts "  Wrong triples: \n"   + RDF::Graph.new(extraction - correct).to_ntriples
+        puts "  Missing triples: \n" + RDF::Graph.new(correct - extraction).to_ntriples
+      end
       
       precision  = extraction.size != 0 ? right/extraction.size.to_f : 1.0
       recall     = correct.size != 0 ? right/correct.size.to_f : 1.0
@@ -273,7 +278,9 @@ module Scrappy
       # Calculate fscore
       fscore = 2.0*(recall*precision)/(precision+recall)
       
-      [ fscore, precision, recall ]
+      puts "  Fscore: #{fscore}" if debug
+      
+      [ precision, recall, fscore ]
     end
     
     private

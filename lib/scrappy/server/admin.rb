@@ -161,7 +161,7 @@ module Scrappy
         predicates.each do |predicate|
           new_output     = output.select     { |s,p,o| p==predicate }
           new_extraction = extraction.select { |s,p,o| p==predicate }
-          fscore, precision, recall = agent.send :metrics, new_output, new_extraction
+          precision, recall, fscore = agent.send :metrics, new_output, new_extraction
           @results[predicate] ||= Hash.new(0.0)
           @results[predicate][:count]     += 1
           @results[predicate][:fscore]    += fscore
@@ -173,7 +173,7 @@ module Scrappy
           new_output     = output.select     { |s,p,o| p==ID("rdf:type") and o==type }
           new_extraction = extraction.select { |s,p,o| p==ID("rdf:type") and o==type }
 
-          fscore, precision, recall = agent.send :metrics, new_output, new_extraction
+          precision, recall, fscore = agent.send :metrics, new_output, new_extraction
           @results[type] ||= Hash.new(0.0)
           @results[type][:count]     += 1
           @results[type][:fscore]    += fscore
@@ -181,7 +181,7 @@ module Scrappy
           @results[type][:recall]    += recall
         end
         
-        fscore, precision, recall = agent.send :metrics, output, extraction
+        precision, recall, fscore = agent.send :metrics, output, extraction
         @results[:total] ||= Hash.new(0.0)
         @results[:total][:count]     += 1
         @results[:total][:fscore]    += fscore
