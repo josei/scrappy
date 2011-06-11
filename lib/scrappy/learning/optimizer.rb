@@ -14,7 +14,6 @@ module Scrappy
         fragment.graph.pool = pool
         fragments << fragment
       end
-
       # Parse the documents
       docs = samples.map do |sample|
         output  = extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
@@ -38,8 +37,9 @@ module Scrappy
       last_save     = 0
       begin
         new_score = score(new_fragments, docs)
+
         if new_score >= score # Improvement after optimization?
-          puts 'Succesful optimization' if i > 0
+          puts 'Successful optimization' if i > 0
           score     = new_score
           fragments = new_fragments
           
@@ -52,7 +52,7 @@ module Scrappy
             last_save = Time.now
           end
         else
-          puts 'Unsuccesful optimization, rolling back...'
+          puts 'Unsuccessful optimization, rolling back...'
         end
         puts
         puts "Fragments: #{fragments.size}, score: #{score}"
@@ -66,16 +66,23 @@ module Scrappy
     
     # Tries to perform one optimization in a set of fragments
     def optimize fragments
+      fragments.each do |fragment|
+        next if @tried.include?(fragment)
+        
+        new_fragment = simplify fragment
+
+        @tried << fragment
+
+        # End by including the new fragment in the list and returning it
+        return fragments - [fragment] + [new_fragment] if new_fragment
+      end
       fragments.each do |fragment1|
         fragments.each do |fragment2|
+          next if fragment1 == fragment2
           next if @tried.include?([fragment1, fragment2]) or @tried.include?([fragment2, fragment1])
           
-          new_fragment = if fragment1 == fragment2
-            simplify fragment1
-          else
-            group fragment1, fragment2
-          end
-
+          new_fragment = group fragment1, fragment2
+          
           @tried << [fragment1, fragment2]
 
           # End by including the new fragment in the list and returning it
@@ -89,13 +96,14 @@ module Scrappy
     def simplify fragment
       new_fragment            = fragment.rename
       new_fragment.graph.pool = fragment.graph.pool
-      
+
       # Attempts to perform one optimization in the subfragments
       subfragments = optimize new_fragment.sc::subfragment
 
       if subfragments
         # Removes old subfragments
-        new_fragment.sc::subfragment.each { |subfragment| new_fragment.graph.delete subfragment }
+        new_fragment.sc::subfragment.map { |subfragment| subfragment.graph.values }.flatten.each { |node| new_fragment.graph.delete node }
+
         # Adds new subfragments
         subfragments.each { |subfragment| new_fragment.graph << subfragment }
         new_fragment.sc::subfragment = subfragments
@@ -106,7 +114,7 @@ module Scrappy
           return
         end
       end
-      
+
       puts "  new fragment #{new_fragment} (#{short_name(new_fragment)}) out of #{fragment}"
       
       new_fragment
@@ -115,7 +123,7 @@ module Scrappy
     # Groups two fragments into one
     def group fragment1, fragment2, siblings=true
       return unless signature(fragment1) == signature(fragment2)
-
+      
       new_fragment                = Node(nil)
       new_fragment.rdf::type      = Node("sc:Fragment")
       new_fragment.graph.pool     = fragment1.graph.pool
@@ -188,7 +196,6 @@ module Scrappy
     # Tries to merge a pair of selectors inside a fragment
     # It accepts a property to indicate sc:selector or sc:identifier
     def generalize! fragment, property
-      done = false
       selectors = fragment[property]
       return false if selectors.size <= 1
       selectors.each do |selector1|
@@ -205,7 +212,7 @@ module Scrappy
           fragment[property] = fragment[property] - [selector1] - [selector2] + [new_selector]
           
           @tried << [selector1, selector2]
-          
+           
           puts "  new selector #{new_selector} out of #{selector1} and #{selector2}"
 
           return true
@@ -219,7 +226,7 @@ module Scrappy
         fragment.sc::relation.map(&:to_sym).to_set,
         fragment.sc::superclass.map(&:to_sym).to_set,
         fragment.sc::sameas.map(&:to_sym).to_set,
-        fragment.sc::identifier.size,
+        fragment.sc::identifier.first.nil?,
         fragment.sc::subfragment.map { |sf| signature(sf) }.to_set ]
     end
     
@@ -252,7 +259,7 @@ module Scrappy
     
     def score fragments, docs
       return 0.0 unless fragments
-      docs.inject(0) { |sum,doc| fscore(fragments, doc)+sum } / docs.size
+      docs.inject(0.0) { |sum,doc| fscore(fragments, doc)+sum } / docs.size.to_f
     end
     
     def fscore fragments, doc
