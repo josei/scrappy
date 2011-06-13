@@ -102,7 +102,7 @@ module Scrappy
 
       if subfragments
         # Removes old subfragments
-        new_fragment.sc::subfragment.map { |subfragment| subfragment.graph.values }.flatten.each { |node| new_fragment.graph.delete node }
+        new_fragment.sc::subfragment.map { |subfragment| new_fragment.graph.delete subfragment }
 
         # Adds new subfragments
         subfragments.each { |subfragment| new_fragment.graph << subfragment }
