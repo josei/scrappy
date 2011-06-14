@@ -23,6 +23,7 @@ module Scrappy
 
       # Optimize the fragments
       @tried = []
+      @distances = {}
       fragments = optimize_all fragments, docs
       RDF::Graph.new(fragments.inject([]) { |triples, fragment| triples += fragment.all_triples })
     end
@@ -66,19 +67,8 @@ module Scrappy
     
     # Tries to perform one optimization in a set of fragments
     def optimize fragments
-      fragments.each do |fragment|
-        next if @tried.include?(fragment)
-        
-        new_fragment = simplify fragment
-
-        @tried << fragment
-
-        # End by including the new fragment in the list and returning it
-        return fragments - [fragment] + [new_fragment] if new_fragment
-      end
-      fragments.each do |fragment1|
-        fragments.each do |fragment2|
-          next if fragment1 == fragment2
+      fragments.each_with_index do |fragment1, index|
+        fragments[0...index].sort_by { |fragment2| distance(fragment1, fragment2) }.each do |fragment2|
           next if @tried.include?([fragment1, fragment2]) or @tried.include?([fragment2, fragment1])
           
           new_fragment = group fragment1, fragment2
@@ -90,34 +80,6 @@ module Scrappy
         end
       end
       return
-    end
-
-    # Tries to perform one simplification inside a fragment
-    def simplify fragment
-      new_fragment            = fragment.rename
-      new_fragment.graph.pool = fragment.graph.pool
-
-      # Attempts to perform one optimization in the subfragments
-      subfragments = optimize new_fragment.sc::subfragment
-
-      if subfragments
-        # Removes old subfragments
-        new_fragment.sc::subfragment.map { |subfragment| new_fragment.graph.delete subfragment }
-
-        # Adds new subfragments
-        subfragments.each { |subfragment| new_fragment.graph << subfragment }
-        new_fragment.sc::subfragment = subfragments
-      else
-        # If subfragments cannot be optimized, try to optimize selectors or identifiers
-        if !generalize!(new_fragment, Node('sc:selector')) and
-           !generalize!(new_fragment, Node('sc:identifier'))
-          return
-        end
-      end
-
-      puts "  new fragment #{new_fragment} (#{short_name(new_fragment)}) out of #{fragment}"
-      
-      new_fragment
     end
 
     # Groups two fragments into one
@@ -148,26 +110,20 @@ module Scrappy
       end
 
       # sc:selector
-      selectors = fragment1.sc::selector + fragment2.sc::selector
-      new_fragment.sc::selector = selectors.map do |selector|
-        new_selector = Node(selector)
-        selector.each { |k,v| new_selector[k] = v }
-        new_fragment.graph << new_selector
-        new_selector
-      end
+      new_selector = merge(*(fragment1.sc::selector + fragment2.sc::selector))
+      new_fragment.sc::selector = new_selector
+      new_fragment.graph << new_selector
       
       # sc:identifier
-      identifiers = fragment1.sc::identifier + fragment2.sc::identifier
-      new_fragment.sc::identifier = identifiers.map do |selector|
-        new_selector = Node(selector)
-        selector.each { |k,v| new_selector[k] = v }
-        new_fragment.graph << new_selector
-        new_selector
+      if fragment1.sc::identifier.first
+        new_identifier = merge(*(fragment1.sc::identifier + fragment2.sc::identifier))
+        new_fragment.sc::identifier = new_identifier
+        new_fragment.graph << new_identifier
       end
       
       subfragments = mix(fragment1.sc::subfragment, fragment2.sc::subfragment)
       return unless subfragments
-      
+
       subfragments.each { |f| new_fragment.graph << f }
       new_fragment.sc::subfragment = subfragments
       
@@ -191,34 +147,6 @@ module Scrappy
         
         group fragment1, fragment2, false
       end
-    end
-
-    # Tries to merge a pair of selectors inside a fragment
-    # It accepts a property to indicate sc:selector or sc:identifier
-    def generalize! fragment, property
-      selectors = fragment[property]
-      return false if selectors.size <= 1
-      selectors.each do |selector1|
-        selectors.each do |selector2|
-          next if selector1 == selector2
-          next if @tried.include?([selector1, selector2]) or @tried.include?([selector2, selector1])
-
-          new_selector = merge selector1, selector2
-
-          # Replace the two selectors with the new one
-          fragment.graph.delete selector1
-          fragment.graph.delete selector2
-          fragment.graph << new_selector
-          fragment[property] = fragment[property] - [selector1] - [selector2] + [new_selector]
-          
-          @tried << [selector1, selector2]
-           
-          puts "  new selector #{new_selector} out of #{selector1} and #{selector2}"
-
-          return true
-        end
-      end
-      false
     end
     
     def signature fragment
@@ -255,6 +183,51 @@ module Scrappy
       selector.sc::attribute       = selectors.first.sc::attribute if selectors.map { |s| s.sc::attribute.sort }.uniq.size == 1
 
       selector
+    end
+    
+    def distance fragment1, fragment2
+      return @distances[[fragment1.id, fragment2.id]] if @distances[[fragment1.id, fragment2.id]]
+      return 1/0.0 if signature(fragment1) != signature(fragment2)
+
+      # Calculate distances
+      distance  = selector_distance(fragment1.sc::selector.first, fragment2.sc::selector.first)
+      distance += selector_distance(fragment1.sc::identifier.first, fragment2.sc::identifier.first) if fragment1.sc::identifier.first
+      
+      # Calculate subfragments' distances
+      subfragments2 = fragment2.sc::subfragment
+      subdistances  = fragment1.sc::subfragment.map do |subfragment1|
+        subfragment2 = subfragments2.select { |f| signature(subfragment1) == signature(f) }.first
+        subfragments2.delete subfragment2
+        
+        distance(subfragment1, subfragment2)
+      end
+      
+      final_distance = distance + subdistances.inject(0.0) {|sum,d| sum+d}
+      @distances[[fragment1.id, fragment2.id]] = final_distance
+      @distances[[fragment2.id, fragment1.id]] = final_distance
+    end
+    
+    def selector_distance selector1, selector2
+      distance  = 0.0
+      distance += (selector1.sc::min_relative_x.first.to_i - selector2.sc::min_relative_x.first.to_i).abs
+      distance += (selector1.sc::max_relative_x.first.to_i - selector2.sc::max_relative_x.first.to_i).abs
+      distance += (selector1.sc::min_relative_y.first.to_i - selector2.sc::min_relative_y.first.to_i).abs
+      distance += (selector1.sc::max_relative_y.first.to_i - selector2.sc::max_relative_y.first.to_i).abs
+      distance += (selector1.sc::min_x.first.to_i - selector2.sc::min_x.first.to_i).abs
+      distance += (selector1.sc::max_x.first.to_i - selector2.sc::max_x.first.to_i).abs
+      distance += (selector1.sc::min_y.first.to_i - selector2.sc::min_y.first.to_i).abs
+      distance += (selector1.sc::max_y.first.to_i - selector2.sc::max_y.first.to_i).abs
+      distance += (selector1.sc::min_width.first.to_i - selector2.sc::min_width.first.to_i).abs
+      distance += (selector1.sc::max_width.first.to_i - selector2.sc::max_width.first.to_i).abs
+      distance += (selector1.sc::min_height.first.to_i - selector2.sc::min_height.first.to_i).abs
+      distance += (selector1.sc::max_height.first.to_i - selector2.sc::max_height.first.to_i).abs
+      distance += (selector1.sc::min_font_size.first.to_i - selector2.sc::min_font_size.first.to_i).abs * 100
+      distance += (selector1.sc::max_font_size.first.to_i - selector2.sc::max_font_size.first.to_i).abs * 100
+      distance += (selector1.sc::min_font_weight.first.to_i - selector2.sc::min_font_weight.first.to_i).abs
+      distance += (selector1.sc::max_font_weight.first.to_i - selector2.sc::max_font_weight.first.to_i).abs
+      distance += 100 if selector1.sc::font_family != selector2.sc::font_family
+      distance += 500 if selector1.sc::tag != selector2.sc::tag
+      distance
     end
     
     def score fragments, docs
