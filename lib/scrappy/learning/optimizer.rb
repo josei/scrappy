@@ -199,10 +199,10 @@ module Scrappy
         subfragment2 = subfragments2.select { |f| signature(subfragment1) == signature(f) }.first
         subfragments2.delete subfragment2
         
-        distance(subfragment1, subfragment2)
+        subfragment2.nil? ? 500.0 : distance(subfragment1, subfragment2)
       end
       
-      final_distance = distance + subdistances.inject(0.0) {|sum,d| sum+d}
+      final_distance = distance + subdistances.inject(0.0) {|sum,d| sum+d} + subfragments2.size*500.0
       @distances[[fragment1.id, fragment2.id]] = final_distance
       @distances[[fragment2.id, fragment1.id]] = final_distance
     end
