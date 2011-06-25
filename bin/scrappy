@@ -103,7 +103,7 @@ module Scrappy
     def self.editable_kb?
       @editable_kb
     end
-    def self.add_pattern graph
+    def self.add_patterns graph
       new_patterns = Scrappy::Kb.patterns.merge graph
       save_patterns new_patterns
       onload

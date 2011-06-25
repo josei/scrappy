@@ -37,11 +37,9 @@ module Scrappy
       app.post '/extractors' do
         if params[:html]
           # Generate extractor automatically
-          iconv = Iconv.new(params[:encoding], 'UTF-8')
-          html  = iconv.iconv(params[:html]) 
-          puts params[:html]
-          puts params[:uri]
-          raise Exception, "Automatic generation of extractors is not supported yet"
+          html = Iconv.iconv('UTF-8', params[:encoding], params[:html]).first
+          extractor = agent.train_xpath(:html=>html, :uri=>params[:uri])
+          Scrappy::App.add_extractor extractor
         else
           # Store the given extractor
           Scrappy::App.add_extractor RDF::Parser.parse(:yarf,params[:rdf])
@@ -131,10 +129,10 @@ module Scrappy
       
       app.post '/samples/train' do
         samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
-        pattern = agent.train(*samples)
-        Scrappy::App.add_pattern pattern
+        patterns = agent.train(*samples)
+        Scrappy::App.add_patterns patterns
         flash[:notice] = "Training completed"
-        redirect "/samples"
+        redirect "#{settings.base_uri}/samples"
       end
       
       app.post '/samples/optimize' do
