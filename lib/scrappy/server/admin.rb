@@ -117,6 +117,11 @@ module Scrappy
         Scrappy::App.samples[id.to_i][:html]
       end
 
+      app.get '/samples/:id/annotations' do |id|
+        headers 'Content-Type' => 'text/plain'
+        RDF::Graph.new(Scrappy::App.samples[id.to_i][:output] || []).serialize(:yarf)
+      end
+
       app.get '/samples/:id/:kb_type' do |id,kb_type|
         kb = (kb_type == "patterns" ? Scrappy::Kb.patterns : Scrappy::Kb.extractors)
         sample = Scrappy::App.samples[id.to_i]
@@ -140,7 +145,17 @@ module Scrappy
         redirect "#{settings.base_uri}/samples"
       end
       
-      app.post '/samples/test' do
+      app.post '/samples/annotate' do
+        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }.each do |sample|
+          sample[:output] = agent.extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
+        end
+        Scrappy::App.save_samples
+        flash[:notice] = "Samples annotated"
+        redirect "#{settings.base_uri}/samples"
+      end
+      
+      app.post '/samples/test/:kb_type' do |kb_type|
+        kb = (kb_type == "patterns" ? Scrappy::Kb.patterns : Scrappy::Kb.extractors)
         @results   = {}
         @missing   = []
         @wrong     = []
@@ -148,8 +163,8 @@ module Scrappy
         extraction = []
         samples = (params['samples'] || []).map do |i|
           sample       = Scrappy::App.samples[i.to_i]
-          output     += agent.extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
-          extraction += agent.extract(sample[:uri], sample[:html], Scrappy::Kb.patterns)
+          output     += sample[:output] || []
+          extraction += agent.extract(sample[:uri], sample[:html], kb)
         end
         
         output     = output.uniq
@@ -206,7 +221,7 @@ module Scrappy
         @missing    = RDF::Graph.new(@missing)
         @wrong      = RDF::Graph.new(@wrong)
         
-        flash[:notice] = "Testing completed"
+        flash.now[:notice] = "Testing completed"
         haml :test
       end
 

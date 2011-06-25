@@ -67,7 +67,7 @@
       Add here any triples that should be counted as correct ones:
     %p
       %textarea{:name=>:output, :rows=>20, :wrap=>:off}=params["output"]
-      -params[:samples].each do |sample|
+      -(params[:samples] || []).each do |sample|
         %input{:name=>"samples[]", :type=>:hidden, :value=>sample}
     %p
       %button Retry

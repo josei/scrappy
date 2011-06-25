@@ -27,7 +27,7 @@
                   =sample[:uri]
               %span.format
                 %input{:type=>:checkbox, :name=>'samples[]', :value=>i}
-              -[['Patterns output', :patterns], ['Extractors output', :extractors]].reverse.each do |text, action|
+              -[['Patterns', :patterns], ['Extractors', :extractors], ['Annotations', :annotations]].reverse.each do |text, action|
                 %span.format
                   %a{:href=>"#{settings.base_uri}/samples/#{i}/#{action}"}=text
               %span.format
@@ -36,8 +36,12 @@
                 %a{:href=>"#{settings.base_uri}/samples/#{i}"}
                   =sample[:date].strftime("%Y/%m/%d - %H:%M")
     %p
-      %a.checksend{:href=>"#{settings.base_uri}/samples/train"} Train
+      %a.checksend{:href=>"#{settings.base_uri}/samples/train", :title=>'This will generate patterns for each of the selected samples'} Train
       |
-      %a.checksend{:href=>"#{settings.base_uri}/samples/optimize"} Optimize
+      %a.checksend{:href=>"#{settings.base_uri}/samples/optimize", :title=>'This will generalize patterns to improve the performance on the selected samples'} Optimize
       |
-      %a.checksend{:href=>"#{settings.base_uri}/samples/test"} Test
+      %a.checksend{:href=>"#{settings.base_uri}/samples/annotate", :title=>'This will store extractors output as the correct samples output'} Annotate
+      |
+      %a.checksend{:href=>"#{settings.base_uri}/samples/test/patterns", :title=>'This will test patterns on the selected samples'} Test patterns
+      |
+      %a.checksend{:href=>"#{settings.base_uri}/samples/test/extractors", :title=>'This will test extractors on the selected samples'} Test extractors
