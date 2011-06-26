@@ -3,7 +3,7 @@ module Scrappy
     # Generates visual patterns
     def train *samples
       RDF::Graph.new( samples.inject([]) do |triples, sample|
-        triples + train_sample(sample).triples
+        triples + train_sample( sample ).triples
       end )
     end
 
@@ -16,6 +16,7 @@ module Scrappy
 
     private
     def train_sample sample, xpath=false
+      sample  = sample.merge(:content=>Nokogiri::HTML(sample[:html], nil, 'utf-8'))
       results = RDF::Graph.new extract(sample[:uri], sample[:html], xpath ? Scrappy::Kb.patterns : Scrappy::Kb.extractors, :minimum)
 
       typed_nodes     = results.find(nil, Node("rdf:type"), [])
@@ -36,7 +37,7 @@ module Scrappy
       superfragment.graph << identifier
 
       RDF::Graph.new( nodes.inject([]) do |triples, node|
-        fragment = fragment_for(node, xpath)
+        fragment = fragment_for(node, sample, xpath)
         # Include a superfragment that limits the fragment to a specified URI
         if xpath
           other_triples = [ [superfragment.id, ID('sc:subfragment'), fragment.id] ]
@@ -48,16 +49,17 @@ module Scrappy
       end + (xpath ? superfragment.graph.triples : []) )
     end
     
-    def fragment_for node, xpath, parent=nil
+    def fragment_for node, sample, xpath, parent=nil, parent_path=nil
       fragment = Node(nil)
+      node_path = node.sc::source.first.sc::selector.first.sc::path.first
       node.keys.each do |predicate|
         case predicate
         when ID("sc:source") then
-          selector = selector_for(node.sc::source.first, xpath, parent)
+          selector = selector_for(node.sc::source.first, sample, xpath, parent, parent_path)
           fragment.graph << selector
           fragment.sc::selector = selector
         when ID("sc:uri") then
-          selector = selector_for(node.sc::uri.first.sc::source.first, xpath, node)
+          selector = selector_for(node.sc::uri.first.sc::source.first, sample, xpath, node, node_path)
           fragment.graph << selector
           fragment.sc::identifier = selector
         when ID("rdf:type") then
@@ -66,10 +68,11 @@ module Scrappy
           if node[predicate].map(&:class).uniq.first == RDF::Node
             done = []
             node[predicate].map do |subnode|
-              next if done.include?( {}.merge(subnode.sc::source.first.sc::selector.first) )
-              done << {}.merge(subnode.sc::source.first.sc::selector.first)
+              selector = subnode.sc::source.first.sc::selector.first
+              next if done.include?( {}.merge(selector) )
+              done << {}.merge(selector)
 
-              subfragment = fragment_for(subnode, xpath, node)
+              subfragment = fragment_for(subnode, sample, xpath, node, node_path)
               subfragment.sc::relation = Node(predicate)
               subfragment.sc::min_cardinality = "1"
               subfragment.sc::max_cardinality = "1"
@@ -85,15 +88,16 @@ module Scrappy
       fragment
     end
     
-    def selector_for fragment, xpath=false, parent=nil
+    def selector_for fragment, sample, xpath=false, parent=nil, parent_path=nil
       fragment_selector = fragment.sc::selector.first
       presentation = fragment.sc::presentation.first
       
       selector = Node(nil)
       
-      if xpath        
+      if xpath
         selector.rdf::type  = Node("sc:XPathSelector")
-        selector.rdf::value = fragment_selector.sc::path
+        selector.rdf::value = path_for fragment_selector.sc::path.first, parent_path, sample
+        selector.sc::helper = fragment.sc::presentation.first.sc::text
       else
         selector.rdf::type = Node("sc:VisualSelector")
         
@@ -130,6 +134,36 @@ module Scrappy
       selector.sc::attribute = fragment_selector.sc::attribute
       
       selector
+    end
+    
+    def path_for path, parent_path, sample
+      return "./." if path == parent_path
+      return path if ["", "/html", "/html/body"].include?(path)
+      
+      node = sample[:content].search(path).first
+      conditions = []
+      if node[:class]
+        conditions += node[:class].split(" ").map {|c| "contains(concat(' ',normalize-space(@class),' '),concat(' ','#{c.strip}',' '))" }
+      else
+        conditions += ["not(@class)"]
+      end
+      if node[:id]
+        conditions += ["contains(@id,'#{node[:id].strip}')"]
+      else
+        conditions += ["not(@id)"]
+      end
+      selector = "/#{node.name}[#{conditions * " and "}]"
+      index = nil
+      node.parent.search(".#{selector}").each_with_index { |n,i| index = i+1 if n.path == path }
+      
+      if false#node.name=="p" and node.content.include?("trabajadoras tienen")
+        require 'ruby-debug'
+        debugger
+      end
+      
+      previous_path = path.split("/")[0..-2] * "/"
+      
+      path_for(previous_path, parent_path, sample) + selector + "[#{index}]"
     end
   end
 end
