@@ -169,7 +169,7 @@ module Scrappy
       subfragments = mix(fragment1.sc::subfragment, fragment2.sc::subfragment)
       return unless subfragments
 
-      subfragments.each { |f| new_fragment.graph << f }
+      subfragments.each { |f| return if !f; new_fragment.graph << f }
       new_fragment.sc::subfragment = subfragments
       
       puts "  new fragment #{new_fragment} (#{short_name(new_fragment)}) out of #{fragment1} and #{fragment2}"
