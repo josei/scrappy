@@ -140,6 +140,10 @@ module Scrappy
       open(File.join(@extractors_folder,"extractor_#{Dir[File.join(@extractors_folder,'*')].size}.yarf"), "w") { |f| f.write graph.serialize(:yarf) }
       onload
     end
+    def self.replace_extractor uri, graph
+      delete_extractor uri
+      add_extractor graph
+    end
     def self.delete_extractor uri
       Dir[File.join(@extractors_folder, '*')].each do |file|
         format = file.split('.').last.to_sym

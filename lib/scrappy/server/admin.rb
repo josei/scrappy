@@ -127,28 +127,36 @@ module Scrappy
         RDF::Graph.new(agent.extract(sample[:uri], sample[:html], kb, Agent::Options.referenceable)).serialize(:yarf)
       end
       
-      app.post '/samples/train' do
-        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
-        patterns = agent.train(*samples)
-        Scrappy::App.add_patterns patterns
-        flash[:notice] = "Training completed"
-        redirect "#{settings.base_uri}/samples"
-      end
-      
-      app.post '/samples/optimize' do
-        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
-        Scrappy::Kb.patterns = agent.optimize_patterns(Scrappy::Kb.patterns, samples)
-        Scrappy::App.save_patterns Scrappy::Kb.patterns
-        flash[:notice] = "Optimization completed"
-        redirect "#{settings.base_uri}/samples"
-      end
-      
       app.post '/samples/annotate' do
         samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }.each do |sample|
           sample[:output] = agent.extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
         end
         Scrappy::App.save_samples
         flash[:notice] = "Samples annotated"
+        redirect "#{settings.base_uri}/samples"
+      end
+      
+      app.post '/samples/train/:kb_type' do |kb_type|
+        kb = (kb_type == "patterns" ? Scrappy::Kb.patterns : Scrappy::Kb.extractors)
+        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
+        if kb_type == "patterns"
+          Scrappy::App.add_patterns agent.train(*samples)
+        else
+          Scrappy::App.add_extractor agent.train_xpath(*samples)
+        end
+        flash[:notice] = "Training completed"
+        redirect "#{settings.base_uri}/samples"
+      end
+      
+      app.post '/samples/optimize/:kb_type' do |kb_type|
+        kb = (kb_type == "patterns" ? Scrappy::Kb.patterns : Scrappy::Kb.extractors)
+        samples = (params['samples'] || []).map { |i| Scrappy::App.samples[i.to_i] }
+        if kb_type == "patterns"
+          Scrappy::App.save_patterns agent.optimize_patterns(kb, samples)
+        else
+          Scrappy::App.replace_extractor agent.optimize_extractor(kb, samples)
+        end
+        flash[:notice] = "Optimization completed"
         redirect "#{settings.base_uri}/samples"
       end
       

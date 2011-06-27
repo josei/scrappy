@@ -224,3 +224,8 @@ fieldset {
 textarea {
   width: 100%;
 }
+
+span.type {
+  float: left;
+  width: 80px;
+}

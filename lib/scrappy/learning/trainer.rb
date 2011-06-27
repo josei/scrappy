@@ -97,7 +97,6 @@ module Scrappy
       if xpath
         selector.rdf::type  = Node("sc:XPathSelector")
         selector.rdf::value = path_for fragment_selector.sc::path.first, parent_path, sample
-        selector.sc::helper = fragment.sc::presentation.first.sc::text
       else
         selector.rdf::type = Node("sc:VisualSelector")
         
