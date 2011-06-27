@@ -58,7 +58,7 @@ module Scrappy
     def optimize_all root_fragments, samples, kb_type
       # Parse the documents
       docs = samples.map do |sample|
-        output  = extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
+        output  = kb_type==:patterns ? samples[:output] : extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
         content = Nokogiri::HTML(sample[:html], nil, 'utf-8')
         { :uri=>sample[:uri], :content=>content, :output=>output }
       end
@@ -115,12 +115,6 @@ module Scrappy
           next if @tried.include?([fragment1, fragment2]) or @tried.include?([fragment2, fragment1])
           
           new_fragment = group fragment1, fragment2
-          
-          if new_fragment
-            puts new_fragment.serialize(:yarf)
-            puts fragment1.serialize(:yarf)
-            puts fragment2.serialize(:yarf)
-          end
           
           @tried << [fragment1, fragment2]
 

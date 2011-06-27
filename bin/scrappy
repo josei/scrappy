@@ -150,12 +150,12 @@ module Scrappy
                         selector.rdf::type.include?(Node('sc:UriPatternSelector')) )
           
           samples.each do |sample|
-            !kb.node(selector).filter(:uri=>sample[:uri]).empty?
-            selector.rdf::value.each { |uri| delete_extractor(uri) }
+            selector.rdf::value.each do |uri|
+              delete_extractor(uri) if !kb.node(selector).filter(:uri=>sample[:uri]).empty?
+            end
           end
         end
       end
-
       add_extractor graph
     end
     def self.delete_extractor uri
@@ -168,10 +168,12 @@ module Scrappy
                           flatten.select do |uri_selector|
                             uri_selector.rdf::value.include?(uri)
         end
+        next if uri_selectors.empty?
         fragments = uri_selectors.map { |uri_selector| graph.find(nil, Node('sc:selector'), uri_selector) }.flatten
         fragments.each { |fragment| graph.triples -= fragment.all_triples }
         text = graph.serialize(format)
         open(file, "w") { |f| f.write text } if fragments.any?
+        File.delete(file) if text==""
       end
       onload
     end
@@ -270,7 +272,7 @@ Copyright
       # Load knowledge base
       Agent::Options.kb ||= RDF::Graph.new
       
-      Kb.extractors, Kb.patterns, RDF::ID::count = if File.exists?(@cache_file) and File.mtime(@cache_file) >= Dir["#{@extractors_folder}/*",@extractors_folder,@patterns_file].map{ |f| File.mtime(f) }.max
+      Kb.extractors, Kb.patterns, RDF::ID::count = if File.exists?(@cache_file) and File.mtime(@cache_file) > Dir["#{@extractors_folder}/*",@extractors_folder,@patterns_file].map{ |f| File.mtime(f) }.max
         # Just load kb from cache
         open(@cache_file) { |f| Marshal.load(f) }
       else
