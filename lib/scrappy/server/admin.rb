@@ -154,7 +154,7 @@ module Scrappy
         if kb_type == "patterns"
           Scrappy::App.save_patterns agent.optimize_patterns(kb, samples)
         else
-          Scrappy::App.replace_extractor agent.optimize_extractor(kb, samples)
+          Scrappy::App.replace_extractor agent.optimize_extractors(kb, samples), samples
         end
         flash[:notice] = "Optimization completed"
         redirect "#{settings.base_uri}/samples"

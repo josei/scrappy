@@ -140,8 +140,22 @@ module Scrappy
       open(File.join(@extractors_folder,"extractor_#{Dir[File.join(@extractors_folder,'*')].size}.yarf"), "w") { |f| f.write graph.serialize(:yarf) }
       onload
     end
-    def self.replace_extractor uri, graph
-      delete_extractor uri
+    def self.replace_extractor graph, samples
+      kb = Scrappy::Kb.extractors
+      
+      all_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
+      all_fragments.each do |fragment|
+        fragment.sc::selector.each do |selector|
+          next unless ( selector.rdf::type.include?(Node('sc:UriSelector')) or
+                        selector.rdf::type.include?(Node('sc:UriPatternSelector')) )
+          
+          samples.each do |sample|
+            !kb.node(selector).filter(:uri=>sample[:uri]).empty?
+            selector.rdf::value.each { |uri| delete_extractor(uri) }
+          end
+        end
+      end
+
       add_extractor graph
     end
     def self.delete_extractor uri
@@ -156,7 +170,8 @@ module Scrappy
         end
         fragments = uri_selectors.map { |uri_selector| graph.find(nil, Node('sc:selector'), uri_selector) }.flatten
         fragments.each { |fragment| graph.triples -= fragment.all_triples }
-        open(file, "w") { |f| f.write graph.serialize(format) } if fragments.any?
+        text = graph.serialize(format)
+        open(file, "w") { |f| f.write text } if fragments.any?
       end
       onload
     end

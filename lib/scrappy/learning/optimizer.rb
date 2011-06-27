@@ -4,9 +4,66 @@ module Scrappy
   module Optimizer
     # Iterates through a knowledge base and tries to merge and generalize
     # selectors whenever the output of the resulting kb is the same
+    def optimize_extractors kb, samples
+      # Build an array of fragments
+      all_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
+
+      root_superfragments = all_fragments.select do |fragment|
+        fragment.sc::selector.any? do |selector|
+          ( selector.rdf::type.include?(Node('sc:UriSelector')) or
+            selector.rdf::type.include?(Node('sc:UriPatternSelector')) ) and
+          samples.any? { |sample| !kb.node(selector).filter(:uri=>sample[:uri]).empty? }
+        end
+      end
+      root_fragments = root_superfragments.map { |f| f.sc::subfragment }.flatten
+
+      # Optimize the fragments
+      fragments = optimize_all root_fragments, samples, :extractors
+      
+      # Build a graph by adding all fragments to a common URI-selected superfragment
+      superfragment = Node(nil)
+      identifier    = Node(nil)
+      selector      = uri_selector_for(samples.map { |sample| sample[:uri] })
+      identifier.rdf::type  = Node('sc:BaseUriSelector')
+      superfragment.rdf::type       = Node('sc:Fragment')
+      superfragment.sc::selector    = selector
+      superfragment.sc::identifier  = identifier
+      superfragment.graph << selector
+      superfragment.graph << identifier
+
+      triples = fragments.inject([]) do |triples, fragment|
+        triples << [superfragment.id, ID('sc:subfragment'), fragment.id]
+        triples += fragment.all_triples
+      end
+      triples += superfragment.all_triples
+            
+      RDF::Graph.new(triples)
+    end
+    
+    # Iterates through a knowledge base and tries to merge and generalize
+    # selectors whenever the output of the resulting kb is the same
     def optimize_patterns kb, samples
       # Build an array of fragments
       root_fragments = kb.find(nil, Node('rdf:type'), Node('sc:Fragment')) - kb.find([], Node('sc:subfragment'), nil)
+
+      # Optimize the fragments
+      fragments = optimize_all root_fragments, samples, :patterns
+      
+      # Build a graph
+      RDF::Graph.new(fragments.inject([]) { |triples, fragment| triples += fragment.all_triples })
+    end
+    
+    protected
+    # Optimizes a set of fragments
+    def optimize_all root_fragments, samples, kb_type
+      # Parse the documents
+      docs = samples.map do |sample|
+        output  = extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
+        content = Nokogiri::HTML(sample[:html], nil, 'utf-8')
+        { :uri=>sample[:uri], :content=>content, :output=>output }
+      end
+      
+      # Fragment cloning to use a new common pool for caching intermediate results
       fragments = []
       pool      = {}
       root_fragments.each do |f|
@@ -14,38 +71,24 @@ module Scrappy
         fragment.graph.pool = pool
         fragments << fragment
       end
-      # Parse the documents
-      docs = samples.map do |sample|
-        output  = extract(sample[:uri], sample[:html], Scrappy::Kb.extractors)
-        content = Nokogiri::HTML(sample[:html], nil, 'utf-8')
-        { :uri=>sample[:uri], :content=>content, :output=>output }
-      end
-
-      # Optimize the fragments
+      
+      # Iterates until no changes are made
       @tried = []
       @distances = {}
-      fragments = optimize_all fragments, docs
-      RDF::Graph.new(fragments.inject([]) { |triples, fragment| triples += fragment.all_triples })
-    end
-    
-    protected
-    # Optimizes a set of fragments
-    def optimize_all fragments, docs
-      # Iterates until no changes are made
       new_fragments = fragments
       score         = 0.0
       i             = 0
       last_save     = 0
       begin
-        new_score = score(new_fragments, docs)
-
+        new_score = score(new_fragments, docs, kb_type)
+        
         if new_score >= score # Improvement after optimization?
           puts 'Successful optimization' if i > 0
           score     = new_score
           fragments = new_fragments
-          
+
           # Save to disk
-          if (Time.now - last_save).to_i > 60 and i > 0
+          if (Time.now - last_save).to_i > 60 and i > 0 and kb_type == :patterns
             print "Saving..."; $stdout.flush
             Scrappy::App.save_patterns fragments
             puts "done!"
@@ -72,6 +115,12 @@ module Scrappy
           next if @tried.include?([fragment1, fragment2]) or @tried.include?([fragment2, fragment1])
           
           new_fragment = group fragment1, fragment2
+          
+          if new_fragment
+            puts new_fragment.serialize(:yarf)
+            puts fragment1.serialize(:yarf)
+            puts fragment2.serialize(:yarf)
+          end
           
           @tried << [fragment1, fragment2]
 
@@ -111,12 +160,14 @@ module Scrappy
 
       # sc:selector
       new_selector = merge(*(fragment1.sc::selector + fragment2.sc::selector))
+      return unless new_selector
       new_fragment.sc::selector = new_selector
       new_fragment.graph << new_selector
       
       # sc:identifier
       if fragment1.sc::identifier.first
         new_identifier = merge(*(fragment1.sc::identifier + fragment2.sc::identifier))
+        return unless new_identifier
         new_fragment.sc::identifier = new_identifier
         new_fragment.graph << new_identifier
       end
@@ -161,26 +212,56 @@ module Scrappy
     # Merges a set of selectors, returning a new more general one
     def merge *selectors
       selector = Node(nil)
-      selector.rdf::type           = Node('sc:VisualSelector')
-      selector.sc::min_relative_x  = selectors.map { |s| s.sc::min_relative_x.map(&:to_i) }.flatten.min.to_s
-      selector.sc::max_relative_x  = selectors.map { |s| s.sc::max_relative_x.map(&:to_i) }.flatten.max.to_s
-      selector.sc::min_relative_y  = selectors.map { |s| s.sc::min_relative_y.map(&:to_i) }.flatten.min.to_s
-      selector.sc::max_relative_y  = selectors.map { |s| s.sc::max_relative_y.map(&:to_i) }.flatten.max.to_s
-      selector.sc::min_x           = selectors.map { |s| s.sc::min_x.map(&:to_i) }.flatten.min.to_s
-      selector.sc::max_x           = selectors.map { |s| s.sc::max_x.map(&:to_i) }.flatten.max.to_s
-      selector.sc::min_y           = selectors.map { |s| s.sc::min_y.map(&:to_i) }.flatten.min.to_s
-      selector.sc::max_y           = selectors.map { |s| s.sc::max_y.map(&:to_i) }.flatten.max.to_s
-      selector.sc::min_width       = selectors.map { |s| s.sc::min_width.map(&:to_i) }.flatten.min.to_s
-      selector.sc::max_width       = selectors.map { |s| s.sc::max_width.map(&:to_i) }.flatten.max.to_s
-      selector.sc::min_height      = selectors.map { |s| s.sc::min_height.map(&:to_i) }.flatten.min.to_s
-      selector.sc::max_height      = selectors.map { |s| s.sc::max_height.map(&:to_i) }.flatten.max.to_s
-      selector.sc::min_font_size   = selectors.map { |s| s.sc::min_font_size.map(&:to_i) }.flatten.min.to_s if selectors.all? { |s| s.sc::min_font_size.first }
-      selector.sc::max_font_size   = selectors.map { |s| s.sc::max_font_size.map(&:to_i) }.flatten.max.to_s if selectors.all? { |s| s.sc::max_font_size.first }
-      selector.sc::min_font_weight = selectors.map { |s| s.sc::min_font_weight.map(&:to_i) }.flatten.min.to_s if selectors.all? { |s| s.sc::min_font_weight.first }
-      selector.sc::max_font_weight = selectors.map { |s| s.sc::max_font_weight.map(&:to_i) }.flatten.max.to_s if selectors.all? { |s| s.sc::max_font_weight.first }
-      selector.sc::font_family     = selectors.first.sc::font_family if selectors.map { |s| s.sc::font_family.sort }.uniq.size == 1
-      selector.sc::tag             = selectors.first.sc::tag if selectors.map { |s| s.sc::tag.sort }.uniq.size == 1
-      selector.sc::attribute       = selectors.first.sc::attribute if selectors.map { |s| s.sc::attribute.sort }.uniq.size == 1
+      if selectors.first.rdf::type.first == Node('sc:XPathSelector')
+        selector.rdf::type  = Node('sc:XPathSelector')
+        selector.sc::attribute = selectors.first.sc::attribute
+        
+        xpaths = selectors.map { |s| s.rdf::value }.flatten.map { |s| xpath_for(s) }
+        selector.rdf::value = if selectors.map { |s| s.rdf::value }.uniq.size == 1
+          # All in common
+          selectors.first.rdf::value
+        elsif xpaths.map { |xpath| xpath[0..-2] }.uniq.size == 1
+          # Siblings
+          xpath = xpaths.first[0..-2]
+          
+          last_terms = xpaths.map     { |xp| xp.last }
+          tags       = last_terms.map { |term| term[:tag] }.uniq
+          indexes    = last_terms.map { |term| term[:index] }.uniq
+          conditions = last_terms.map { |term| term[:conditions] }
+          
+          tag        = tags.size > 1 ? '*' : tags.first
+          index      = indexes.first if indexes.size == 1
+          conditions = conditions.inject { |acc, n| acc & n }
+          
+          xpath << {:tag => tag, :conditions => conditions, :index => index}
+          xpath_expression_for(xpath)
+        else
+          # Nothing in common
+          return
+          nil
+        end
+      elsif selectors.first.rdf::type.first == Node('sc:VisualSelector')
+        selector.rdf::type           = Node('sc:VisualSelector')
+        selector.sc::min_relative_x  = selectors.map { |s| s.sc::min_relative_x.map(&:to_i) }.flatten.min.to_s
+        selector.sc::max_relative_x  = selectors.map { |s| s.sc::max_relative_x.map(&:to_i) }.flatten.max.to_s
+        selector.sc::min_relative_y  = selectors.map { |s| s.sc::min_relative_y.map(&:to_i) }.flatten.min.to_s
+        selector.sc::max_relative_y  = selectors.map { |s| s.sc::max_relative_y.map(&:to_i) }.flatten.max.to_s
+        selector.sc::min_x           = selectors.map { |s| s.sc::min_x.map(&:to_i) }.flatten.min.to_s
+        selector.sc::max_x           = selectors.map { |s| s.sc::max_x.map(&:to_i) }.flatten.max.to_s
+        selector.sc::min_y           = selectors.map { |s| s.sc::min_y.map(&:to_i) }.flatten.min.to_s
+        selector.sc::max_y           = selectors.map { |s| s.sc::max_y.map(&:to_i) }.flatten.max.to_s
+        selector.sc::min_width       = selectors.map { |s| s.sc::min_width.map(&:to_i) }.flatten.min.to_s
+        selector.sc::max_width       = selectors.map { |s| s.sc::max_width.map(&:to_i) }.flatten.max.to_s
+        selector.sc::min_height      = selectors.map { |s| s.sc::min_height.map(&:to_i) }.flatten.min.to_s
+        selector.sc::max_height      = selectors.map { |s| s.sc::max_height.map(&:to_i) }.flatten.max.to_s
+        selector.sc::min_font_size   = selectors.map { |s| s.sc::min_font_size.map(&:to_i) }.flatten.min.to_s if selectors.all? { |s| s.sc::min_font_size.first }
+        selector.sc::max_font_size   = selectors.map { |s| s.sc::max_font_size.map(&:to_i) }.flatten.max.to_s if selectors.all? { |s| s.sc::max_font_size.first }
+        selector.sc::min_font_weight = selectors.map { |s| s.sc::min_font_weight.map(&:to_i) }.flatten.min.to_s if selectors.all? { |s| s.sc::min_font_weight.first }
+        selector.sc::max_font_weight = selectors.map { |s| s.sc::max_font_weight.map(&:to_i) }.flatten.max.to_s if selectors.all? { |s| s.sc::max_font_weight.first }
+        selector.sc::font_family     = selectors.first.sc::font_family if selectors.map { |s| s.sc::font_family.sort }.uniq.size == 1
+        selector.sc::tag             = selectors.first.sc::tag if selectors.map { |s| s.sc::tag.sort }.uniq.size == 1
+        selector.sc::attribute       = selectors.first.sc::attribute if selectors.map { |s| s.sc::attribute.sort }.uniq.size == 1
+      end
 
       selector
     end
@@ -230,18 +311,20 @@ module Scrappy
       distance
     end
     
-    def score fragments, docs
+    def score fragments, docs, kb_type
       return 0.0 unless fragments
-      docs.inject(0.0) { |sum,doc| fscore(fragments, doc)+sum } / docs.size.to_f
+      docs.inject(0.0) { |sum,doc| doc_score(fragments, doc, kb_type)+sum } / docs.size.to_f
     end
     
-    def fscore fragments, doc
+    def doc_score fragments, doc, kb_type
       count = RDF::ID.count
       extraction = extract_graph(fragments.map(&:proxy), :doc=>doc).triples
       RDF::ID.count = count # Hack to reduce symbol creation
 
       correct    = doc[:output]
-      metrics(correct, extraction, true).last
+      precision, recall, fscore = metrics(correct, extraction, true)
+      
+      kb_type == :patterns ? fscore : recall
     end
     
     def metrics correct, extraction, debug=false
@@ -268,6 +351,52 @@ module Scrappy
       [ fragment.sc::type.first, fragment.sc::relation.first ].
         compact.
         map { |id| RDF::ID.compress(id) } * ", "
+    end
+    
+    def uri_selector_for uris
+      selector = Node(nil)
+      if uris.uniq.size == 1
+        selector.rdf::type    = Node('sc:UriSelector')
+        selector.rdf::value   = uris.first
+        selector
+      else
+        min_length = uris.map(&:length).min
+        pattern = ""
+        (0..min_length).map.reverse.each do |length|
+          pattern = uris.first[0..length]
+          break if uris.all? { |uri| uri.index(pattern) == 0 and uri.length > pattern.length }
+        end
+        selector.rdf::type    = Node('sc:UriPatternSelector')
+        selector.rdf::value   = pattern + "*"
+        selector
+      end
+    end
+    
+    # Parses an xpath expression into an array
+    def xpath_for expression
+      expression.split('/')[1..-1].map do |term|
+        chunks = term.split('[')
+        tag = chunks[0]        
+        conditions = chunks[1]
+        if conditions.to_i.to_s == conditions
+          # It's the index in fact
+          index = chunks[1]
+        else
+          conditions = conditions.chop.split(" and ") if conditions
+          index = chunks[2]
+        end
+        index = index.to_i if index
+        { :tag=>tag, :conditions=>conditions||[], :index=>index }
+      end
+    end
+
+    # Serializes an xpath expression
+    def xpath_expression_for xpath
+      "/" + xpath.map do |term|
+        term[:tag] +
+        ("[" + (term[:conditions]*' and ') + "]" if term[:conditions].size > 0).to_s +
+        ("[" + term[:index].to_s + "]" if term[:index]).to_s
+      end * '/'
     end
   end
 end
