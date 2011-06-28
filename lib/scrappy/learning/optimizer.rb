@@ -215,21 +215,22 @@ module Scrappy
         selector.rdf::value = if selectors.map { |s| s.rdf::value }.uniq.size == 1
           # All in common
           selectors.first.rdf::value
-        elsif xpaths.map { |xpath| xpath[0..-2] }.uniq.size == 1
-          # Siblings
-          xpath = xpaths.first[0..-2]
+        elsif xpaths.map(&:size).uniq.size == 1
+          # Possible siblings
+          new_xpath = []
+          (0...xpaths.first.size).each do |i|
+            terms      = xpaths.map     { |xp|   xp[i] }
+            tags       = terms.map { |term| term[:tag] }.uniq
+            indexes    = terms.map { |term| term[:index] }.uniq
+            conditions = terms.map { |term| term[:conditions] }
+            
+            tag        = tags.size > 1 ? '*' : tags.first
+            index      = indexes.first if indexes.size == 1
+            conditions = conditions.inject { |acc, n| acc & n }
           
-          last_terms = xpaths.map     { |xp| xp.last }
-          tags       = last_terms.map { |term| term[:tag] }.uniq
-          indexes    = last_terms.map { |term| term[:index] }.uniq
-          conditions = last_terms.map { |term| term[:conditions] }
-          
-          tag        = tags.size > 1 ? '*' : tags.first
-          index      = indexes.first if indexes.size == 1
-          conditions = conditions.inject { |acc, n| acc & n }
-          
-          xpath << {:tag => tag, :conditions => conditions, :index => index}
-          xpath_expression_for(xpath)
+            new_xpath << {:tag => tag, :conditions => conditions, :index => index}
+          end
+          xpath_expression_for(new_xpath)
         else
           # Nothing in common
           return
@@ -369,7 +370,8 @@ module Scrappy
     
     # Parses an xpath expression into an array
     def xpath_for expression
-      expression.split('/')[1..-1].map do |term|
+      start = expression[0..0]=='/' ? 1 : 0
+      expression.split('/')[start..-1].map do |term|
         chunks = term.split('[')
         tag = chunks[0]        
         conditions = chunks[1]
@@ -387,7 +389,7 @@ module Scrappy
 
     # Serializes an xpath expression
     def xpath_expression_for xpath
-      "/" + xpath.map do |term|
+      (xpath.first[:tag]=='.' ? "" : "/" ) + xpath.map do |term|
         term[:tag] +
         ("[" + (term[:conditions]*' and ') + "]" if term[:conditions].size > 0).to_s +
         ("[" + term[:index].to_s + "]" if term[:index]).to_s
