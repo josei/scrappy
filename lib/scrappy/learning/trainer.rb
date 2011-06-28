@@ -156,11 +156,6 @@ module Scrappy
       results = node.parent.search(".#{selector}")
       results.each_with_index { |n,i| index = i+1 if n.path == path }
       
-      if false#node.name=="p" and node.content.include?("trabajadoras tienen")
-        require 'ruby-debug'
-        debugger
-      end
-      
       previous_path = path.split("/")[0..-2] * "/"
       suffix = results.size > 1  ? "[#{index}]" : ""
       
