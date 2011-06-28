@@ -209,6 +209,7 @@ module Scrappy
       if selectors.first.rdf::type.first == Node('sc:XPathSelector')
         selector.rdf::type  = Node('sc:XPathSelector')
         selector.sc::attribute = selectors.first.sc::attribute
+        selector.sc::text = selectors.map { |s| s.sc::text }.flatten
         
         xpaths = selectors.map { |s| s.rdf::value }.flatten.map { |s| xpath_for(s) }
         selector.rdf::value = if selectors.map { |s| s.rdf::value }.uniq.size == 1

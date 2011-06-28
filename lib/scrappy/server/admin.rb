@@ -38,8 +38,12 @@ module Scrappy
         if params[:html]
           # Generate extractor automatically
           html = Iconv.iconv('UTF-8', params[:encoding], params[:html]).first
-          extractor = agent.train_xpath(:html=>html, :uri=>params[:uri])
+          samples = [{ :html=>html, :uri=>params[:uri] }]
+          extractor = agent.train_xpath(*samples)
+          # Train
           Scrappy::App.add_extractor extractor
+          # Optimize
+          Scrappy::App.replace_extractor agent.optimize_extractors(Scrappy::Kb.extractors, samples), samples
         else
           # Store the given extractor
           Scrappy::App.add_extractor RDF::Parser.parse(:yarf,params[:rdf])
