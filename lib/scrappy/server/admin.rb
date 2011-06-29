@@ -171,8 +171,8 @@ module Scrappy
         @wrong     = []
         output     = RDF::Parser.parse(:ntriples, params["output"].to_s).triples
         extraction = []
-        samples = (params['samples'] || []).map do |i|
-          sample       = Scrappy::App.samples[i.to_i]
+        (params['samples'] || []).each do |i|
+          sample      = Scrappy::App.samples[i.to_i]
           output     += sample[:output] || []
           extraction += agent.extract(sample[:uri], sample[:html], kb)
         end
