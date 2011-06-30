@@ -53,8 +53,8 @@ jQuery(document).ready(function(){
   } else {
     div = "<div id='scrappy_window' title='Scrappy'>" +
           "<p>No extractor available for this URL</p>" +
-          "<p><a href='TODO'>Annotate page</a></p>" +
           "<p><a class='extractor' href='http://localhost:3434/extractors'>Generate extractor</a></p>" +
+          "<p><a class='sample' href='http://localhost:3434/samples'>Upload sample</a></p>" +
           "</div>";
   }
   
