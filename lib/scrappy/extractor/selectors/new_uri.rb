@@ -13,7 +13,7 @@ module Sc
       prefix = (prefix =~ /\Ahttp\:/ or prefix =~ /\Ahttps\:/) ? URI::parse(doc[:uri]).merge(prefix).to_s : "#{doc[:uri]}#{prefix}"
       suffix = sc::suffix.first.to_s
       
-      nofollow = (sc::follow.first != "false")
+      nofollow = (sc::follow.first != "true")
       
       contents.map do |content, attribute|
         new_uri = if (content.to_s =~ /\Ahttp\:/ or content.to_s =~ /\Ahttps\:/)

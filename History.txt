@@ -1,3 +1,7 @@
+=== 0.4.1 2011-07-05
+
+* Bug correction in NewUriSelector
+
 === 0.4.0 2011-06-30
 
 * Added machine learning of patterns that allow creating extractors automatically
