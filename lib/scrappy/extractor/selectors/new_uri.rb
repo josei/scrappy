@@ -10,7 +10,9 @@ module Sc
       
       @indexes ||= Hash.new(0)
       prefix = sc::prefix.first.to_s
-      prefix = (prefix =~ /\Ahttp\:/ or prefix =~ /\Ahttps\:/) ? URI::parse(doc[:uri]).merge(prefix).to_s : "#{doc[:uri]}#{prefix}"
+      if !["http://", "https://"].include?(prefix)
+        prefix = (prefix =~ /\Ahttp\:/ or prefix =~ /\Ahttps\:/) ? URI::parse(doc[:uri]).merge(prefix).to_s : "#{doc[:uri]}#{prefix}"
+      end
       suffix = sc::suffix.first.to_s
       
       nofollow = (sc::follow.first != "true")

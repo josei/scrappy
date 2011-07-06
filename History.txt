@@ -1,3 +1,8 @@
+=== 0.4.2 2011-07-06
+
+* Support to sc:nonempty and sc:boolean in selectors
+* Bugfix in NewUriSelector
+
 === 0.4.1 2011-07-05
 
 * Bug correction in NewUriSelector

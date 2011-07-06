@@ -20,6 +20,27 @@ module Sc
       # Filter method is defined in each subclass
       results = filter doc
 
+      if sc::boolean.first=="true"
+        results = results.map do |r|
+          affirmations = ["yes", "true"]
+          negations = ["no", "none", "false", "-", "--"]
+          no  = negations.include?(r[:value].gsub("\302\240"," ").strip.downcase)
+          yes = affirmations.include?(r[:value].gsub("\302\240"," ").strip.downcase)
+          if no
+            value = "false" 
+          elsif yes
+            value = "true"
+          else
+            value = :remove
+          end
+          r.merge :value=>value
+        end
+        results = results.select{ |r| r[:value] != :remove }
+      end
+      if sc::nonempty.first=="true"
+        results = results.select{ |r| r[:value].gsub("\302\240"," ").strip!=""}
+      end
+      
       if sc::debug.first=="true" and Scrappy::Agent::Options.debug and
         (Scrappy::Agent::Options.debug_key.nil? or doc[:value].downcase.include?(Scrappy::Agent::Options.debug_key) )
         

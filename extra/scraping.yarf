@@ -104,6 +104,20 @@ sc:downcase:
   rdfs:domain: sc:NewUriSelector
   rdfs:range: rdf:Literal
 
+sc:nonempty:
+  rdf:type: rdf:Property
+  rdfs:label: "non-empty"
+  rdfs:comment: "Indicates whether or not to allow empty literal as selector's output"
+  rdfs:domain: sc:Selector
+  rdfs:range: rdf:Literal
+
+sc:boolean:
+  rdf:type: rdf:Property
+  rdfs:label: "boolean"
+  rdfs:comment: "Indicates whether or not the selector's output is boolean"
+  rdfs:domain: sc:Selector
+  rdfs:range: rdf:Literal
+
 sc:debug:
   rdf:type: rdf:Property
   rdfs:label: "debug"

@@ -64,7 +64,7 @@ module Sc
 
         # Build the object -- it can be a node or a literal
         object = if sc::type.include?(Node('rdf:Literal'))
-          value = doc[:value].to_s.strip
+          value = doc[:value].to_s.gsub("\302\240"," ").strip
           if options[:referenceable]
             node.rdf::value = value
             node.rdf::type += [Node('rdf:Literal')]
