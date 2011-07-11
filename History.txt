@@ -1,3 +1,7 @@
+=== 0.4.3 2011-07-11
+
+* Bugfix: missing files in Manifest
+
 === 0.4.2 2011-07-06
 
 * Support to sc:nonempty and sc:boolean in selectors

@@ -37,6 +37,7 @@ public/images/logo.png
 public/images/logo_tiny.png
 public/javascripts/annotator.js
 public/javascripts/remote.js
+public/javascripts/utils.js
 public/stylesheets/application.css
 test/test_helper.rb
 test/test_scrappy.rb
@@ -46,3 +47,4 @@ views/home.haml
 views/layout.haml
 views/patterns.haml
 views/samples.haml
+views/test.haml
