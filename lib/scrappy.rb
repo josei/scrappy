@@ -24,5 +24,5 @@ require 'scrappy/agent/blind_agent'
 require 'scrappy/agent/agent'
 
 module Scrappy
-  VERSION = '0.4.3'
+  VERSION = '0.4.4'
 end

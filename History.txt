@@ -1,3 +1,7 @@
+=== 0.4.4 2011-07-11
+
+* More details in test reports
+
 === 0.4.3 2011-07-11
 
 * Bugfix: missing files in Manifest

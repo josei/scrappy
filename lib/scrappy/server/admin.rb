@@ -189,6 +189,7 @@ module Scrappy
           precision, recall, fscore = agent.send :metrics, new_output, new_extraction
           @results[predicate] ||= Hash.new(0.0)
           @results[predicate][:count]     += 1
+          @results[predicate][:triples]    = new_output.size
           @results[predicate][:fscore]    += fscore
           @results[predicate][:precision] += precision
           @results[predicate][:recall]    += recall
@@ -201,6 +202,7 @@ module Scrappy
           precision, recall, fscore = agent.send :metrics, new_output, new_extraction
           @results[type] ||= Hash.new(0.0)
           @results[type][:count]     += 1
+          @results[type][:triples]    = new_output.size
           @results[type][:fscore]    += fscore
           @results[type][:precision] += precision
           @results[type][:recall]    += recall
@@ -209,6 +211,7 @@ module Scrappy
         precision, recall, fscore = agent.send :metrics, output, extraction
         @results[:total] ||= Hash.new(0.0)
         @results[:total][:count]     += 1
+        @results[:total][:triples]    = output.size
         @results[:total][:fscore]    += fscore
         @results[:total][:precision] += precision
         @results[:total][:recall]    += recall

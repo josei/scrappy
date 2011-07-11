@@ -41,9 +41,16 @@
   %h2 Details
   %p
     %ul.detail
+      -(@results.keys-[:total]).each do |label|
+        %li
+          %span.name
+            =label
+          %span.date
+            =@results[label][:triples].to_i
+    %ul.detail
       %li
         %span.name
-          Triples
+          Total triples
         %span.date
           =@total
       %li
