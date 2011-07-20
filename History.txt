@@ -1,3 +1,7 @@
+=== 0.4.5 2011-07-20
+
+* Bug fix in underscored new URIs
+
 === 0.4.4 2011-07-11
 
 * More details in test reports
