@@ -1,3 +1,7 @@
+=== 0.4.6 2011-10-05
+
+* Bug fix when using public instead of public_folder
+
 === 0.4.5 2011-07-20
 
 * Bug fix in underscored new URIs

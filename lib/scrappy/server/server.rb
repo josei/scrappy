@@ -12,9 +12,9 @@ module Scrappy
     register Admin if Scrappy::Options.admin
     
     enable :sessions
-    set    :root,   File.join(File.dirname(__FILE__), '..', '..', '..')
-    set    :views,  Proc.new { File.join(root, "views") }
-    set    :public, Proc.new { File.join(root, "public") }
+    set    :root,          File.join(File.dirname(__FILE__), '..', '..', '..')
+    set    :views,         Proc.new { File.join(root, "views") }
+    set    :public_folder, Proc.new { File.join(root, "public") }
 
     get '/:format/*' do |format, url|
       process_request :get, format, url, params[:callback]

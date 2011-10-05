@@ -18,7 +18,7 @@ module Scrappy
       app.get '/javascript' do
         fragments = agent.fragments_for(Scrappy::Kb.extractors, params[:uri])
         content_type 'application/javascript'
-        "window.scrappy_extractor=#{fragments.any?};" + open("#{settings.public}/javascripts/annotator.js").read
+        "window.scrappy_extractor=#{fragments.any?};" + open("#{settings.public_folder}/javascripts/annotator.js").read
       end
       
       app.get '/help' do
