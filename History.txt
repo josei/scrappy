@@ -1,3 +1,7 @@
+=== 0.4.7 2011-11-24
+
+* Bug fix in Ruby 1.9
+
 === 0.4.6 2011-10-05
 
 * Bug fix when using public instead of public_folder
