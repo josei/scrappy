@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 module Sc
   class Fragment
     include RDF::NodeProxy
