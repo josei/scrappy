@@ -1,3 +1,8 @@
+=== 0.4.8 2011-11-24
+
+* Encoding fixes
+* Added sc:normalize_max and sc:normalize_min support
+
 === 0.4.7 2011-11-24
 
 * Bug fix in Ruby 1.9
