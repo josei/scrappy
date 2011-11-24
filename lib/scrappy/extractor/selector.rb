@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 module Sc
   class Selector
     include RDF::NodeProxy
@@ -36,6 +37,11 @@ module Sc
           r.merge :value=>value
         end
         results = results.select{ |r| r[:value] != :remove }
+      end
+      if sc::normalize_max.first
+        max = sc::normalize_max.first.to_f
+        min = sc::normalize_min.first.to_f
+        results.each { |r| r[:value] = ((r[:value].to_f-min) / (max-min)).to_s }
       end
       if sc::nonempty.first=="true"
         results = results.select{ |r| r[:value].gsub("\302\240"," ").strip!=""}

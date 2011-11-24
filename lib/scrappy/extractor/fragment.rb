@@ -65,7 +65,8 @@ module Sc
 
         # Build the object -- it can be a node or a literal
         object = if sc::type.include?(Node('rdf:Literal'))
-          value = doc[:value].to_s.gsub("\302\240"," ").strip
+          ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
+          value = ic.iconv(doc[:value].to_s + ' ')[0..-2].gsub("\302\240"," ").strip
           if options[:referenceable]
             node.rdf::value = value
             node.rdf::type += [Node('rdf:Literal')]

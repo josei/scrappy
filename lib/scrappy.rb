@@ -8,6 +8,7 @@ require 'ostruct'
 require 'active_support'
 require 'tmpdir'
 require 'lightrdf'
+require 'iconv'
 
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'
 
