@@ -21,12 +21,18 @@ module Sc
       # Filter method is defined in each subclass
       results = filter doc
 
+      # Encoding corrections and trimming
+      ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
+      results.each do |r|
+        r[:value] = ic.iconv(r[:value].to_s + ' ')[0..-2].gsub("\302\240"," ").strip
+      end
+      
       if sc::boolean.first=="true"
         results = results.map do |r|
           affirmations = ["yes", "true"]
           negations = ["no", "none", "false", "-", "--"]
-          no  = negations.include?(r[:value].gsub("\302\240"," ").strip.downcase)
-          yes = affirmations.include?(r[:value].gsub("\302\240"," ").strip.downcase)
+          no  = negations.include?(r[:value].downcase)
+          yes = affirmations.include?(r[:value].downcase)
           if no
             value = "false" 
           elsif yes
@@ -41,10 +47,16 @@ module Sc
       if sc::normalize_max.first
         max = sc::normalize_max.first.to_f
         min = sc::normalize_min.first.to_f
-        results.each { |r| r[:value] = ((r[:value].to_f-min) / (max-min)).to_s }
+        in_range = sc::normalize_in_range.first == "true"
+        results.each do |r|
+          r[:value] = ((r[:value].to_f-min) / (max-min)).to_s
+        end
+        if in_range
+          results = results.select { |r| r[:value].to_f <= 1.0 and r[:value].to_f >= 0.0 }
+        end
       end
       if sc::nonempty.first=="true"
-        results = results.select{ |r| r[:value].gsub("\302\240"," ").strip!=""}
+        results = results.select{ |r| r[:value] != ""}
       end
       
       if sc::debug.first=="true" and Scrappy::Agent::Options.debug and
