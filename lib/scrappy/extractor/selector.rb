@@ -20,12 +20,6 @@ module Sc
       # Process selector
       # Filter method is defined in each subclass
       results = filter doc
-
-      # Encoding corrections and trimming
-      ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
-      results.each do |r|
-        r[:value] = ic.iconv(r[:value].to_s + ' ')[0..-2].gsub("\302\240"," ").strip
-      end
       
       if sc::boolean.first=="true"
         results = results.map do |r|

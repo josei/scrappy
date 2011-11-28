@@ -4,7 +4,7 @@ module Scrappy
     def format node, formats, uri
       case formats.first
       when Node('sc:WikiText') then
-        doc = Nokogiri::XML(node.to_html)
+        doc = Nokogiri::XML(node.to_html.clean)
         doc.search("a").each {|n| n.replace(Nokogiri::XML::Text.new(URI.parse(uri).merge(n["href"]).to_s, n.document)) }
         doc.search("h1").each {|n| n.replace(Nokogiri::XML::Text.new("= #{n.text.strip} =", n.document)) }
         doc.search("h2").each {|n| n.replace(Nokogiri::XML::Text.new("== #{n.text.strip} ==", n.document)) }
@@ -26,15 +26,15 @@ module Scrappy
         doc.text.strip
       when Node('sc:Html') then
         if node.respond_to? :to_html
-          node.to_html
+          node.to_html.clean
         else
-          node.to_s
+          node.to_s.clean
         end
       else
         if node.respond_to? :text
-          node.text
+          node.text.clean
         else
-          node.to_s
+          node.to_s.clean
         end
       end
     end

@@ -1,3 +1,7 @@
+=== 0.4.9 2011-11-28
+
+* Refactorization of how encoding issues are managed
+
 === 0.4.8 2011-11-24
 
 * Encoding fixes

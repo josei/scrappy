@@ -8,7 +8,6 @@ require 'ostruct'
 require 'active_support'
 require 'tmpdir'
 require 'lightrdf'
-require 'iconv'
 
 Namespace :sc, 'http://lab.gsi.dit.upm.es/scraping.rdf#'
 
@@ -25,5 +24,5 @@ require 'scrappy/agent/blind_agent'
 require 'scrappy/agent/agent'
 
 module Scrappy
-  VERSION = '0.4.8'
+  VERSION = '0.4.9'
 end
