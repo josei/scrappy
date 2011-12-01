@@ -26,6 +26,7 @@ module Scrappy
 
     protected
     def process_request method, format, url, callback
+      url = url.gsub("http:/","http://").gsub("https:/","https://") if url.index(/http:\/\w/) or url.index(/https:\/\w/)
       response = agent.proxy :method=>method, :uri=>url, :inputs=>inputs, :format=>format.to_sym
       case response.status
       when :redirect
