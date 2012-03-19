@@ -1,11 +1,11 @@
 require 'iconv'
-require 'rack-flash'
+require 'sinatra/flash'
 
 module Scrappy
   module Admin
     def self.registered app
       app.set :method_override, true
-      app.use Rack::Flash
+      app.register Sinatra::Flash
       
       app.get '/' do
         if params[:format] and params[:uri]
